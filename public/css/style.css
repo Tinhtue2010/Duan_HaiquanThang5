@@ -1,0 +1,447 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto:400,100,300,700");
+#navbarNav {
+    display: flex;
+    align-items: center; /* Vertically center items */
+    justify-content: center; /* Optionally center horizontally */
+}
+
+.modal-dialog-2 {
+    max-height: 90vh; /* Limits modal height to 90% of the viewport */
+    overflow-y: auto; /* Enables scrolling for long content */
+}
+.navbar-nav {
+    display: flex;
+    align-items: center; /* Vertically center each `nav-item` */
+    margin: 0; /* Remove default spacing */
+}
+table {
+    text-transform: uppercase;
+  }
+a::after {
+    content: none;
+}
+html {
+    scroll-behavior: smooth;
+}
+.wrapper {
+    min-height: 55vh;
+}
+.custom-line {
+    margin-top: -5px; /* Move the line upwards */
+    height: 3px; /* Make it bold */
+    background-color: #187bcd; /* Set color to black */
+    width: 100%; /* Adjust width as needed */
+}
+
+.navbar {
+    background-color: linear-gradient(90deg, #0056b3, #28a745);
+    height: 100px;
+    z-index: 1030; /* Add higher z-index */
+    position: relative; /* Establish stacking context */
+}
+.navbar-collapse {
+    background-color: white; /* Add background color to dropdown menu */
+    z-index: 1030; /* Match navbar z-index */
+}
+.carousel,
+.carousel-inner {
+    z-index: 1020;
+    position: relative;
+}
+.logo {
+    height: 66px; /* Hoặc điều chỉnh chiều cao phù hợp với navbar */
+    width: auto; /* Giữ tỉ lệ khung hình của logo */
+    margin-right: 10px; /* Tạo khoảng cách giữa logo và tên trang web */
+}
+
+.navbar .navbar-brand {
+    font-weight: bold;
+    color: rgb(8, 0, 255);
+}
+
+.navbar .nav-link {
+    color: rgb(13, 13, 13);
+    transition: color 0.3s ease;
+}
+
+.navbar .nav-link:hover {
+    color: #ffd700; /* Màu vàng nhạt khi hover */
+}
+
+.navbar-toggler {
+    border-color: white;
+}
+
+.navbar-toggler-icon {
+    background-color: white;
+}
+
+.carousel-inner img {
+    max-height: 500px; /* Đặt chiều cao tối đa cho hình ảnh */
+    object-fit: cover; /* Hình ảnh sẽ tự động cắt để vừa khung */
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5); /* Màu nền cho nút điều khiển */
+    padding: 10px;
+    border-radius: 50%;
+}
+
+.container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.row {
+    margin-bottom: 20px;
+}
+
+body {
+    font-family: "Roboto", sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: bold;
+    color: #007bff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 .original {
+    font-weight: bold;
+}
+
+p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.card .clickable-card {
+    border: none;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card .clickable-card p {
+    color: black;
+    /* Remove fixed height that was causing overflow */
+    height: auto;
+    /* Add these properties for better text handling */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4; /* Show 4 lines of text */
+    -webkit-box-orient: vertical;
+    margin-bottom: 1rem;
+}
+.card .clickable-card:hover {
+    transform: translateY(-5px); /* Tăng hiệu ứng nổi khi hover */
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card .card-title {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.card .clickable-card .btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.card .clickable-card .btn:hover {
+    background-color: #0056b3; /* Màu đậm hơn khi hover */
+}
+
+.card .clickable-card {
+    text-decoration: none;
+}
+
+.card .clickable-card p {
+    color: black;
+    height: 110px;
+}
+.card .justified-text {
+    text-align: justify;
+}
+
+.return-link {
+    color: #555555; /* or a color between light and dark, like a medium gray */
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.return-link:hover {
+    color: #333333; /* Darken slightly on hover */
+    font-weight: 500;
+}
+
+form .label-text {
+    font-size: 18px;
+}
+form .modal-body .label-text {
+    font-size: 16px;
+}
+form .form-control {
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
+}
+
+/* form button[type="submit"] {
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+} */
+
+form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.top-post-img {
+    height: 650px;
+    width: 1000px;
+}
+.letter-img {
+    height: 500px;
+    width: 560px;
+}
+.post-content {
+    font-size: 22px;
+    text-align: justify;
+    font-family: "Times New Roman", Times, serif;
+    margin-bottom: 0.5rem; /* Reduce space between <p> tags */
+}
+
+.no-text-decoration {
+    text-decoration: none;
+}
+.side-bar-icon {
+    width: 2.2em;
+    height: 2.2em;
+    object-fit: cover;
+}
+.status-icon {
+    width: 7em;
+    height: 7em;
+    object-fit: cover;
+}
+
+.clickable-row tr:hover {
+    cursor: pointer;
+    background-color: #ccc;
+}
+
+.image-div {
+    width: 100%; /* Full width of the parent column */
+    height: 900px; /* Set a fixed height or adjust as needed */
+    background-size: cover; /* Ensures the image covers the entire div */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents tiling of the image */
+}
+.select2-modal {
+    z-index: 9999 !important; /* Set a high z-index to ensure the dropdown is on top */
+}
+
+footer {
+    background-color: #007bff;
+    color: white;
+    padding: 20px 0;
+}
+
+footer h5 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+footer p,
+footer ul,
+footer li {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+footer a {
+    color: #ffcc00;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: #ffd700; /* Màu vàng sáng hơn */
+    text-decoration: underline;
+}
+
+footer .list-inline-item {
+    margin-right: 10px;
+}
+
+footer .text-center {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    font-size: 0.85rem;
+}
+
+.why-choose-section {
+    padding: 7rem 0;
+}
+.why-choose-section .img-wrap {
+    position: relative;
+}
+.why-choose-section .img-wrap img {
+    border-radius: 20px;
+}
+
+.missing-input-text {
+    font-size: 0.9em;
+    display: none; /* Hide by default */
+}
+
+/* Container styles */
+.select2-container--bootstrap {
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-selection {
+    height: calc(1.5em + 0.75rem + 2px) !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #495057 !important;
+    background-color: #fff !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+}
+
+.select2-container--default .select2-selection--single {
+    padding: 0.375rem 0.75rem !important;
+}
+
+.select2-container--default
+    .select2-selection--single
+    .select2-selection__arrow {
+    height: 100% !important;
+    top: 0 !important;
+}
+
+.select2-dropdown {
+    border-color: #ced4da !important;
+}
+
+.select2-search__field {
+    padding: 0.375rem 0.75rem !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+}
+.file-upload {
+    position: relative;
+    display: inline-block;
+}
+
+.file-upload-input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.file-upload-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.file-upload-btn:hover {
+    background-color: #45a049;
+}
+
+.file-name {
+    margin-left: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.file-upload-icon {
+    margin-right: 8px;
+}
+
+/* Optional: Add animation for selected state */
+.file-selected .file-upload-btn {
+    background-color: #357abd;
+}
+/* Add media queries for different screen sizes */
+@media (max-width: 768px) {
+    .card .clickable-card {
+        margin-bottom: 1rem;
+    }
+
+    .card .clickable-card p {
+        font-size: 0.9rem; /* Slightly smaller font on mobile */
+        -webkit-line-clamp: 5; /* Show 5 lines on mobile if needed */
+    }
+}
+@media (max-width: 768px) {
+    .carousel-inner {
+        max-height: 300px; /* Match img height */
+        overflow: hidden;
+    }
+
+    .carousel-item {
+        height: 300px; /* Match img height */
+    }
+
+    .carousel-item img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+    .logo {
+        height: 40px; /* Smaller logo on mobile */
+        width: auto;
+    }
+
+    .navbar-brand {
+        font-size: 5px;
+        word-wrap: break-word;
+    }
+
+    /* Ensure navbar height adjusts on mobile */
+    .navbar {
+        height: auto;
+        min-height: 50px;
+        padding: 1px 1px;
+    }
+}
