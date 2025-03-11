@@ -24,8 +24,8 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
         $currentYear = Carbon::now()->format('Y');  // Year
 
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO SỐ LƯỢNG CONTAINER LƯU TẠI CẢNG', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
@@ -102,17 +102,6 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
             $totalHangTon,
         ];
 
-
-
-        $result[] = [
-            [''],
-            [''],
-            ['CÔNG CHỨC HẢI QUAN'],
-            [''],
-            [''],
-            [''],
-            [Auth::user()->CongChuc->ten_cong_chuc],
-        ];
         return $result;
     }
 
@@ -219,26 +208,6 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
 
                 ]);
 
-                $chuKyStart = null;
-                for ($i = 1; $i <= $lastRow; $i++) {
-                    if ($sheet->getCell('A' . $i)->getValue() === 'CÔNG CHỨC HẢI QUAN') {
-                        $chuKyStart = $i;
-                        break;
-                    }
-                }
-
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':O' . $lastRow)->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_NONE,
-                        ],
-                    ],
-                ]);
-
-                $sheet->mergeCells('A' . $chuKyStart . ':O' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':O' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':O' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':O' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

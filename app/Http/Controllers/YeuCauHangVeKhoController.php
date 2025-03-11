@@ -31,22 +31,28 @@ class YeuCauHangVeKhoController extends Controller
     {
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
             $data = YeuCauHangVeKho::join('doanh_nghiep', 'yeu_cau_hang_ve_kho.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('yeu_cau_hang_ve_kho_chi_tiet', 'yeu_cau_hang_ve_kho.ma_yeu_cau', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau')
                 ->select(
                     'doanh_nghiep.*',
                     'yeu_cau_hang_ve_kho.*',
+                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+
                 )
-                ->distinct()  // Ensure unique rows
+                ->groupBy('yeu_cau_hang_ve_kho.ma_yeu_cau')
                 ->orderBy('ma_yeu_cau', 'desc')
                 ->get();
         } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
             $data = YeuCauHangVeKho::join('doanh_nghiep', 'yeu_cau_hang_ve_kho.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('yeu_cau_hang_ve_kho_chi_tiet', 'yeu_cau_hang_ve_kho.ma_yeu_cau', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau')
                 ->where('yeu_cau_hang_ve_kho.ma_doanh_nghiep', $maDoanhNghiep)
                 ->select(
                     'doanh_nghiep.*',
                     'yeu_cau_hang_ve_kho.*',
+                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+
                 )
-                ->distinct()  // Ensure unique rows
+                ->groupBy('yeu_cau_hang_ve_kho.ma_yeu_cau')
                 ->orderBy('ma_yeu_cau', 'desc')
                 ->get();
         }
@@ -89,31 +95,15 @@ class YeuCauHangVeKhoController extends Controller
             // Decode the JSON data from the form
             $rowsData = json_decode($request->rows_data, true);
             foreach ($rowsData as $row) {
-                $ten_hang = '';
-                $nhapHang = NhapHang::with('hangHoa.hangTrongCont')->find($row['so_to_khai_nhap']);
-                foreach ($nhapHang->hangHoa as $hangHoa) {
-                    foreach ($hangHoa->hangTrongCont as $hangTrongCont) {
-                        $ten_hang .= $hangHoa->ten_hang . ' - Số lượng: ' . $hangTrongCont->so_luong . "<br>";
-                    }
-                }
-                $containers = $nhapHang->hangHoa
-                    ->flatMap(
-                        fn($hangHoa) =>
-                        $hangHoa->hangTrongCont
-                            ->filter(fn($cont) => $cont->is_da_chuyen_cont == 0 || $cont->so_luong != 0)
-                            ->pluck('so_container')
-                    )
-                    ->unique()
-                    ->implode(';');
-
-
+                $nhapHang = NhapHang::find($row['so_to_khai_nhap']);
+                $firstResult = $this->getThongTinTenHang($row);
 
                 YeuCauHangVeKhoChiTiet::insert([
                     'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                     'so_tau' => $nhapHang->phuong_tien_vt_nhap,
                     'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
-                    'ten_hang' => $ten_hang,
-                    'so_container' => $containers,
+                    'ten_hang' => $firstResult['hang_hoa'] ?? '',
+                    'so_container' => $row['so_container'],
                     'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt'],
                     'ma_yeu_cau' => $yeuCau->ma_yeu_cau
                 ]);
@@ -132,6 +122,32 @@ class YeuCauHangVeKhoController extends Controller
         }
     }
 
+    public function getThongTinTenHang($row)
+    {
+        $data = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $row['so_to_khai_nhap'])
+            ->where('hang_trong_cont.so_container', $row['so_container'])
+            ->select(
+                'hang_trong_cont.so_container',
+                'hang_hoa.ten_hang',
+                'hang_trong_cont.so_luong'
+            )
+            ->get()
+            ->groupBy('so_container');
+
+        $result = $data->map(function ($items, $so_container) {
+            $hang_hoa_info = $items->map(function ($item) {
+                return "{$item->ten_hang} - Số lượng: {$item->so_luong}";
+            })->implode('<br>');
+
+            return [
+                'hang_hoa' => $hang_hoa_info,
+            ];
+        });
+        return $result->first();
+    }
+
     public function thongTinYeuCauHangVeKho($ma_yeu_cau)
     {
 
@@ -147,7 +163,7 @@ class YeuCauHangVeKhoController extends Controller
             ->where('yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
             ->select('nhap_hang.*')
             ->get();
-        $congChucs = CongChuc::where('is_chi_xem',0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
         $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
         return view('quan-ly-kho.yeu-cau-hang-ve-kho.thong-tin-yeu-cau-hang-ve-kho', compact('yeuCau', 'nhapHangs', 'doanhNghiep', 'congChucs', 'chiTiets')); // Pass data to the view
     }
@@ -370,7 +386,7 @@ class YeuCauHangVeKhoController extends Controller
             $toKhaiDangXuLys = YeuCauHangVeKhoChiTiet::join('nhap_hang', 'yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_hang_ve_kho', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_hang_ve_kho.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_hang_ve_kho.trang_thai', '!=', "Đã hủy")
+                ->where('yeu_cau_hang_ve_kho.trang_thai', "Đang chờ duyệt")
                 ->pluck('yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap');
 
             $toKhaiTrongPhieu = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');
@@ -380,12 +396,7 @@ class YeuCauHangVeKhoController extends Controller
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
-            $chiTiets = NhapHang::with('hangHoa')
-                ->join('yeu_cau_hang_ve_kho_chi_tiet', 'nhap_hang.so_to_khai_nhap', 'yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
-                ->where('yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
-                ->whereIn('nhap_hang.so_to_khai_nhap', $toKhaiTrongPhieu)
-                ->get();
+            $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
             $yeuCau = YeuCauHangVeKho::find($ma_yeu_cau);
             return view('quan-ly-kho.yeu-cau-hang-ve-kho.sua-yeu-cau-hang-ve-kho', data: compact('toKhaiNhaps', 'doanhNghiep', 'chiTiets', 'yeuCau'));
         }
@@ -420,28 +431,15 @@ class YeuCauHangVeKhoController extends Controller
         $rowsData = json_decode($request->rows_data, true);
         YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
         foreach ($rowsData as $row) {
-            $ten_hang = '';
             $nhapHang = NhapHang::find($row['so_to_khai_nhap']);
-            foreach ($nhapHang->hangHoa as $hangHoa) {
-                foreach ($hangHoa->hangTrongCont as $hangTrongCont) {
-                    $ten_hang .= $hangHoa->ten_hang . ' - Số lượng: ' . $hangTrongCont->so_luong . "<br>";
-                }
-            }
-            $containers = $nhapHang->hangHoa
-            ->flatMap(
-                fn($hangHoa) =>
-                $hangHoa->hangTrongCont
-                    ->filter(fn($cont) => $cont->is_da_chuyen_cont == 0 || $cont->so_luong != 0)
-                    ->pluck('so_container')
-            )
-            ->unique()
-            ->implode(';');
+            $firstResult = $this->getThongTinTenHang($row);
+
             YeuCauHangVeKhoChiTiet::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                 'so_tau' => $nhapHang->phuong_tien_vt_nhap,
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
-                'ten_hang' => $ten_hang,
-                'so_container' => $containers,
+                'ten_hang' => $firstResult['hang_hoa'] ?? '',
+                'so_container' => $row['so_container'],
                 'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt'],
                 'ma_yeu_cau' => $request->ma_yeu_cau
             ]);
@@ -465,27 +463,13 @@ class YeuCauHangVeKhoController extends Controller
 
         $rowsData = json_decode($request->rows_data, true);
         foreach ($rowsData as $row) {
-            $ten_hang = '';
             $nhapHang = NhapHang::find($row['so_to_khai_nhap']);
-            foreach ($nhapHang->hangHoa as $hangHoa) {
-                foreach ($hangHoa->hangTrongCont as $hangTrongCont) {
-                    $ten_hang .= $hangHoa->ten_hang . ' - Số lượng: ' . $hangTrongCont->so_luong . "<br>";
-                }
-            }
-            $containers = $nhapHang->hangHoa
-            ->flatMap(
-                fn($hangHoa) =>
-                $hangHoa->hangTrongCont
-                    ->filter(fn($cont) => $cont->is_da_chuyen_cont == 0 || $cont->so_luong != 0)
-                    ->pluck('so_container')
-            )
-            ->unique()
-            ->implode(';');
+            $firstResult = $this->getThongTinTenHang($row);
             YeuCauHangVeKhoChiTietSua::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
-                'so_container' => $containers,
+                'so_container' => $row['so_container'],
                 'so_tau' => $nhapHang->phuong_tien_vt_nhap,
-                'ten_hang' => $ten_hang,
+                'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ma_sua_yeu_cau' => $suaYeuCau->ma_sua_yeu_cau,
                 'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt']

@@ -534,6 +534,18 @@ class NhapHangController extends Controller
         $nhapHang = NhapHang::find($so_to_khai_nhap);
         return view('nhap-hang.vi-tri-hang-hien-tai', compact('hangTrongConts', 'nhapHang'));
     }
+    public function phieuXuatCuaToKhai($so_to_khai_nhap)
+    {
+        $xuatHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
+            ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
+            ->groupBy('xuat_hang.so_to_khai_xuat')
+            ->orderBy('xuat_hang.so_to_khai_xuat', 'desc')
+            ->get();
+        return view('nhap-hang.phieu-xuat-cua-to-khai', compact('xuatHangs', 'so_to_khai_nhap'));
+    }
 
     public function duyetToKhaiNhap(Request $request)
     {

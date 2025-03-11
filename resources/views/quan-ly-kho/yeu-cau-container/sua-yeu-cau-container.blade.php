@@ -531,6 +531,37 @@
                 });
             });
         });
+        $(document).ready(function() {
+            const ma_yeu_cau = @json($yeuCau->ma_yeu_cau);
+            $('#container-dropdown-search').on('change', function() {
+                let selectedValue = $(this).val();
+                $.ajax({
+                    url: "/kiem-tra-container-dang-chuyen-sua", // Laravel route
+                    type: "GET",
+                    contentType: "application/json",
+                    data: {
+                        so_container: selectedValue,
+                        loai: 'container',
+                        ma_yeu_cau: ma_yeu_cau
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content')
+                    },
+
+                    success: function(response) {
+                        if (response) {
+                            alert(
+                                "Container này đang chờ duyệt chuyển, hãy đợi công chức duyệt container này trước");
+                            $('#container-dropdown-search').val(null).trigger('change');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error:", error);
+                    }
+                });
+            });
+        });
     </script>
     <script>
         const fileInput = document.getElementById('fileInput');

@@ -194,7 +194,7 @@
                                         </div>
                                     </div>
                                 @endif
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <div class="row mt-3">
@@ -350,7 +350,7 @@
                                         </a>
                                     @endif
                                 </center>
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <div class="row mt-3">
@@ -387,7 +387,7 @@
                                             </a>
                                         </div>
                                     </center>
-                                @elseif(Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @elseif(Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
                                     <center>
 
                                         <div class="row">
@@ -529,7 +529,7 @@
                 <form action="{{ route('xuat-hang.thu-hoi-yeu-cau-huy') }}" method="POST">
                     @csrf
                     <div class="modal-body text-danger">
-                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
                             <p class="text-danger">Xác nhận từ chối yêu cầu xin hủy của phiếu xuất này?</p>
                         @else
                             <p class="text-danger">Xác nhận thu hồi yêu cầu xin hủy của phiếu xuất này?</p>

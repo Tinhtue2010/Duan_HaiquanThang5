@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BaoCao;
+use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
 use App\Models\HangHoa;
 use Illuminate\Http\Request;
@@ -9,6 +11,7 @@ use App\Models\LoaiHinh;
 use App\Models\NhapHang;
 use App\Models\NhapHangDaHuy;
 use App\Models\NhapHangSua;
+use App\Models\PhanQuyenBaoCao;
 use App\Models\PTVTXuatCanhCuaPhieu;
 use App\Models\TaiKhoan;
 use App\Models\TheoDoiHangHoa;
@@ -26,7 +29,9 @@ use App\Models\YeuCauKiemTraChiTiet;
 use App\Models\YeuCauNiemPhong;
 use App\Models\YeuCauTauCont;
 use App\Models\YeuCauTieuHuy;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class LoaiHinhController extends Controller
 {
@@ -63,21 +68,50 @@ class LoaiHinhController extends Controller
     }
     public function xoaTheoDoiHang(Request $request)
     {
-        $hangHoa = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('so_to_khai_nhap', $request->so_to_khai_nhap)->get();
-        dd($hangHoa);
-
-        // $xuatHangs = XuatHang::all();
-        // foreach ($xuatHangs as $xuatHang) {
-        //     $sl = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
-        //         ->where('xuat_hang.so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
-        //         ->sum('xuat_hang_cont.so_luong_xuat');
-        //     $xuatHang->tong_so_luong = $sl ?? 0;
-        //     $xuatHang->save();
-        // }
+        // $hangHoa = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+        //     ->where('so_to_khai_nhap', $request->so_to_khai_nhap)->get();
+        // dd($hangHoa);
+        $congChucs = CongChuc::all();
+        $baoCaos = BaoCao::all();
+        foreach($congChucs as $congChuc){
+            foreach( $baoCaos as $baoCao){
+                PhanQuyenBaoCao::insert([
+                    'ma_cong_chuc' => $congChuc->ma_cong_chuc,
+                    'ma_bao_cao' => $baoCao->ma_bao_cao,
+                ]);
+            }
+        }
 
         return redirect()->back();
     }
+    public function fixNgayXuatHet()
+    {
+        try {
+            DB::beginTransaction();
+
+            $xuatHet = NhapHang::where('trang_thai', 'Đã xuất hết')
+                ->where('ngay_xuat_het', null)
+                ->get();
+
+            foreach ($xuatHet as $nhapHang) {
+                $ngay_xuat_canh = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                    ->where('xuat_hang_cont.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
+                    ->where('xuat_hang.trang_thai', 'Đã thực xuất hàng')
+                    ->orderBy('xuat_hang.updated_at', 'desc')
+                    ->select('xuat_hang.ngay_xuat_canh')
+                    ->first()?->ngay_xuat_canh;
+                $nhapHang->ngay_xuat_het = $ngay_xuat_canh;
+                $nhapHang->save();
+            }
+            DB::commit();
+            return redirect()->back();
+        } catch (\Exception $e) {
+            session()->flash('alert-danger', 'Có lỗi xảy ra');
+            Log::error('Error in fix: ' . $e->getMessage());
+            return redirect()->back();
+        }
+    }
+
 
     public function thayDoiMaDoanhNghiep(Request $request)
     {
@@ -149,7 +183,7 @@ class LoaiHinhController extends Controller
             $xuatHang->save();
         }
     }
-    public function xuatHet(Request $request)
+    public function xuatHet()
     {
         $allNhapHangs = NhapHang::where('trang_thai', 'Đã nhập hàng')->get();
         $arr = [];

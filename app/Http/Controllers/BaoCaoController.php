@@ -27,6 +27,7 @@ use App\Exports\BaoCaoTheoDoiTruLuiTheoNgayExport;
 use App\Exports\BaoCaoDangKyXuatKhauHangHoa;
 use App\Exports\BaoCaoSangContChuyenTau;
 use App\Exports\BaoCaoGiamSatXuatKhau;
+use App\Exports\BaoCaoContainerLuuTaiCangTheoCont;
 use App\Models\ChuHang;
 use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
@@ -203,6 +204,12 @@ class BaoCaoController extends Controller
         $date = $this->formatDateNow();
         $fileName = 'Báo cáo số lượng container lưu tại cảng ngày ' . $date . '.xlsx';
         return Excel::download(new BaoCaoContainerLuuTaiCang(), $fileName);
+    }
+    public function containerLuuTaiCangTheoCont(Request $request)
+    {
+        $date = $this->formatDateNow();
+        $fileName = 'Báo cáo số lượng container lưu tại cảng ngày ' . $date . '.xlsx';
+        return Excel::download(new BaoCaoContainerLuuTaiCangTheoCont($request->so_container), $fileName);
     }
     public function doanhNghiepXNK()
     {

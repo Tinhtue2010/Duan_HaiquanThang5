@@ -53,6 +53,7 @@
                     <tr style="vertical-align: middle; text-align: center;">
                         <th>STT</th>
                         <th>Số tờ khai</th>
+                        <th>Số container</th>
                         <th>Tên hàng</th>
                         <th>Thao tác</th>
                     </tr>
@@ -126,16 +127,12 @@
             // Populate table with chiTiets data
             chiTiets.forEach(chiTiet => {
                 rowIndex++;
-
-                // Assume `hangHoa` is a related property for items. Adjust as needed.
-                const hangHoas = chiTiet.hang_hoa ? chiTiet.hang_hoa.map(h => h.ten_hang).join('<br>') :
-                    'Không có hàng hóa';
-
                 const newRow = `
                     <tr data-index="${rowIndex}">
                         <td class="text-center">${rowIndex}</td>
                         <td class="text-center">${chiTiet.so_to_khai_nhap}</td>
-                        <td>${hangHoas}</td>
+                        <td>${chiTiet.so_container}</td>
+                        <td>${chiTiet.ten_hang}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
@@ -169,24 +166,47 @@
                 const selectedToKhaiNhap = toKhaiNhaps.find(
                     item => item.so_to_khai_nhap.toString().trim() === soToKhaiNhap.toString().trim()
                 );
-                const hangHoas = selectedToKhaiNhap ? selectedToKhaiNhap.hang_hoa.map(h => h.ten_hang).join(
-                    '<br>') : 'Không có hàng hóa';
+                getYeuCauTableData();
 
-                // Create a new table row
-                const newRow = `
-                <tr data-index="${rowIndex}">
-                    <td class="text-center">${rowIndex}</td>
-                    <td class="text-center">${soToKhaiNhap}</td>
-                    <td>${hangHoas}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                    </td>
-                </tr>
-            `;
-                tableBody.insertAdjacentHTML('beforeend', newRow);
+                function getYeuCauTableData() {
+                    let rowsData = $("#rowsDataInput").val();
+                    $.ajax({
+                        url: "/get-hang-trong-to-khai", // Laravel route
+                        type: "GET",
+                        contentType: "application/json",
+                        data: {
+                            so_to_khai_nhap: soToKhaiNhap
+                        },
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                'content') // For Laravel CSRF protection
+                        },
+                        success: function(response) {
+                            updateTable(response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error:", error);
+                        }
+                    });
+                }
 
-                // Clear the dropdown selection
-                dropdown.value = '';
+                function updateTable(data) {
+                    let tableBody = $("#displayTableYeuCau tbody");
+                    data.forEach((item, index) => {
+                        let row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${soToKhaiNhap}</td>
+                            <td>${item.so_container}</td>
+                            <td>${item.hang_hoa}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                        tableBody.append(row);
+                    });
+                }
             });
 
             // Delete a row
@@ -209,7 +229,8 @@
                 const rowsData = rows.map(row => {
                     return {
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
-                        so_to_khai_nhap: row.querySelector('td:nth-child(2)').textContent.trim()
+                        so_to_khai_nhap: row.querySelector('td:nth-child(2)').textContent.trim(),
+                        so_container: row.querySelector('td:nth-child(3)').textContent.trim(),
                     };
                 });
 
@@ -232,20 +253,6 @@
                 $('#xacNhanModal').modal('show');
             })
         });
-    </script>
-    {{-- Submit table --}}
-    <script>
-        function updateRowsData() {
-            const rows = $('#displayTableYeuCau tbody tr').map(function() {
-                const cells = $(this).find('td');
-                return {
-                    so_to_khai_nhap: $(this).find('td').eq(1).text(),
-                    ten_hang_hoa: $(this).find('td').eq(3).text(),
-                };
-            }).get();
-
-            $('#rowsDataInput').val(JSON.stringify(rows));
-        }
     </script>
     <script>
         $(document).ready(function() {

@@ -63,6 +63,7 @@
                     <tr style="vertical-align: middle; text-align: center;">
                         <th>STT</th>
                         <th>Số tờ khai</th>
+                        <th>Số container</th>
                         <th>Tên hàng</th>
                         <th>Phương tiện vận tải</th>
                         <th style="display: none;">Mã PTVT</th>
@@ -179,27 +180,53 @@
 
                 rowIndex++;
 
+
                 // Find the related `hangHoa` items
                 const selectedToKhaiNhap = toKhaiNhaps.find(
                     item => item.so_to_khai_nhap.toString().trim() === soToKhaiNhap.toString().trim()
                 );
-                const hangHoas = selectedToKhaiNhap ? selectedToKhaiNhap.hang_hoa.map(h => h.ten_hang).join(
-                    '<br>') : 'Không có hàng hóa';
+                getYeuCauTableData();
 
-                // Create a new table row
-                const newRow = `
-                    <tr data-index="${rowIndex}">
-                        <td class="text-center">${rowIndex}</td>
-                        <td class="text-center">${soToKhaiNhap}</td>
-                        <td>${hangHoas}</td>
-                        <td>${selectedText}</td>
-                        <td style="display: none;">${PTVTXC_Value}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.insertAdjacentHTML('beforeend', newRow);
+                function getYeuCauTableData() {
+                    let rowsData = $("#rowsDataInput").val();
+                    $.ajax({
+                        url: "/get-hang-trong-to-khai", // Laravel route
+                        type: "GET",
+                        contentType: "application/json",
+                        data: {
+                            so_to_khai_nhap: soToKhaiNhap
+                        },
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                'content') // For Laravel CSRF protection
+                        },
+                        success: function(response) {
+                            updateTable(response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error:", error);
+                        }
+                    });
+                }
+
+                function updateTable(data) {
+                    let tableBody = $("#displayTableYeuCau tbody");
+                    data.forEach((item, index) => {
+                        let row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${soToKhaiNhap}</td>
+                            <td>${item.so_container}</td>
+                            <td>${item.hang_hoa}</td>
+                            <td>${PTVTXC_Value}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                        tableBody.append(row);
+                    });
+                }
 
             });
 
@@ -207,14 +234,22 @@
             tableBody.addEventListener('click', function(e) {
                 if (e.target.classList.contains('deleteRowButton')) {
                     const row = e.target.closest('tr');
-                    row.remove();
+                    if (!row) return;
+
+                    // Get the text from the second column of the clicked row
+                    const soToKhaiNhapValue = row.children[1].textContent.trim();
+
+                    // Remove all rows with the same second column value
+                    Array.from(tableBody.querySelectorAll('tr')).forEach((tr) => {
+                        if (tr.children[1].textContent.trim() === soToKhaiNhapValue) {
+                            tr.remove();
+                        }
+                    });
 
                     // Reorder the STT column after deletion
                     Array.from(tableBody.querySelectorAll('tr')).forEach((tr, index) => {
                         tr.querySelector('td:first-child').textContent = index + 1;
                     });
-
-                    rowIndex--;
                 }
             });
 
@@ -224,6 +259,7 @@
                     return {
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
                         so_to_khai_nhap: row.querySelector('td:nth-child(2)').textContent.trim(),
+                        so_container: row.querySelector('td:nth-child(3)').textContent.trim(),
                         ten_phuong_tien_vt: row.querySelector('td:nth-child(5)').textContent.trim()
                     };
                 });
@@ -237,21 +273,6 @@
             });
         });
     </script>
-    {{-- Submit table --}}
-    <script>
-        function updateRowsData() {
-            const rows = $('#displayTableYeuCau tbody tr').map(function() {
-                const cells = $(this).find('td');
-                return {
-                    so_to_khai_nhap: $(this).find('td').eq(1).text(),
-                    ten_hang_hoa: $(this).find('td').eq(3).text(),
-                };
-            }).get();
-
-            $('#rowsDataInput').val(JSON.stringify(rows));
-        }
-    </script>
-
     <script>
         $(document).ready(function() {
             $('#chonHangTheoToKhaiModal').on('shown.bs.modal', function() {

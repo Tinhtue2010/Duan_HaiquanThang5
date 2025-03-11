@@ -9,6 +9,10 @@ use App\Models\NhapHang;
 use App\Models\NiemPhong;
 use App\Models\PTVTXuatCanh;
 use App\Models\Seal;
+use App\Models\YeuCauChuyenContainer;
+use App\Models\YeuCauContainerChiTiet;
+use App\Models\YeuCauTauCont;
+use App\Models\YeuCauTauContChiTiet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -219,7 +223,6 @@ class QuanLyKhoController extends Controller
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
-                    ->distinct()
                     ->sum('hang_trong_cont.so_luong');
 
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -261,7 +264,6 @@ class QuanLyKhoController extends Controller
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
-                    ->distinct()
                     ->sum('hang_trong_cont.so_luong');
 
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -311,5 +313,96 @@ class QuanLyKhoController extends Controller
             ->get();
 
         return response()->json(['seals' => $seals]);
+    }
+    public function kiemTraContainerDangChuyen(Request $request)
+    {
+        $existConts = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_chuyen_container.trang_thai', 'Đang chờ duyệt')
+            ->where(function ($query) use ($request) {
+                $query->where('yeu_cau_container_chi_tiet.so_container_goc', $request->so_container)
+                    ->orWhere('yeu_cau_container_chi_tiet.so_container_dich', $request->so_container);
+            })
+            ->exists();
+
+        $existTauConts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', '=', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_tau_cont.trang_thai', 'Đang chờ duyệt')
+            ->where(function ($query) use ($request) {
+                $query->where('yeu_cau_tau_cont_chi_tiet.so_container_goc', $request->so_container)
+                    ->orWhere('yeu_cau_tau_cont_chi_tiet.so_container_dich', $request->so_container);
+            })->exists();
+        if ($existConts || $existTauConts) {
+            return true;
+        }
+        return false;
+    }
+    public function kiemTraContainerDangChuyenSua(Request $request)
+    {
+        if ($request->loai == 'container') {
+            $exists = YeuCauContainerChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
+                ->where(function ($query) use ($request) {
+                    $query->where('so_container_goc', $request->so_container)
+                        ->orWhere('so_container_dich', $request->so_container);
+                })
+                ->exists();
+        } else if ($request->loai == 'tau_cont') {
+            $exists = YeuCauTauContChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
+                ->where(function ( $query) use ($request) {
+                    $query->where('so_container_goc', $request->so_container)
+                        ->orWhere('so_container_dich', $request->so_container);
+                })
+                ->exists();
+        }
+        if ($exists) {
+            return false;
+        }
+
+        $existConts = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_chuyen_container.trang_thai', 'Đang chờ duyệt')
+            ->where(function ($query) use ($request) {
+                $query->where('yeu_cau_container_chi_tiet.so_container_goc', $request->so_container)
+                    ->orWhere('yeu_cau_container_chi_tiet.so_container_dich', $request->so_container);
+            })
+            ->exists();
+
+        $existTauConts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', '=', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_tau_cont.trang_thai', 'Đang chờ duyệt')
+            ->where(function ($query) use ($request) {
+                $query->where('yeu_cau_tau_cont_chi_tiet.so_container_goc', $request->so_container)
+                    ->orWhere('yeu_cau_tau_cont_chi_tiet.so_container_dich', $request->so_container);
+            })->exists();
+        if ($existConts || $existTauConts) {
+            return true;
+        }
+        return false;
+    }
+    public function getHangTrongToKhai(Request $request)
+    {
+        $so_to_khai_nhap = $request->so_to_khai_nhap;
+        $data = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $request->so_to_khai_nhap)
+            ->select(
+                'hang_trong_cont.so_container',
+                'hang_hoa.ten_hang',
+                'hang_trong_cont.so_luong'
+            )
+            ->get()
+            ->groupBy('so_container');
+
+        $result = $data->map(function ($items, $so_container) {
+            $hang_hoa_info = $items->map(function ($item) {
+                return "{$item->ten_hang} - Số lượng: {$item->so_luong}";
+            })->implode('<br>');
+
+            return [
+                'so_container' => $so_container,
+                'hang_hoa' => $hang_hoa_info,
+            ];
+        });
+
+        // Convert to an array if needed
+        $formattedResult = $result->values()->toArray();
+
+        return response()->json($formattedResult);
     }
 }

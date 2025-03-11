@@ -52,16 +52,20 @@
                     @endif
                 </div>
                 <div class="col-8">
-                    @if (trim($nhapHang->trang_thai) == 'Đã nhập hàng' || trim($nhapHang->trang_thai) == 'Đã nhập hàng (Đã gia hạn)')
+                    @if (trim($nhapHang->trang_thai) == 'Đã nhập hàng')
                         <a
                             href="{{ route('nhap-hang.vi-tri-hang-hien-tai', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
                             <button class="btn btn-primary float-end">Thông tin hàng hiện tại</button>
                         </a>
                     @endif
                     <a
-                        href="{{ route('export.theo-doi-hang-hoa-tong', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
-                        <button class="btn btn-primary float-end me-1">Theo dõi hàng hóa</button>
+                        href="{{ route('nhap-hang.phieu-xuat-cua-to-khai', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                        <button class="btn btn-primary float-end me-1">Phiếu xuất</button>
                     </a>
+                    <a
+                    href="{{ route('export.theo-doi-hang-hoa-tong', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                    <button class="btn btn-success float-end me-1">Theo dõi hàng hóa</button>
+                </a>
                 </div>
             </div>
 
@@ -113,7 +117,7 @@
                                             <form action="{{ route('export.theo-doi-hang-hoa') }}" method="GET">
                                                 <input type="hidden" name="ma_hang" value="{{ $hangHoa->ma_hang }}">
                                                 <center>
-                                                    <button type="submit" class="btn btn-primary mt-2">Theo dõi</button>
+                                                    <button type="submit" class="btn btn-success mt-2">Theo dõi</button>
                                                 </center>
                                             </form>
                                         </td>
@@ -142,9 +146,7 @@
                             @if (trim($nhapHang->trang_thai) == 'Đang chờ duyệt')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
-                                        Auth::user()->congChuc->is_chi_xem == 0 &&
-                                        Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <div class="row mt-3">

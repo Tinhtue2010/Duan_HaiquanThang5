@@ -12,7 +12,8 @@
                             <h4 class="font-weight-bold text-primary">Danh sách biên bản bàn giao hồ sơ</h4>
                         </div>
                         <div class="col-3">
-                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức')
+                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_ban_giao == 1)
+
                                 <a href="{{ route('ban-giao.them-ban-giao-ho-so')}}"><button class="btn btn-success float-end">Thêm biên bản</button></a>
                             @endif
                         </div>

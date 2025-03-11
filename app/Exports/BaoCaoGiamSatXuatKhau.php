@@ -35,8 +35,8 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
         $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', '', '', '', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', '', '', '', '', '', '', '', ''],
             ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
             ['BÁO CÁO GIÁM SÁT HÀNG HÓA XUẤT KHẨU', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // Updated line
@@ -171,7 +171,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                         }
 
                         // Trim semicolons and count actual items
-                        $tenPhuongTien = trim($nhapHang->ten_phuong_tien_vt, ';');
+                        $tenPhuongTien = trim($nhapHang->ten_phuong_tien_vt, '; ');
                         $numberXuong = substr_count($tenPhuongTien, ';') + 1;
 
                         // Update values safely
@@ -179,26 +179,16 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
 
                         if (strpos($row[13], $nhapHang->ten_phuong_tien_vt) === false) {
                             $row[9] += ($nhapHang->total_so_luong_ton == 0) ? 1 : 0;
-                            $row[13] .= ($row[13] !== '' ? ';' : '') . $nhapHang->ten_phuong_tien_vt;
-                            $row[10] += $numberXuong; 
+                            $row[13] .= ($row[13] !== '' ? '; ' : '') . $nhapHang->ten_phuong_tien_vt;
+                            $row[10] += $numberXuong;
                         }
                     }
                 }
                 unset($row); // Prevent reference issues
-
-
-
-
-
-                // if (!in_array($nhapHang->ma_xuat_canh, $maXuatCanhList)) {
-                //     $number = substr_count($nhapHang->ten_phuong_tien_vt, ';') + 1;
-                //     $soPTVT += $number;
-                //     $maXuatCanhList[] = $nhapHang->ma_xuat_canh;
-                //     $sumSoXuong += $number;
-                // }
             }
         }
 
+        $result = $this->deduplicateShipData(array_values(array_slice($result, 10)));
 
         $nhapHangXuatHets = NhapHang::whereIn('nhap_hang.trang_thai', ['Đã bàn giao hồ sơ', 'Đã xuất hết'])
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -239,6 +229,93 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
         return $result;
     }
 
+    function deduplicateShipData(array $data): array
+    {
+        // Group records by date
+        $groupedByDate = collect($data)->groupBy(function ($item) {
+            return $item[12]; // Date index
+        });
+
+        $result = [];
+
+        foreach ($groupedByDate as $date => $dateGroup) {
+            $processedIndices = [];
+
+            // Process each item in the date group
+            for ($i = 0; $i < count($dateGroup); $i++) {
+                // Skip if already processed
+                if (in_array($i, $processedIndices)) {
+                    continue;
+                }
+
+                $currentItem = $dateGroup[$i];
+                $currentShips = explode('; ', $currentItem[13]);
+                $duplicateIndices = [$i];
+
+                // Find duplicates
+                for ($j = 0; $j < count($dateGroup); $j++) {
+                    if ($i === $j || in_array($j, $processedIndices)) {
+                        continue;
+                    }
+
+                    $comparisonItem = $dateGroup[$j];
+                    $comparisonShips = explode('; ', $comparisonItem[13]);
+
+                    // Check if there's any overlap in ship names
+                    $hasOverlap = false;
+                    foreach ($currentShips as $ship) {
+                        if (in_array($ship, $comparisonShips)) {
+                            $hasOverlap = true;
+                            break;
+                        }
+                    }
+
+                    if ($hasOverlap) {
+                        $duplicateIndices[] = $j;
+                        $processedIndices[] = $j;
+                    }
+                }
+
+                // If we found duplicates, find the one with longest ship names string
+                if (count($duplicateIndices) > 1) {
+                    $longestStringIndex = $duplicateIndices[0];
+                    $maxLength = strlen($dateGroup[$longestStringIndex][13]);
+
+                    foreach ($duplicateIndices as $index) {
+                        $length = strlen($dateGroup[$index][13]);
+                        if ($length > $maxLength) {
+                            $maxLength = $length;
+                            $longestStringIndex = $index;
+                        }
+                    }
+
+                    // Create a new record with the longest ship names string
+                    $mergedItem = $dateGroup[$longestStringIndex]->toArray();
+
+                    // Sum the amounts from all duplicates
+                    foreach ($duplicateIndices as $index) {
+                        if ($index === $longestStringIndex) {
+                            continue;
+                        }
+
+                        // Sum the amounts (indices 4-8)
+                        for ($amountIndex = 4; $amountIndex <= 8; $amountIndex++) {
+                            $mergedItem[$amountIndex] += $dateGroup[$index][$amountIndex];
+                        }
+                    }
+
+                    $result[] = $mergedItem;
+                    $processedIndices[] = $i;
+                } else {
+                    // No duplicates found, add the original item
+                    $result[] = $currentItem->toArray();
+                    $processedIndices[] = $i;
+                }
+            }
+        }
+
+        return $result;
+    }
     public function registerEvents(): array
     {
         return [
@@ -279,7 +356,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $sheet->getColumnDimension('K')->setWidth(width: 10);
                 $sheet->getColumnDimension('L')->setWidth(width: 10);
                 $sheet->getColumnDimension('M')->setWidth(width: 12);
-                $sheet->getColumnDimension('N')->setWidth(width: 17);
+                $sheet->getColumnDimension('N')->setWidth(width: 18);
                 $sheet->getColumnDimension('O')->setWidth(width: 7);
                 $sheet->getColumnDimension('P')->setWidth(width: 15);
                 $sheet->getColumnDimension('Q')->setWidth(width: 15);

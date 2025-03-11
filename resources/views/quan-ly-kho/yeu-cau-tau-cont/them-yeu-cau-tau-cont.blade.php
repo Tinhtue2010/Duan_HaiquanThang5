@@ -504,6 +504,34 @@
                 });
             });
         });
+        $(document).ready(function() {
+            $('#container-dropdown-search').on('change', function() {
+                let selectedValue = $(this).val();
+                $.ajax({
+                    url: "/kiem-tra-container-dang-chuyen", // Laravel route
+                    type: "GET",
+                    contentType: "application/json",
+                    data: {
+                        so_container: selectedValue
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content')
+                    },
+
+                    success: function(response) {
+                        if (response) {
+                            alert(
+                                "Container này đang chờ duyệt chuyển, hãy đợi công chức duyệt container này trước");
+                            $('#container-dropdown-search').val(null).trigger('change');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error:", error);
+                    }
+                });
+            });
+        });
     </script>
     <script>
         const fileInput = document.getElementById('fileInput');

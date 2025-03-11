@@ -100,10 +100,19 @@ class YeuCauNiemPhongController extends Controller
         $doanhNghiep = DoanhNghiep::find($yeuCau->ma_doanh_nghiep);
         $chiTiets = YeuCauNiemPhongChiTiet::where('yeu_cau_niem_phong_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
             ->get();
-        $congChucHienTai = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
-        $seals = Seal::where('seal.trang_thai', 0)->get();
+
+        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+            $congChucHienTai = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
+            $seals = Seal::where('seal.ngay_cap', today())
+                ->where('seal.ma_cong_chuc', $congChucHienTai->ma_cong_chuc)
+                ->get();
+        } else {
+            $congChucHienTai = null;
+            $seals = [];
+        }
+
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
-        return view('quan-ly-kho.yeu-cau-niem-phong.thong-tin-yeu-cau-niem-phong', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs', 'seals')); // Pass data to the view
+        return view('quan-ly-kho.yeu-cau-niem-phong.thong-tin-yeu-cau-niem-phong', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs', 'congChucHienTai', 'seals')); // Pass data to the view
     }
 
     public function suaYeuCauNiemPhong($ma_yeu_cau)
@@ -228,22 +237,31 @@ class YeuCauNiemPhongController extends Controller
     }
     public function capNhatSealXuatHang($so_container, $so_seal)
     {
+        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
         XuatHang::where('xuat_hang.ngay_dang_ky', today())
             ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-            ->where('xuat_hang_cont.so_container', '=', $so_container)
+            ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
             ->where('xuat_hang.ngay_dang_ky', today())
             ->update(['xuat_hang.so_seal_cuoi_ngay' => $so_seal]);
     }
     public function capNhatSealTruLui($so_container, $so_seal)
     {
+        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
         TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', 'theo_doi_tru_lui.ma_theo_doi')
-            ->where('theo_doi_tru_lui_chi_tiet.so_container', '=', $so_container)
+            ->whereIn('theo_doi_tru_lui_chi_tiet.so_container', [$so_container_no_space, $so_container_with_space])
             ->where('ngay_them', today())
             ->update(['theo_doi_tru_lui_chi_tiet.so_seal' => $so_seal]);
     }
     public function capNhatSealTheoDoi($so_container, $so_seal)
     {
-        TheoDoiHangHoa::where('so_container', '=', $so_container)
+        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+        
+        TheoDoiHangHoa::whereIn('so_container', [$so_container_no_space, $so_container_with_space])
             ->whereDate('thoi_gian', today())
             ->update(['so_seal' => $so_seal]);
     }
@@ -328,36 +346,50 @@ class YeuCauNiemPhongController extends Controller
                 ->where('so_container', $request->so_container)
                 ->first();
 
-            if ($request->loai_seal == 5 && $request->so_seal == null) {
-                session()->flash('alert-danger', 'Chưa lựa chọn số chì cho seal loại seal định vị điện tử');
-                return redirect()->back();
-            }
-            if ($request->loai_seal == 5) {
-                $so_seal_moi = $request->so_seal;
-            } else {
-                $availableSeals = $this->getSealNhoNhat($request->loai_seal, $yeuCau->ma_cong_chuc);
-                if (!$availableSeals) {
-                    session()->flash('alert-danger', 'Không đủ số seal niêm phong để cấp cho yêu cầu này');
-                    return redirect()->back();
-                }
-                $so_seal_moi = $availableSeals->shift();
+            if (!Seal::find($request->so_seal)) {
+                Seal::create([
+                    'so_seal' => $request->so_seal,
+                    'ma_cong_chuc' => $yeuCau->ma_cong_chuc,
+                    'loai_seal' => $request->loai_seal,
+                    'ngay_cap' => now(),
+                ]);
             }
 
-            $sealMoi->so_seal_moi = $so_seal_moi;
+
+            // if ($request->loai_seal == 5 && $request->so_seal == null) {
+            //     session()->flash('alert-danger', 'Chưa lựa chọn số chì cho seal loại seal định vị điện tử');
+            //     return redirect()->back();
+            // }
+            // if ($request->loai_seal == 5) {
+            //     $so_seal_moi = $request->so_seal;
+            // } else {
+            //     $availableSeals = $this->getSealNhoNhat($request->loai_seal, $yeuCau->ma_cong_chuc);
+            //     if (!$availableSeals) {
+            //         session()->flash('alert-danger', 'Không đủ số seal niêm phong để cấp cho yêu cầu này');
+            //         return redirect()->back();
+            //     }
+            //     $so_seal_moi = $availableSeals->shift();
+            // }
+
+            $sealMoi->so_seal_moi = $request->so_seal;
             $sealMoi->save();
 
-            $so_seal = NiemPhong::where('so_container', $request->so_container)->first()->so_seal;
+            $so_seal_moi = $request->so_seal_moi;
 
+            //Tim Seal đã dùng và chuyển thành seal hỏng
+            $so_seal = NiemPhong::where('so_container', $request->so_container)->first()->so_seal;
             $seal = Seal::find($so_seal);
             if ($seal->loai_seal != 5) {
                 $seal->update(['trang_thai' => 2]);
             }
 
-            $suDungSeal = $this->suDungSeal($so_seal_moi, $request->so_container, $yeuCau->ma_cong_chuc);
-            if (!$suDungSeal) {
-                session()->flash('alert-danger', 'Seal này đã được sử dụng');
-                return redirect()->back();
-            }
+            //KT
+            // $suDungSeal = $this->suDungSeal($so_seal_moi, $request->so_container, $yeuCau->ma_cong_chuc);
+            // if (!$suDungSeal) {
+            //     session()->flash('alert-danger', 'Seal này đã được sử dụng');
+            //     return redirect()->back();
+            // }
+
             $this->updateNiemPhong($so_seal_moi, $request->so_container, $yeuCau->ma_cong_chuc);
             $this->capNhatSealXuatHang($request->so_container, $so_seal_moi);
             $this->capNhatSealTruLui($request->so_container, $so_seal_moi);

@@ -26,8 +26,8 @@ class BaoCaoDoanhNghiepXNK implements FromArray, WithEvents
         $loaiHangs = LoaiHang::all();
 
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO CHI TIẾT HÀNG HÓA XUẤT NHẬP KHẨU', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line

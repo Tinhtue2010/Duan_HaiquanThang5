@@ -26,7 +26,7 @@ class InPhieuKiemTraHang
         $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('dmy'); // Convert to ddmmYY
         $chiTiets = YeuCauKiemTraChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
 
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau);
         $phpWord = new PhpWord();
         // Set A4 page size and orientation (portrait)
         $sectionStyle = [
@@ -72,7 +72,7 @@ class InPhieuKiemTraHang
         $section->addTextBreak(1);
 
         // Add body text
-        $section->addText('          Công ty đã làm thủ tục tiếp nhận hồ sơ và hàng hóa tại Chi cục Hải quan cửa khẩu Cảng Vạn Gia. Hiện hàng hóa đang nằm trong khu vực giám sát của cơ quan hải quan. Công ty đề nghị được kiểm tra hàng, cụ thể như sau:', [], 'justify');
+        $section->addText('          Công ty đã làm thủ tục tiếp nhận hồ sơ và hàng hóa tại HẢI QUAN CỬA KHẨU CẢNG VẠN GIA. Hiện hàng hóa đang nằm trong khu vực giám sát của cơ quan hải quan. Công ty đề nghị được kiểm tra hàng, cụ thể như sau:', [], 'justify');
         // Add a table with borders
         $phpWord->addTableStyle('borderedTable', [
             'borderSize' => 6,
@@ -81,22 +81,22 @@ class InPhieuKiemTraHang
         ]);
         $table = $section->addTable('borderedTable');
         $table->addRow();
-        $table->addCell(2000, ['valign' => 'center'])->addText('STT', ['bold' => true], ['alignment' => 'center']);
+        $table->addCell(800, ['valign' => 'center'])->addText('STT', ['bold' => true], ['alignment' => 'center']);
         $table->addCell(3000, ['valign' => 'center'])->addText('Số Tờ Khai', ['bold' => true], ['alignment' => 'center']);
-        $table->addCell(3000, ['valign' => 'center'])->addText('Số tàu', ['bold' => true], ['alignment' => 'center']);
+        $table->addCell(2000, ['valign' => 'center'])->addText('Số tàu', ['bold' => true], ['alignment' => 'center']);
         $table->addCell(3000, ['valign' => 'center'])->addText('Số container', ['bold' => true], ['alignment' => 'center']);
-        $table->addCell(3000, ['valign' => 'center'])->addText('Ngày Tờ Khai', ['bold' => true], ['alignment' => 'center']);
+        $table->addCell(2000, ['valign' => 'center'])->addText('Ngày Tờ Khai', ['bold' => true], ['alignment' => 'center']);
         $table->addCell(3000, ['valign' => 'center'])->addText('Tên Hàng', ['bold' => true], ['alignment' => 'center']);
 
         $stt = 1;
         foreach ($chiTiets as $chiTiet) {
             $table->addRow();
-            $table->addCell(500, ['valign' => 'center'])->addText($stt++, [], ['alignment' => 'center']);
+            $table->addCell(800, ['valign' => 'center'])->addText($stt++, [], ['alignment' => 'center']);
             $table->addCell(3000, ['valign' => 'center'])->addText($chiTiet->so_to_khai_nhap, [], ['alignment' => 'center']);
-            $table->addCell(3000, ['valign' => 'center'])->addText($chiTiet->so_tau, [], ['alignment' => 'center']);
+            $table->addCell(2000, ['valign' => 'center'])->addText($chiTiet->so_tau, [], ['alignment' => 'center']);
             $table->addCell(3000, ['valign' => 'center'])->addText($chiTiet->so_container, [], ['alignment' => 'center']);
             $date = Carbon::createFromFormat('Y-m-d', $chiTiet->ngay_dang_ky)->format('d-m-Y');
-            $table->addCell(3000, ['valign' => 'center'])->addText($date, [], ['alignment' => 'center']);
+            $table->addCell(2000, ['valign' => 'center'])->addText($date, [], ['alignment' => 'center']);
             $cell = $table->addCell(5000, ['valign' => 'center']);
             $lines = explode('<br>', $chiTiet->ten_hang);
             

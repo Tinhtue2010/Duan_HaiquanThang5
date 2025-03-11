@@ -19,22 +19,26 @@ class YeuCauGiaHanController extends Controller
     {
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
             $data = YeuCauGiaHan::join('doanh_nghiep', 'yeu_cau_gia_han.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('yeu_cau_gia_han_chi_tiet', 'yeu_cau_gia_han.ma_yeu_cau', 'yeu_cau_gia_han_chi_tiet.ma_yeu_cau')
                 ->select(
                     'doanh_nghiep.*',
                     'yeu_cau_gia_han.*',
+                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_gia_han_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_gia_han_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
                 )
-                ->distinct()  // Ensure unique rows
+                ->groupBy('yeu_cau_gia_han.ma_yeu_cau')
                 ->orderBy('ma_yeu_cau', 'desc')
                 ->get();
         } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
             $data = YeuCauGiaHan::join('doanh_nghiep', 'yeu_cau_gia_han.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('yeu_cau_gia_han_chi_tiet', 'yeu_cau_gia_han.ma_yeu_cau', 'yeu_cau_gia_han_chi_tiet.ma_yeu_cau')
                 ->where('yeu_cau_gia_han.ma_doanh_nghiep', $maDoanhNghiep)
                 ->select(
                     'doanh_nghiep.*',
                     'yeu_cau_gia_han.*',
+                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_gia_han_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_gia_han_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
                 )
-                ->distinct()  // Ensure unique rows
+                ->groupBy('yeu_cau_gia_han.ma_yeu_cau')
                 ->orderBy('ma_yeu_cau', 'desc')
                 ->get();
         }
@@ -133,7 +137,7 @@ class YeuCauGiaHanController extends Controller
 
         $nhapHangs = NhapHang::whereIn('so_to_khai_nhap', $chiTiets)->get();
 
-        $congChucs = CongChuc::where('is_chi_xem',0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
         $chiTiets = YeuCauGiaHanChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
         return view('quan-ly-kho.yeu-cau-gia-han.thong-tin-yeu-cau-gia-han', compact('yeuCau', 'nhapHangs', 'doanhNghiep', 'congChucs', 'chiTiets')); // Pass data to the view
     }
@@ -240,7 +244,7 @@ class YeuCauGiaHanController extends Controller
             $toKhaiDangXuLys = YeuCauGiaHanChiTiet::join('nhap_hang', 'yeu_cau_gia_han_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_gia_han', 'yeu_cau_gia_han_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_gia_han.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_gia_han.trang_thai', '!=', "Đã hủy")
+                ->where('yeu_cau_gia_han.trang_thai', "Đang chờ duyệt")
                 ->pluck('yeu_cau_gia_han_chi_tiet.so_to_khai_nhap');
 
             $toKhaiTrongPhieu = YeuCauGiaHanChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');

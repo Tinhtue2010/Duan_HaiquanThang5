@@ -82,29 +82,38 @@
                                         data-is-xuat-canh="{{ $congChuc->is_xuat_canh }}"
                                         data-is-yeu-cau="{{ $congChuc->is_yeu_cau }}"
                                         data-is-ban-giao="{{ $congChuc->is_ban_giao }}"
-                                        data-is-chi-xem="{{ $congChuc->is_chi_xem }}"
-                                        >
+                                        data-is-chi-xem="{{ $congChuc->is_chi_xem }}">
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $congChuc->ma_cong_chuc }}</td>
                                         <td>{{ $congChuc->ten_cong_chuc }}</td>
                                         <td>{{ $congChuc->ten_dang_nhap }}</td>
 
                                         <td>
-                                            <input type="checkbox" {{ $congChuc->is_nhap_hang ? 'checked' : '' }} disabled >
+                                            <input type="checkbox" {{ $congChuc->is_nhap_hang ? 'checked' : '' }} disabled>
                                         </td>
-                                                                                
-                                        <td><input type="checkbox" {{ $congChuc->is_xuat_hang ? 'checked' : '' }} disabled ></td>
-                                        <td><input type="checkbox" {{ $congChuc->is_xuat_canh ? 'checked' : '' }} disabled ></td>
-                                        <td><input type="checkbox" {{ $congChuc->is_yeu_cau ? 'checked' : '' }} disabled ></td>
-                                        <td><input type="checkbox" {{ $congChuc->is_ban_giao ? 'checked' : '' }} disabled ></td>
-                                        <td><input type="checkbox" {{ $congChuc->is_chi_xem ? 'checked' : '' }} disabled ></td>
-                                        
-
-                                        <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
+                                        <td><input type="checkbox" {{ $congChuc->is_xuat_hang ? 'checked' : '' }} disabled>
+                                        </td>
+                                        <td><input type="checkbox" {{ $congChuc->is_xuat_canh ? 'checked' : '' }} disabled>
+                                        </td>
+                                        <td><input type="checkbox" {{ $congChuc->is_yeu_cau ? 'checked' : '' }} disabled>
+                                        </td>
+                                        <td><input type="checkbox" {{ $congChuc->is_ban_giao ? 'checked' : '' }} disabled>
+                                        </td>
+                                        <td><input type="checkbox" {{ $congChuc->is_chi_xem ? 'checked' : '' }} disabled>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#baoCaoModal"
+                                                data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
+                                                data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}">
+                                                Báo cáo
+                                            </button>
+                                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
                                                 data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
                                                 data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}">
                                                 Xóa
-                                            </button></td>
+                                            </button>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -161,10 +170,12 @@
                                 <input type="checkbox" name="is_nhap_hang" id="nhap-hang" value="1">
                                 <label for="myCheckbox">Quản lý nhập hàng</label>
                                 <br>
-                                <input class="mt-2" type="checkbox" name="is_xuat_hang" id="xuat-hang" value="1">
+                                <input class="mt-2" type="checkbox" name="is_xuat_hang" id="xuat-hang"
+                                    value="1">
                                 <label for="myCheckbox">Quản lý xuất hàng</label>
                                 <br>
-                                <input class="mt-2" type="checkbox" name="is_xuat_canh" id="xuat-canh" value="1">
+                                <input class="mt-2" type="checkbox" name="is_xuat_canh" id="xuat-canh"
+                                    value="1">
                                 <label for="myCheckbox">Quản lý xuất cảnh</label>
                                 <br>
                                 <input class="mt-2" type="checkbox" name="is_yeu_cau" id="yeu-cau" value="1">
@@ -257,6 +268,91 @@
             </div>
         </div>
     </div>
+    <!-- Báo cáo Modal -->
+    <div class="modal fade" id="baoCaoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Phân quyền báo cáo công chức</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('quan-ly-khac.phan-quyen-bao-cao') }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="modal-body fs-5">
+                        <div>
+                            <label><strong>Mã cán bộ công chức:</strong></label>
+                            <p class="d-inline fs-5" id="modalMaCongChucBC"></p>
+                        </div>
+                        <div>
+                            <label><strong>Tên cán bộ công chức:</strong></label>
+                            <p class="d-inline fs-5" id="modalTenCongChucBC"></p>
+                        </div>
+                        <br>
+                        <input type="checkbox" name="1" id="1" value="1">
+                        <label for="myCheckbox">Báo cáo số lượng container lưu tại cảng</label>
+                        <br>
+                        <input type="checkbox" name="2" id="2" value="1">
+                        <label for="myCheckbox">Báo cáo hàng tồn tại cảng</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="3" id="3" value="1">
+                        <label for="3">Báo cáo theo dõi trừ lùi xuất hàng tất cả các ngày</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="4" id="4" value="1">
+                        <label for="4">Báo cáo tiếp nhận hằng ngày</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="5" id="5" value="1">
+                        <label for="5">Báo cáo theo dõi trừ lùi theo ngày</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="6" id="6" value="1">
+                        <label for="6">Báo cáo đăng ký xuất khẩu hàng hóa</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="7" id="7" value="1">
+                        <label for="7">Báo cáo hàng tồn theo tờ khai nhập</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="8" id="8" value="1">
+                        <label for="8">Báo cáo hàng hóa xuất nhập khẩu</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="9" id="9" value="1">
+                        <label for="9">Báo cáo hàng tồn theo Doanh nghiệp</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="10" id="10" value="1">
+                        <label for="10">Báo cáo hàng tồn theo đại lý</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="11" id="11" value="1">
+                        <label for="myCheckbox">Báo cáo chi tiết hàng hóa xuất nhập khẩu</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="12" id="12" value="1">
+                        <label for="myCheckbox">Báo cáo thống kê hàng hóa sang cont, chuyển tàu, kiểm tra hàng</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="13" id="13" value="1">
+                        <label for="myCheckbox">Báo cáo doanh nghiệp xuất nhập khẩu hàng hóa</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="14" id="14" value="1">
+                        <label for="myCheckbox">Báo cáo doanh nghiệp xuất nhập khẩu hàng hóa theo doanh nghiệp</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="15" id="15" value="1">
+                        <label for="myCheckbox">Báo cáo hàng chuyển cửa khẩu xuất (Quay về kho)</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="16" id="16" value="1">
+                        <label for="myCheckbox">Theo dõi hàng hóa quá 15 ngày chưa thực xuất</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="17" id="17" value="1">
+                        <label for="myCheckbox">Báo cáo số lượng tờ khai xuất hết</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="18" id="18" value="1">
+                        <label for="myCheckbox">Báo cáo giám sát hàng hóa xuất khẩu</label>
+
+                        <input type="hidden" name="ma_cong_chuc" id="modalInputMaCongChucBC">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Phân quyền</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         $(document).ready(function() {
             $('#tai-khoan-dropdown-search').select2();
@@ -303,7 +399,6 @@
 
 
                 if ($(this).data('is-nhap-hang') == 1) {
-
                     $("#nhap-hang").prop("checked", true); // Use jQuery
                 }
                 if ($(this).data('is-xuat-hang') == 1) {
@@ -334,12 +429,18 @@
             });
         });
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const baoCaoButtons = document.querySelectorAll('.btn-primary[data-bs-toggle="modal"]');
             const deleteButtons = document.querySelectorAll('.btn-danger[data-bs-toggle="modal"]');
             const modalTenCongChuc = document.getElementById('modalTenCongChucXoa');
             const modalMaCongChuc = document.getElementById('modalMaCongChucXoa');
             const modalInputMaCongChuc = document.getElementById('modalInputMaCongChucXoa');
+
+            const modalTenCongChucBC = document.getElementById('modalTenCongChucBC');
+            const modalMaCongChucBC = document.getElementById('modalMaCongChucBC');
+            const modalInputMaCongChucBC = document.getElementById('modalInputMaCongChucBC');
 
             deleteButtons.forEach(button => {
                 button.addEventListener('click', function() {
@@ -353,6 +454,50 @@
                     modalInputMaCongChuc.value = maCongChuc;
                 });
             });
+            baoCaoButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const maCongChucBC = this.getAttribute('data-ma-cong-chuc');
+                    const tenCongChucBC = this.getAttribute('data-ten-cong-chuc');
+                    for (let i = 1; i <= 18; i++) {
+                        $(`#${i}`).prop("checked", false);
+                    }
+
+                    $.ajax({
+                        url: "/get-phan-quyen-bao-cao", // Laravel route
+                        type: "GET",
+                        contentType: "application/json",
+                        data: {
+                            ma_cong_chuc: maCongChucBC
+                        },
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                'content')
+                        },
+
+                        success: function(response) {
+                            if (response) {
+                                $.each(response, function(index, phanQuyen) {
+                                    if (phanQuyen.phan_quyen == 1) {
+                                        $(`#${phanQuyen.ma_bao_cao}`).prop(
+                                            "checked", true);
+                                    }
+                                });
+                            }
+
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error:", error);
+                        }
+                    });
+
+                    // Set data in the modal
+                    modalTenCongChucBC.textContent = tenCongChucBC;
+                    modalMaCongChucBC.textContent = maCongChucBC;
+                    modalInputMaCongChucBC.value = maCongChucBC;
+                });
+            });
+
+
         });
     </script>
     <script>

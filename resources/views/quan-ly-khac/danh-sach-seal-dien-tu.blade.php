@@ -51,6 +51,9 @@
                                 <th>
                                     Số container
                                 </th>
+                                <th>
+                                    Thao tác
+                                </th>
                             </thead>
                             <tbody>
                                 @foreach ($seals as $index => $seal)
@@ -68,6 +71,10 @@
                                             <td>{{ \Carbon\Carbon::parse($seal->ngay_su_dung)->format('d-m-Y') }}</td>
                                         @endif
                                         <td>{{ $seal->so_container }}</td>
+                                        <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
+                                            data-so-seal="{{ $seal->so_seal }}" data-loai-seal="{{ $seal->loai_seal }}">
+                                            Xóa
+                                        </button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -136,7 +143,38 @@
             </div>
         </div>
     </div>
+    <!-- Xóa Modal -->
+    <div class="modal fade" id="xoaModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-danger">Xác nhận xóa seal này</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('quan-ly-khac.xoa-seal') }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="modal-body">
+                        <div>
+                            <label><strong>Số seal:</strong></label>
+                            <p class="d-inline" id="modalSoSeal"></p>
 
+                        </div>
+                        <div>
+                            <label><strong>Loại seal:</strong></label>
+                            <p class="d-inline" id="modalLoaiSeal"></p>
+
+                        </div>
+                        <input type="hidden" name="so_seal" id="modalInputSoSeal">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         $(document).ready(function() {
             $('#cong-chuc-dropdown-search').select2();
@@ -176,6 +214,22 @@
                 width: '350px',
                 display: 'inline-block',
                 height: '40px',
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.btn-danger[data-bs-toggle="modal"]');
+            const modalSoSeal = document.getElementById('modalSoSeal');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const soSeal = this.getAttribute('data-so-seal');
+                    const loaiSeal = this.getAttribute('data-loai-seal');
+                    modalSoSeal.textContent = soSeal;
+                    modalLoaiSeal.textContent = loaiSeal;
+                    modalInputSoSeal.value = soSeal;
+                });
             });
         });
     </script>

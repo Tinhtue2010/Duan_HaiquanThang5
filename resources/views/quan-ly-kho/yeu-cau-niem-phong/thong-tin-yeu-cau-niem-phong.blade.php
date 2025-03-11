@@ -63,7 +63,7 @@
                             @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <div class="row mt-3">
@@ -114,7 +114,7 @@
                             @elseif(trim($yeuCau->trang_thai) == 'Đã duyệt')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/success.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc }}</h2>
+                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}</h2>
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $yeuCau->ma_doanh_nghiep)
@@ -138,7 +138,9 @@
                                             <th>Số container</th>
                                             <th>Số seal niêm phong cũ</th>
                                             <th>Số seal niêm phong mới</th>
-                                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
+                                                    Auth::user()->congChuc->is_yeu_cau == 1 &&
+                                                    $yeuCau->ma_cong_chuc == Auth::user()->congChuc->ma_cong_chuc)
                                                 <th>Thao tác</th>
                                             @endif
                                         </tr>
@@ -150,7 +152,9 @@
                                                 <td>{{ $chiTiet->so_container }}</td>
                                                 <td>{{ $chiTiet->so_seal_cu }}</td>
                                                 <td>{{ $chiTiet->so_seal_moi }}</td>
-                                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
+                                                        Auth::user()->congChuc->is_yeu_cau == 1 &&
+                                                        $yeuCau->ma_cong_chuc == Auth::user()->congChuc->ma_cong_chuc)
                                                     <td> <a href="#">
                                                             <button data-bs-toggle="modal"
                                                                 data-container="{{ $chiTiet->so_container }}"
@@ -172,7 +176,7 @@
                                 <h2 class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h3 class="text-dark">Lý do hủy: {{ $yeuCau->ghi_chu }}</h3>
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                     <div class="row">
                                         <div class="col-6">
                                             <a href="#">
@@ -235,12 +239,13 @@
                             <label class="label-text mb-1" for=""><strong>Cán bộ công chức phụ
                                     trách</strong></label>
                             <select class="form-control" id="cong-chuc-dropdown-search" name="ma_cong_chuc">
-                                <option></option>
-                                @foreach ($congChucs as $congChuc)
+                                <option value="{{ $congChucHienTai->ma_cong_chuc ?? '' }}" selected>
+                                    {{ $congChucHienTai->ten_cong_chuc ?? '' }}</option>
+                                {{-- @foreach ($congChucs as $congChuc)
                                     <option value="{{ $congChuc->ma_cong_chuc }}">
                                         {{ $congChuc->ten_cong_chuc }}
                                     </option>
-                                @endforeach
+                                @endforeach --}}
                             </select>
                             <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
                                 id="displayTableYeuCau">
@@ -315,9 +320,11 @@
                             <option value="5">Seal định vị điện tử</option>
                         </select>
                         <label for="loai_seal"><strong>Số seal</strong></label>
-                        <select class="form-control" name="so_seal" id="seal-dropdown-search-2">
+                        <input type="text" class="form-control mt-2" id="so_seal" name="so_seal"
+                            placeholder="Nhập số seal" required>
+                        {{-- <select class="form-control" name="so_seal" id="seal-dropdown-search-2">
                             <option value="">Chọn seal</option>
-                        </select>
+                        </select> --}}
 
                         <input type="hidden" id="maCongChuc" value="{{ $yeuCau->ma_cong_chuc }}">
                         <input type="hidden" name="so_container" id="so_container_hidden">
@@ -371,7 +378,7 @@
                 <form action="{{ route('quan-ly-kho.huy-huy-yeu-cau-niem-phong') }}" method="POST">
                     @csrf
                     <div class="modal-body text-danger">
-                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                             <p class="text-danger">Xác nhận từ chối đề nghị xin hủy của yêu cầu này?</p>
                         @else
                             <p class="text-danger">Xác nhận hủy đề nghị xin hủy của yêu cầu này?</p>
@@ -436,7 +443,7 @@
             });
             const tableBody = document.querySelector('#displayTableYeuCau tbody');
             const rowsDataInput = document.getElementById('rowsDataInput');
-            $(document).on('change', '.seal-dropdown-search, .loai-seal-dropdown-search' , function() {
+            $(document).on('change', '.seal-dropdown-search, .loai-seal-dropdown-search', function() {
                 let row = $(this).closest('tr');
                 let cells = row.find('td');
 
@@ -445,7 +452,7 @@
                     return {
                         stt: $(cells[0]).text().trim(),
                         so_container: $(cells[1]).text().trim(),
-                        loai_seal: $(cells[2]).find('.loai-seal-dropdown-search').val() ||"",
+                        loai_seal: $(cells[2]).find('.loai-seal-dropdown-search').val() || "",
                         so_seal: $(this).find('.seal-dropdown-search').val() || "",
                     };
                 }).get();

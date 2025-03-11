@@ -43,9 +43,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
 
     public function array(): array
     {
-        $currentDate = Carbon::now()->format('d');  // Day of the month
-        $currentMonth = Carbon::now()->format('m'); // Month number
-        $currentYear = Carbon::now()->format('Y');  // Year
+
 
         if ($this->cong_viec == 1) {
             $xuatHang = XuatHang::find($this->ma_yeu_cau);
@@ -62,6 +60,11 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
         }
         $theoDoiChiTiet = TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoi->ma_theo_doi)->get();
 
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $theoDoi->ngay_them);
+
+        $day = $tu_ngay->format('d');  // Day of the month
+        $month = $tu_ngay->format('m'); // Month number
+        $year = $tu_ngay->format('Y');  // Year
 
         $ten_doanh_nghiep = $nhapHang->doanhNghiep->ten_doanh_nghiep;
         $this->so_to_khai_nhap = $nhapHang->so_to_khai_nhap;
@@ -90,7 +93,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
             [''],
             ['PHIẾU THEO DÕI, TRỪ LÙI HÀNG HÓA XUẤT KHẨU TỪNG LẦN'],
             [''],
-            ['', '', '', '', '', '', '', 'Ngày ' . $currentDate . ' Tháng ' . $currentMonth . ' Năm ' . $currentYear],
+            ['', '', '', '', '', '', '', 'Ngày ' . $day . ' Tháng ' . $month . ' Năm ' . $year],
             ['Tên Doanh Nghiệp: ' . $ten_doanh_nghiep],
             ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Chi cục hải quan đăng ký: ' . $ten_hai_quan],
             ['Tên hàng hóa: ' . $hangHoaLonNhat->ten_hang],

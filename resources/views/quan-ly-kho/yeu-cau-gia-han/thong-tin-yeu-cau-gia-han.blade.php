@@ -74,7 +74,7 @@
                                         <td>{{ $chiTiet->so_container }}</td>
                                         <td>{{ \Carbon\Carbon::parse($chiTiet->ngay_dang_ky)->format('d-m-Y') }}</td>
                                         <td>{!! $chiTiet->ten_hang !!}</td>
-                                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                             <td>
                                                 <center>
                                                     <input type="number" class="form-control" id="so_ngay_gia_han_input"
@@ -99,7 +99,7 @@
                             @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <div class="row mt-3">

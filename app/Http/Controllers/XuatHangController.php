@@ -438,6 +438,9 @@ class XuatHangController extends Controller
                 ->distinct()
                 ->get();
             foreach ($xuatHangConts as $xuatHangCont) {
+                $nhapHang = NhapHang::find($xuatHangCont->so_to_khai_nhap);
+                $nhapHang->trang_thai = 'Đã nhập hàng';
+                $nhapHang->save();
                 $this->xuatHangService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Công chức duyệt yêu cầu hủy phiếu xuất số " . $xuatHang->so_to_khai_xuat, $this->xuatHangService->getCongChucHienTai()->ma_cong_chuc);
             }
         }
@@ -500,7 +503,7 @@ class XuatHangController extends Controller
         $ptvtXuatCanhs = PTVTXuatCanh::all();
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
         $congChucHienTai = $this->xuatHangService->getCongChucHienTai();
-        return view('xuat-hang.duyet-nhanh-thuc-xuat', data: compact('ptvtXuatCanhs', 'congChucs','congChucHienTai'));
+        return view('xuat-hang.duyet-nhanh-thuc-xuat', data: compact('ptvtXuatCanhs', 'congChucs', 'congChucHienTai'));
     }
     public function duyetNhanhThucXuatSubmit(Request $request)
     {
@@ -623,7 +626,7 @@ class XuatHangController extends Controller
                 'xuat_hang.phuong_tien_vt_nhap',
             )
             ->get();
-        
+
         return response()->json(['xuatHangs' => $xuatHangs]);
     }
 

@@ -16,12 +16,12 @@ class InPhieuChuyenContainer
 {
     public function inPhieuChuyenContainer($ma_yeu_cau)
     {
-        $yeuCau = YeuCauChuyenContainer::find( $ma_yeu_cau);
+        $yeuCau = YeuCauChuyenContainer::find($ma_yeu_cau);
 
         $chiTiets = YeuCauContainerChiTiet::where('yeu_cau_container_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
             ->get();
         $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('dmy');
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau);
         $phpWord = new PhpWord();
 
         // Set A4 page size and orientation (portrait)
@@ -48,7 +48,7 @@ class InPhieuChuyenContainer
         $headerTable->addRow();
         $cell1 = $headerTable->addCell(6000);
         $cell1->addText($yeuCau->doanhNghiep->ten_doanh_nghiep ?? '', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
-        $cell1->addText('Số : '.$yeuCau->ma_yeu_cau.' – '.$date.' /CV', ['size' => 12], ['alignment' => 'center']);
+        $cell1->addText('Số : ' . $yeuCau->ma_yeu_cau . ' – ' . $date . ' /CV', ['size' => 12], ['alignment' => 'center']);
         $cell1->addLine(['weight' => 1, 'width' => 120, 'height' => 0, 'alignment' => 'center']);
         $cell1->addText('V/v: “chuyển hàng sang container mới ”', ['italic' => true, 'size' => 12], ['alignment' => 'center']);
 
@@ -69,7 +69,7 @@ class InPhieuChuyenContainer
         $section->addTextBreak(1);
 
         // Add body text
-        $section->addText('          Công ty đã làm thủ tục tiếp nhận hồ sơ và hàng hóa tại Chi cục Hải quan cửa khẩu Cảng Vạn Gia. Hiện hàng hóa đang nằm trong khu vực giám sát của cơ quan hải quan. Công ty đề nghị được chuyển hàng sang container mới, cụ thể như sau:', [], 'justify');
+        $section->addText('          Công ty đã làm thủ tục tiếp nhận hồ sơ và hàng hóa tại HẢI QUAN CỬA KHẨU CẢNG VẠN GIA. Hiện hàng hóa đang nằm trong khu vực giám sát của cơ quan hải quan. Công ty đề nghị được chuyển hàng sang container mới, cụ thể như sau:', [], 'justify');
         // Add a table with borders
         $phpWord->addTableStyle('borderedTable', [
             'borderSize' => 6,
@@ -153,7 +153,7 @@ class InPhieuChuyenContainer
 
         $stt = 1;
         foreach ($chiTiets as $chiTiet) {
-            
+
             $phuong_tien_vt_nhap = $chiTiet->nhapHang->phuong_tien_vt_nhap ?? ' ';
             $table->addRow();
             $table->addCell(500, ['valign' => 'center'])->addText(
@@ -203,7 +203,7 @@ class InPhieuChuyenContainer
         }
 
         $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y');
-        $section->addText('          Đoàn tàu số: '.$yeuCau->ten_doan_tau, 'justify');
+        $section->addText('          Đoàn tàu số: ' . $yeuCau->ten_doan_tau, 'justify');
         $section->addText('          Thời gian thực hiện: Ngày ' . $date, 'justify');
         $section->addText('          Đề nghị Quý Chi cục tạo điều kiện thuận lợi để Công ty thực hiện nội dung công việc như trên, chúng tôi cam kết chịu trách nhiệm bảo quản nguyên trạng hàng hóa, niêm phong hải quan theo đúng quy định.', [], 'justify');
         $section->addText('Xin chân thành cảm ơn!', [], 'justify');
@@ -217,7 +217,7 @@ class InPhieuChuyenContainer
         $cell1->addText('- Chi cục HQCK cảng VG (để b/c);');
         $cell1->addText('- Lưu văn thư: 01 bản.');
 
-        $qrCodeText = 'Yêu cầu số '.$yeuCau->ma_yeu_cau.' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
+        $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
         $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
 
         $section->addImage($qrCodeUrl, [

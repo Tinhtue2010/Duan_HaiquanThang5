@@ -40,8 +40,8 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
         $this->hangHoa = $hangHoa;
         $theoDoiHangHoas = TheoDoiHangHoa::where('ma_hang', $this->ma_hang)->get();
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['PHIẾU THEO DÕI HÀNG HÓA XUẤT NHẬP KHẨU', '', '', '', '', ''],
             [''],

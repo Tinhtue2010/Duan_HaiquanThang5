@@ -56,6 +56,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/thong-tin-nhap-hang-huy/{id_huy}', [NhapHangController::class, 'thongTinToKhaiHuy'])->name('show-huy');
         // Vị trí hàng hiện tại
         Route::get('/vi-tri-hien-tai/{so_to_khai_nhap}', [NhapHangController::class, 'viTriHangHienTai'])->name('vi-tri-hang-hien-tai');
+        Route::get('/phieu-xuat-cua-to-khai/{so_to_khai_nhap}', [NhapHangController::class, 'phieuXuatCuaToKhai'])->name('phieu-xuat-cua-to-khai');
 
         Route::post('/duyet-to-khai-nhap', [NhapHangController::class, 'duyetToKhaiNhap'])->name('duyet-to-khai-nhap');
         //Sửa tờ khai
@@ -226,6 +227,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/huy-huy-yeu-cau-kiem-tra', [YeuCauKiemTraController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-kiem-tra');
         Route::post('/duyet-hoan-thanh-kiem-tra', [YeuCauKiemTraController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-kiem-tra');
 
+        
 
         Route::get('/danh-sach-yeu-cau-niem-phong', [YeuCauNiemPhongController::class, 'danhSachYeuCauNiemPhong'])->name('danh-sach-yeu-cau-niem-phong');
         Route::get('/them-yeu-cau-niem-phong', [YeuCauNiemPhongController::class, 'themYeuCauNiemPhong'])->name('them-yeu-cau-niem-phong');
@@ -265,7 +267,6 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/xem-sua-yeu-cau-hang-ve-kho/{ma_yeu_cau}', [YeuCauHangVeKhoController::class, 'xemSuaYeuCau'])->name('xem-sua-yeu-cau-hang-ve-kho');
         Route::post('/duyet-sua-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-hang-ve-kho');
         Route::post('/huy-sua-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-hang-ve-kho');
-        // Route::post('/duyet-huy-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'duyetHuyYeuCau'])->name('duyet-huy-yeu-cau-hang-ve-kho');
         Route::post('/huy-huy-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-hang-ve-kho');
         Route::post('/duyet-hoan-thanh-hang-ve-kho', [YeuCauHangVeKhoController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-hang-ve-kho');
 
@@ -289,6 +290,11 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/get-to-khai-kiem-tra', [QuanLyKhoController::class, 'getToKhaiKiemTra'])->name('getToKhaiKiemTra');
         Route::get('/get-to-khai-trong-cont', [QuanLyKhoController::class, 'getToKhaiTrongCont'])->name('getToKhaiTrongCont');
         Route::get('/get-to-khai-trong-tau-cont', [QuanLyKhoController::class, 'getToKhaiTrongTauCont'])->name('getToKhaiTrongTauCont');
+        Route::get('/kiem-tra-container-dang-chuyen', [QuanLyKhoController::class, 'kiemTraContainerDangChuyen'])->name('kiemTraContainerDangChuyen');
+        Route::get('/kiem-tra-container-dang-chuyen-sua', [QuanLyKhoController::class, 'kiemTraContainerDangChuyenSua'])->name('kiemTraContainerDangChuyenSua');
+        Route::get('/get-hang-trong-to-khai', [QuanLyKhoController::class, 'getHangTrongToKhai'])->name('getHangTrongToKhai');
+
+
         Route::get('/get-ten-ptvt', [QuanLyKhoController::class, 'getTenPTVT'])->name('getTenPTVT');
         Route::get('/get-seals', [QuanLyKhoController::class, 'getSeals'])->name('getSeals');
 
@@ -312,6 +318,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/chuyen-cua-khau-xuat', [BaoCaoController::class, 'chuyenCuaKhauXuat'])->name('chuyen-cua-khau-xuat');
         Route::get('/hang-ton-tai-cang', [BaoCaoController::class, 'hangTonTaiCang'])->name('hang-ton-tai-cang');
         Route::get('/so-luong-container-tai-cang', [BaoCaoController::class, 'containerLuuTaiCang'])->name('so-luong-container-tai-cang');
+        Route::get('/so-luong-container-theo-cont', [BaoCaoController::class, 'containerLuuTaiCangTheoCont'])->name('so-luong-container-theo-cont');
         Route::get('/hang-hoa-chua-thuc-xuat', [BaoCaoController::class, 'hangHoaChuaThucXuat'])->name('hang-hoa-chua-thuc-xuat');
         Route::get('/bao-cao-hang-hoa-xuat-nhap-khau', [WordReportController::class, 'baoCaoHangHoaXuatNhapKhau'])->name('bao-cao-hang-hoa-xuat-nhap-khau');
         Route::get('/so-luong-to-khai-xuat-het', [BaoCaoController::class, 'soLuongToKhaiXuatHet'])->name('so-luong-to-khai-xuat-het');
@@ -362,6 +369,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleThuKho::class])->group(function
     Route::name('quan-ly-khac.')->group(function () {
         Route::get('/quan-ly-seal-dien-tu', [SealNiemPhongController::class, 'danhSachSealDienTu'])->name('danh-sach-seal-dien-tu');
         Route::get('/quan-ly-chi-niem-phong', [SealNiemPhongController::class, 'danhSachChiNiemPhong'])->name('danh-sach-chi-niem-phong');
+
+        Route::post('/xoa-seal', [SealNiemPhongController::class, 'xoaSeal'])->name('xoa-seal');
         Route::post('/them-chi-niem-phong', [SealNiemPhongController::class, 'themChiNiemPhong'])->name('them-chi-niem-phong');
         Route::get('/get-seal-items', [SealNiemPhongController::class, 'getSealItems']);
     });
@@ -394,6 +403,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleAdmin::class])->group(function 
         Route::post('/them-cong-chuc', [CongChucController::class, 'themCongChuc'])->name('them-cong-chuc');
         Route::post('/update-cong-chuc', [CongChucController::class, 'updateCongChuc'])->name('update-cong-chuc');
         Route::post('/xoa-cong-chuc', [CongChucController::class, 'xoaCongChuc'])->name('xoa-cong-chuc');
+        Route::post('/phan-quyen-bao-cao', [CongChucController::class, 'phanQuyenBaoCao'])->name('phan-quyen-bao-cao');
+        Route::get('/get-phan-quyen-bao-cao', [CongChucController::class, 'getPhanQuyenBaoCao'])->name('get-phan-quyen-bao-cao');
 
         Route::get('/quan-ly-thu-kho', [ThuKhoController::class, 'danhSachThuKho'])->name('danh-sach-thu-kho');
         Route::post('/them-thu-kho', [ThuKhoController::class, 'themThuKho'])->name('them-thu-kho');

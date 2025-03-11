@@ -22,6 +22,10 @@ class CongChuc extends Model
         'is_ban_giao',
         'is_chi_xem',
     ];
+    public function phanQuyenBaoCao()
+    {
+        return $this->hasMany(PhanQuyenBaoCao::class, 'ma_cong_chuc', 'ma_cong_chuc');
+    }
     public function tienTrinh()
     {
         return $this->hasMany(TienTrinh::class, 'ma_cong_chuc', 'ma_cong_chuc');

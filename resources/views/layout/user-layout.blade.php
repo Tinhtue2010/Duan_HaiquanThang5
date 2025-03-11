@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
 
-    <title>@yield('title', 'Chi cục Hải quan cửa khẩu cảng Vạn Gia')</title>
+    <title>@yield('title', 'HẢI QUAN CỬA KHẨU CẢNG VẠN GIA')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -181,7 +181,7 @@
                 <div class="sb-sidenav-menu">
                     <div class="nav">
                         @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang === 1) ||
+                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
                                 Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý nhập hàng</div>
                             <a class="nav-link" href="/quan-ly-nhap-hang">
@@ -201,7 +201,7 @@
                             </a>
                         @endif
                         @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang === 1) ||
+                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
                                 Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý xuất hàng</div>
                             <a class="nav-link" href="/quan-ly-xuat-hang">
@@ -221,7 +221,7 @@
                             </a>
                         @endif
                         @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_canh === 1) ||
+                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
                                 Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý PTVT</div>
                             <a class="nav-link" href="/quan-ly-xuat-canh">
@@ -236,7 +236,7 @@
                             </a>
                         @endif
                         @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau === 1) ||
+                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
                                 Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý yêu cầu</div>
                             <a class="nav-link" href="/danh-sach-yeu-cau-niem-phong">
@@ -287,7 +287,7 @@
                                         src="{{ asset('images/icons/report.png') }}"></div>
                                 Kết xuất báo cáo
                             </a>
-                        @elseif (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem === 0)
+                        @elseif (Auth::user()->loai_tai_khoan === 'Cán bộ công chức')
                             <div class="sb-sidenav-menu-heading">Quản lý tồn kho</div>
                             <a class="nav-link" href="/bao-cao-hang-ton">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"

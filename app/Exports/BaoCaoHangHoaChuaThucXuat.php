@@ -23,8 +23,8 @@ class BaoCaoHangHoaChuaThucXuat implements FromArray, WithEvents
         $currentMonth = Carbon::now()->format('m'); // Month number
         $currentYear = Carbon::now()->format('Y');  // Year
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['THEO DÕI HÀNG HÓA QUÁ 15 NGÀY CHƯA THỰC XUẤT', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line

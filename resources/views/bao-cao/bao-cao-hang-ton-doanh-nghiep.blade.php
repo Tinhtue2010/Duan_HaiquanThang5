@@ -27,6 +27,25 @@
                 <div class="container-fluid card-body">
                     <div class="row justify-content-center">
                         <div class="card p-3 me-3 col-5">
+                            <h4>Báo cáo số lượng container lưu tại cảng</h4>
+                            <div class="form-group">
+                                <form action="{{ route('export.so-luong-container-theo-cont') }}" method="GET">
+                                    <label class="label-text mb-2" for="ma_to_khai">Số container</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="so_container"
+                                            placeholder="Nhập số container" required>
+                                    </div>
+                                    <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo cáo</button>
+                                    </center>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card p-3 me-3 col-5">
+
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="card p-3 me-3 col-5">
                             <h4>Báo cáo theo dõi trừ lùi theo ngày</h4>
                             <div class="form-group">
                                 <form action="{{ route('export.theo-doi-tru-lui-theo-ngay') }}" method="GET">
@@ -45,16 +64,6 @@
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                             cáo</button></center>
                                 </form>
-                                {{-- <form action="{{ route('export.theo-doi-tru-lui-theo-ngay') }}" method="GET">
-                                    <label class="label-text mb-2" for="ma_to_khai">Số tờ khai nhập</label>
-                                    <input type="text" class="form-control" id="so_to_khai_nhap" name="so_to_khai_nhap"
-                                        placeholder="Nhập số tờ khai" required>
-                                    <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
-                                    <input type="text" id="datepicker1" class="form-control" placeholder="dd/mm/yyyy"
-                                        name="tu_ngay" readonly>
-                                    <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
-                                            cáo</button></center>
-                                </form> --}}
                             </div>
                         </div>
                         <div class="card p-3 me-3 col-5">
@@ -104,8 +113,8 @@
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_to_khai">Số tờ khai nhập</label>
                                 <form action="{{ route('export.theo-doi-tru-lui-tat-ca') }}" method="GET">
-                                    <input type="text" class="form-control" id="so_to_khai_nhap" name="so_to_khai_nhap"
-                                        placeholder="Nhập số tờ khai" required>
+                                    <input type="text" class="form-control" id="so_to_khai_nhap"
+                                        name="so_to_khai_nhap" placeholder="Nhập số tờ khai" required>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo cáo</button>
                                     </center>
                                 </form>
@@ -141,8 +150,8 @@
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
                                 <form action="{{ route('export.chi-tiet-xnk-theo-dn') }}" method="GET">
-                                    <select class="form-control" id="doanh-nghiep-dropdown-search-3" name="ma_doanh_nghiep"
-                                        required>
+                                    <select class="form-control" id="doanh-nghiep-dropdown-search-3"
+                                        name="ma_doanh_nghiep" required>
                                         <option value="">Chọn doanh nghiệp</option>
                                         @foreach ($doanhNghieps as $doanhNghiep)
                                             <option value="{{ $doanhNghiep->ma_doanh_nghiep }}">

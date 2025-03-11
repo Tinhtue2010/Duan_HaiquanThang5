@@ -38,7 +38,6 @@
                         {{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</h2>
                     <hr>
                     <h1 class="text-center">Yêu cầu ban đầu</h1>
-                    <h2 class="text-center">Đoàn tàu số: {{ $yeuCau->ten_doan_tau }}</h2>
                     <div class="float-end mb-2 d-flex align-items-center justify-content-center">
 
                         @if ($yeuCau->file_name)
@@ -83,7 +82,6 @@
                         <div class="custom-line mb-2"></div>
                     </center>
                     <h1 class="text-center">Yêu cầu sau khi sửa</h1>
-                    <h2 class="text-center">Đoàn tàu số: {{ $suaYeuCau->ten_doan_tau }}</h2>
                     <div class="float-end mb-2 d-flex align-items-center justify-content-center">
                         @if ($suaYeuCau->file_name)
                             {{ $suaYeuCau->file_name }}
@@ -128,7 +126,7 @@
                 <div class="col-3"></div>
                 <div class="col-6">
                     <div class="text-center">
-                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                             <hr />
                             <div class="row mt-3">
                                 <div class="col-6">

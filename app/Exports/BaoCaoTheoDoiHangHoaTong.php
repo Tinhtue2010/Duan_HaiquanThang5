@@ -34,8 +34,8 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
         $this->nhapHang = NhapHang::find($this->so_to_khai_nhap);
         $theoDoiHangHoas = TheoDoiHangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)->get();
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['PHIẾU THEO DÕI HÀNG HÓA XUẤT NHẬP KHẨU', '', '', '', '', ''],
             [''],

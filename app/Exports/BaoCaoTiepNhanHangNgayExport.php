@@ -35,8 +35,8 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
         $haiQuans = HaiQuan::all();
 
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', 'Độc lập - Tự do - Hạnh phúc', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', 'Độc lập - Tự do - Hạnh phúc', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO TIẾP NHẬN HẰNG NGÀY', '', '', '', '', ''],
             ["Ngày $day tháng $month năm $year", '', '', '', '', ''], // Updated line

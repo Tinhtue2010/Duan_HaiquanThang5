@@ -30,8 +30,8 @@ class BaoCaoCapHai implements FromArray, WithEvents
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
         $ten_doanh_nghiep = DoanhNghiep::find($this->ma_doanh_nghiep)->ten_doanh_nghiep;
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH', '', '', '', '', ''],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO CẤP 2', '', '', '', '', ''],
             ['', '', '', '', '', ''],

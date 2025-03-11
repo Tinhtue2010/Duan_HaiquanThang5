@@ -125,7 +125,7 @@
                 <div class="col-3"></div>
                 <div class="col-6">
                     <div class="text-center">
-                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                             <hr />
                             <div class="row mt-3">
                                 <div class="col-6">

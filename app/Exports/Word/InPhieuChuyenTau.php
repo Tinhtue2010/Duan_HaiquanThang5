@@ -17,7 +17,7 @@ class InPhieuChuyenTau
             ->where('yeu_cau_chuyen_tau.ma_yeu_cau', $ma_yeu_cau)
             ->get();
         $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('dmy');
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau);
         $phpWord = new PhpWord();
 
         // Set A4 page size and orientation (portrait)
@@ -66,7 +66,7 @@ class InPhieuChuyenTau
         $section->addTextBreak(1);
 
         // Add body text
-        $section->addText('          Công ty đã làm thủ tục tiếp nhận hồ sơ và hàng hóa tại Chi cục Hải quan cửa khẩu Cảng Vạn Gia. Hiện hàng hóa đang nằm trong khu vực giám sát của cơ quan hải quan. Công ty đề nghị được chuyển hàng sang phương tiện vận tải mới, cụ thể như sau:', [], 'justify');
+        $section->addText('          Công ty đã làm thủ tục tiếp nhận hồ sơ và hàng hóa tại HẢI QUAN CỬA KHẨU CẢNG VẠN GIA. Hiện hàng hóa đang nằm trong khu vực giám sát của cơ quan hải quan. Công ty đề nghị được chuyển hàng sang phương tiện vận tải mới, cụ thể như sau:', [], 'justify');
         // Add a table with borders
         $phpWord->addTableStyle('borderedTable', [
             'borderSize' => 6,

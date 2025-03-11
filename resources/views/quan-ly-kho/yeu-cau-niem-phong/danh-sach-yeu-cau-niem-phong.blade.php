@@ -36,6 +36,9 @@
                                     STT
                                 </th>
                                 <th>
+                                    Số
+                                </th>
+                                <th>
                                     Doanh nghiệp
                                 </th>
                                 <th>
@@ -50,6 +53,7 @@
                                     <tr class="clickable-row"
                                         onclick="window.location='{{ route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', $yeuCau->ma_yeu_cau) }}'">
                                         <td>{{ $index + 1 }}</td>
+                                        <td>{{ $yeuCau->ma_yeu_cau }}</td>
                                         <td>{{ $yeuCau->ten_doanh_nghiep }}</td>
                                         <td>{{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</td>
                                         @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
@@ -93,7 +97,7 @@
                         display: 'inline-block',
                         height: '40px'
                     });
-                    var column = this.api().column(3); // Status column index
+                    var column = this.api().column(4); // Status column index
                     var select = $(
                         '<select class="form-control"><option value="">TẤT CẢ</option></select>'
                     )

@@ -142,7 +142,7 @@
                                         </div>
                                     </center>
                                 @endif
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_canh == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <center>
@@ -265,7 +265,7 @@
                                     Thu hồi yêu cầu hủy
                                 </button>
                             </form>
-                        @elseif(Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                        @elseif(Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_canh == 1)
                             <div class="row">
                                 <div class="col-6">
                                     <a href="#">

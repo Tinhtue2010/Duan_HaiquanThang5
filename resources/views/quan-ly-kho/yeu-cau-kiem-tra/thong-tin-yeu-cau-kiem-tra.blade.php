@@ -96,7 +96,7 @@
                             @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                     <hr />
                                     <h2 class="text-dark">Cập nhật trạng thái</h2>
                                     <div class="row mt-3">
@@ -148,7 +148,7 @@
                             @elseif(trim($yeuCau->trang_thai) == 'Đã duyệt')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/success.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc }}</h2>
+                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}</h2>
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $yeuCau->ma_doanh_nghiep)
@@ -173,30 +173,11 @@
                                             </a>
                                         </div>
                                     </div>
-                                @elseif(Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
-                                    <center>
-                                        <div class="col-6">
-                                            <a href="#">
-                                                <button data-bs-toggle="modal" data-bs-target="#duyetDaHoanThanhModal"
-                                                    class="btn btn-success ">
-                                                    <img class="side-bar-icon"
-                                                        src="{{ asset('images/icons/approved2.png') }}">
-                                                    Đã hoàn thành yêu cầu</button>
-                                            </a>
-                                        </div>
-                                    </center>
                                 @endif
-                            @elseif(trim($yeuCau->trang_thai) == 'Đã hoàn thành')
-                                <h2 class="text-success">Đã hoàn thành yêu cầu</h2>
-                                <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
-                                <h2 class="text-primary">Công chức phụ trách:
-                                    {{ $yeuCau->congChuc->ten_cong_chuc ?? '' }}</h2>
-                                <h2 class="text-success">Ngày duyệt:
-                                    {{ \Carbon\Carbon::parse($yeuCau->ngay_duyet)->format('d-m-Y') }}</h2>
                             @elseif(trim($yeuCau->trang_thai) == 'Doanh nghiệp đề nghị sửa yêu cầu')
                                 <h2 class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc }}</h2>
+                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}</h2>
                                 <div class="row">
                                     <center>
                                         <div class="col-6">
@@ -219,7 +200,7 @@
                                 <h2 class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h3 class="text-dark">{{ $yeuCau->ghi_chu }}</h3>
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                     <div class="row">
                                         <div class="col-6">
                                             <a href="#">
@@ -285,7 +266,7 @@
                                 <option></option>
                                 @foreach ($congChucs as $congChuc)
                                     <option value="{{ $congChuc->ma_cong_chuc }}">
-                                        {{ $congChuc->ten_cong_chuc }}
+                                        {{ $congChuc->ten_cong_chuc ?? '' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -363,7 +344,7 @@
                 <form action="{{ route('quan-ly-kho.huy-huy-yeu-cau-kiem-tra') }}" method="POST">
                     @csrf
                     <div class="modal-body text-danger">
-                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                             <p class="text-danger">Xác nhận từ chối đề nghị xin hủy của yêu cầu này?</p>
                         @else
                             <p class="text-danger">Xác nhận hủy đề nghị xin hủy của yêu cầu này?</p>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CongChuc;
+use App\Models\PhanQuyenBaoCao;
 use App\Models\TaiKhoan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -90,5 +91,25 @@ class CongChucController extends Controller
         }
         session()->flash('alert-danger', 'Có lỗi xảy ra');
         return redirect()->back();
+    }
+    public function phanQuyenBaoCao(Request $request)
+    {
+        $ma_cong_chuc = $request->ma_cong_chuc;
+        $congChuc = CongChuc::find($ma_cong_chuc);
+        $phanQuyens = PhanQuyenBaoCao::where('ma_cong_chuc', $ma_cong_chuc)->get();
+        foreach ($phanQuyens as $phanQuyen) {
+            $phanQuyen->phan_quyen = $request->input($phanQuyen->ma_bao_cao) ? 1 : 0;
+            $phanQuyen->save();
+
+        }
+        session()->flash('alert-success', 'Cập nhật thành công');
+        return redirect()->back();
+    }
+
+    public function getPhanQuyenBaoCao(Request $request)
+    {
+        $phanQuyens = PhanQuyenBaoCao::where('ma_cong_chuc', $request->ma_cong_chuc)
+            ->get();
+        return response()->json($phanQuyens);
     }
 }

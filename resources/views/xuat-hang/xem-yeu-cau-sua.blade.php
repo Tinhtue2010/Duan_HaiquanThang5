@@ -216,7 +216,7 @@
                                     </center>
                                 </div>
                             @endif
-                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
+                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
                                 <div class="row mt-3">
                                     <div class="col-6">
                                         <a href="#">

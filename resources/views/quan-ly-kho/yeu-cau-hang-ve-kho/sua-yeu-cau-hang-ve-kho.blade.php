@@ -15,7 +15,7 @@
                 <p>
                     < Quay lại quản lý yêu cầu đưa hàng trở lại kho ban đầu</p>
             </a>
-            <h2>Thêm yêu cầu đưa hàng trở lại kho ban đầu</h2>
+            <h2>Sửa yêu cầu đưa hàng trở lại kho ban đầu</h2>
             <div class="row">
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
@@ -44,8 +44,7 @@
                                         @foreach ($toKhaiNhaps as $toKhaiNhap)
                                             <option value="{{ $toKhaiNhap->so_to_khai_nhap }}">
                                                 {{ $toKhaiNhap->so_to_khai_nhap }} (Ngày đăng ký:
-                                                {{ \Carbon\Carbon::parse($toKhaiNhap->ngay_dang_ky)->format('d-m-Y') }},
-                                                Container {{ $toKhaiNhap->so_container }})
+                                                {{ \Carbon\Carbon::parse($toKhaiNhap->ngay_dang_ky)->format('d-m-Y') }})
                                             </option>
                                             </option>
                                         @endforeach
@@ -64,6 +63,7 @@
                     <tr>
                         <th>STT</th>
                         <th>Số tờ khai</th>
+                        <th>Số container</th>
                         <th>Tên hàng</th>
                         <th>Phương tiện vận tải</th>
                         <th style="display: none;">Mã PTVT</th>
@@ -136,26 +136,22 @@
 
         document.addEventListener('DOMContentLoaded', function() {
 
-            let ten_ptvt = '';
-            // Populate table with chiTiets data
             chiTiets.forEach(chiTiet => {
-                const so_ptvt_xuat_canh = chiTiet.ten_
                 rowIndex++;
-                const hangHoas = chiTiet.hang_hoa ? chiTiet.hang_hoa.map(h => h
-                        .ten_hang).join('<br>') :
-                    'Không có hàng hóa';
 
                 const newRow = `
                     <tr data-index="${rowIndex}">
                         <td class="text-center">${rowIndex}</td>
                         <td class="text-center">${chiTiet.so_to_khai_nhap}</td>
-                        <td>${hangHoas}</td>
+                        <td>${chiTiet.so_container}</td>
+                        <td>${chiTiet.ten_hang}</td>
                         <td class="text-center">${chiTiet.ten_phuong_tien_vt}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
                     </tr>
                 `;
+
                 tableBody.insertAdjacentHTML('beforeend', newRow);
             });
 
@@ -163,12 +159,12 @@
         // Add a new row
         addRowButton.addEventListener('click', function() {
             const dropdown = document.getElementById('so-to-khai-nhap-dropdown-search');
-                const ptvt_xc = document.getElementById('ten_phuong_tien_vt');
-                // const selectedText = ptvt_xc.options[ptvt_xc.selectedIndex].text;
+            const ptvt_xc = document.getElementById('ten_phuong_tien_vt');
+            // const selectedText = ptvt_xc.options[ptvt_xc.selectedIndex].text;
 
-                const soToKhaiNhap = dropdown.value;
-                const PTVTXC_Value = ptvt_xc.value;
-                const selectedText = PTVTXC_Value;
+            const soToKhaiNhap = dropdown.value;
+            const PTVTXC_Value = ptvt_xc.value;
+            const selectedText = PTVTXC_Value;
             if (soToKhaiNhap === '') {
                 alert('Vui lòng chọn số tờ khai nhập');
                 return;
@@ -192,37 +188,47 @@
             const selectedToKhaiNhap = toKhaiNhaps.find(
                 item => item.so_to_khai_nhap.toString().trim() === soToKhaiNhap.toString().trim()
             );
-            const hangHoas = selectedToKhaiNhap ? selectedToKhaiNhap.hang_hoa.map(h => h.ten_hang).join(
-                '<br>') : 'Không có hàng hóa';
+            getYeuCauTableData();
 
-            // Create a new table row
-            const newRow = `
-                    <tr data-index="${rowIndex}">
-                        <td class="text-center">${rowIndex}</td>
-                        <td class="text-center">${soToKhaiNhap}</td>
-                        <td>${hangHoas}</td>
-                        <td>${selectedText}</td>
-                        <td style="display: none;">${PTVTXC_Value}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                        </td>
-                    </tr>
-                `;
-            tableBody.insertAdjacentHTML('beforeend', newRow);
-        });
-
-        // Delete a row
-        tableBody.addEventListener('click', function(e) {
-            if (e.target.classList.contains('deleteRowButton')) {
-                const row = e.target.closest('tr');
-                row.remove();
-
-                // Reorder the STT column after deletion
-                Array.from(tableBody.querySelectorAll('tr')).forEach((tr, index) => {
-                    tr.querySelector('td:first-child').textContent = index + 1;
+            function getYeuCauTableData() {
+                let rowsData = $("#rowsDataInput").val();
+                $.ajax({
+                    url: "/get-hang-trong-to-khai", // Laravel route
+                    type: "GET",
+                    contentType: "application/json",
+                    data: {
+                        so_to_khai_nhap: soToKhaiNhap
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content') // For Laravel CSRF protection
+                    },
+                    success: function(response) {
+                        updateTable(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error:", error);
+                    }
                 });
+            }
 
-                rowIndex--;
+            function updateTable(data) {
+                let tableBody = $("#displayTableYeuCau tbody");
+                data.forEach((item, index) => {
+                    let row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${soToKhaiNhap}</td>
+                            <td>${item.so_container}</td>
+                            <td>${item.hang_hoa}</td>
+                            <td>${PTVTXC_Value}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
             }
         });
 
@@ -232,7 +238,8 @@
                 return {
                     stt: row.querySelector('td:nth-child(1)').textContent.trim(),
                     so_to_khai_nhap: row.querySelector('td:nth-child(2)').textContent.trim(),
-                    ten_phuong_tien_vt: row.querySelector('td:nth-child(4)').textContent.trim()
+                    so_container: row.querySelector('td:nth-child(3)').textContent.trim(),
+                    ten_phuong_tien_vt: row.querySelector('td:nth-child(5)').textContent.trim()
                 };
             });
             const rowCount = $('#displayTableYeuCau tbody tr').length;
@@ -243,21 +250,29 @@
             rowsDataInput.value = JSON.stringify(rowsData);
             $('#xacNhanModal').modal('show');
         });
+        tableBody.addEventListener('click', function(e) {
+            if (e.target.classList.contains('deleteRowButton')) {
+                const row = e.target.closest('tr');
+                if (!row) return;
+
+                // Get the text from the second column of the clicked row
+                const soToKhaiNhapValue = row.children[1].textContent.trim();
+
+                // Remove all rows with the same second column value
+                Array.from(tableBody.querySelectorAll('tr')).forEach((tr) => {
+                    if (tr.children[1].textContent.trim() === soToKhaiNhapValue) {
+                        tr.remove();
+                    }
+                });
+
+                // Reorder the STT column after deletion
+                Array.from(tableBody.querySelectorAll('tr')).forEach((tr, index) => {
+                    tr.querySelector('td:first-child').textContent = index + 1;
+                });
+            }
+        });
     </script>
 
-    <script>
-        function updateRowsData() {
-            const rows = $('#displayTableYeuCau tbody tr').map(function() {
-                const cells = $(this).find('td');
-                return {
-                    so_to_khai_nhap: $(this).find('td').eq(1).text(),
-                    ten_hang_hoa: $(this).find('td').eq(3).text(),
-                };
-            }).get();
-
-            $('#rowsDataInput').val(JSON.stringify(rows));
-        }
-    </script>
     <script>
         $(document).ready(function() {
             $('#chonHangTheoToKhaiModal').on('shown.bs.modal', function() {

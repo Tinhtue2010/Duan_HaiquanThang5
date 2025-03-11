@@ -20,6 +20,7 @@ use App\Models\TheoDoiHangHoa;
 use App\Models\TheoDoiTruLui;
 use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\YCTauContMaHangContMoi;
+use App\Models\YeuCauContainerChiTiet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -36,23 +37,28 @@ class YeuCauTauContController extends Controller
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
             $data = YeuCauTauCont::join('nhap_hang', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
                 ->join('doanh_nghiep', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('yeu_cau_tau_cont_chi_tiet','yeu_cau_tau_cont_chi_tiet.ma_yeu_cau','yeu_cau_tau_cont.ma_yeu_cau')
                 ->select(
                     'doanh_nghiep.*',
                     'yeu_cau_tau_cont.*',
+                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
                 )
-                ->distinct()  // Ensure unique rows
+                ->groupBy('yeu_cau_tau_cont.ma_yeu_cau')
                 ->orderBy('ma_yeu_cau', 'desc')
                 ->get();
         } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
             $data = YeuCauTauCont::join('nhap_hang', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
                 ->join('doanh_nghiep', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('yeu_cau_tau_cont_chi_tiet','yeu_cau_tau_cont_chi_tiet.ma_yeu_cau','yeu_cau_tau_cont.ma_yeu_cau')
                 ->where('yeu_cau_tau_cont.ma_doanh_nghiep', $maDoanhNghiep)
                 ->select(
                     'doanh_nghiep.*',
                     'yeu_cau_tau_cont.*',
+                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+
                 )
-                ->distinct()  // Ensure unique rows
+                ->groupBy('yeu_cau_tau_cont.ma_yeu_cau')
                 ->orderBy('ma_yeu_cau', 'desc')
                 ->get();
         }
@@ -74,13 +80,18 @@ class YeuCauTauContController extends Controller
             $toKhaiDangXuLys = YeuCauTauContChiTiet::join('nhap_hang', 'yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_tau_cont', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_tau_cont.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_tau_cont.trang_thai', '!=', "Đã hủy")
-                ->where('yeu_cau_tau_cont.trang_thai', '!=', "Đã duyệt")
+                ->where('yeu_cau_tau_cont.trang_thai', "Đang chờ duyệt")
                 ->pluck('yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap');
+            $toKhaiDangXuLyConts = YeuCauContainerChiTiet::join('nhap_hang', 'yeu_cau_container_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                ->join('yeu_cau_chuyen_container', 'yeu_cau_container_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_chuyen_container.ma_yeu_cau')
+                ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
+                ->where('yeu_cau_chuyen_container.trang_thai', "Đang chờ duyệt")
+                ->pluck('yeu_cau_container_chi_tiet.so_to_khai_nhap');
 
             $toKhaiNhaps = NhapHang::where('nhap_hang.trang_thai', 'Đã nhập hàng')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
+                ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLyConts)
                 ->get();
 
             return view('quan-ly-kho.yeu-cau-tau-cont.them-yeu-cau-tau-cont', data: compact('toKhaiNhaps', 'doanhNghiep', 'soContainers'));
@@ -126,7 +137,6 @@ class YeuCauTauContController extends Controller
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
-                    ->distinct()
                     ->sum('hang_trong_cont.so_luong');
 
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -199,7 +209,6 @@ class YeuCauTauContController extends Controller
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
-                ->distinct()
                 ->sum('hang_trong_cont.so_luong');
 
             $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -388,6 +397,11 @@ class YeuCauTauContController extends Controller
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->where('yeu_cau_tau_cont.trang_thai', "Đang chờ duyệt")
                 ->pluck('yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap');
+            $toKhaiDangXuLyConts = YeuCauContainerChiTiet::join('nhap_hang', 'yeu_cau_container_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                ->join('yeu_cau_chuyen_container', 'yeu_cau_container_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_chuyen_container.ma_yeu_cau')
+                ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
+                ->where('yeu_cau_chuyen_container.trang_thai', "Đang chờ duyệt")
+                ->pluck('yeu_cau_container_chi_tiet.so_to_khai_nhap');
 
             $toKhaiTrongPhieu = YeuCauTauContChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');
             $toKhaiDangXuLys = $toKhaiDangXuLys->diff($toKhaiTrongPhieu);
@@ -395,6 +409,7 @@ class YeuCauTauContController extends Controller
             $toKhaiNhaps = NhapHang::where('nhap_hang.trang_thai', 'Đã nhập hàng')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
+                ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLyConts)
                 ->get();
             $chiTiets = YeuCauTauContChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
             $chiTietHangHoas = YeuCauTauContHangHoa::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_chi_tiet', '=', 'yeu_cau_tau_cont_hang_hoa.ma_chi_tiet')
@@ -757,7 +772,6 @@ class YeuCauTauContController extends Controller
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
-                ->distinct()
                 ->sum('hang_trong_cont.so_luong');
 
             $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -815,7 +829,7 @@ class YeuCauTauContController extends Controller
         $chiTiets = YeuCauTauContChiTiet::with('yeuCauTauContHangHoa')->where('ma_yeu_cau', $ma_yeu_cau)->get();
         $sealMois = SealMoiTauCont::where('ma_yeu_cau', $ma_yeu_cau)->get();
         $seals = Seal::where('seal.trang_thai', 0)->get();
-        $congChucs = CongChuc::where('is_chi_xem',0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
         return view('quan-ly-kho.yeu-cau-tau-cont.thong-tin-yeu-cau-tau-cont', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'sealMois', 'seals', 'congChucs')); // Pass data to the view
     }
     public function duyetYeuCauTauCont(Request $request)

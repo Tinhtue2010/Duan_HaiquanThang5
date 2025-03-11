@@ -45,6 +45,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                 'xuat_hang.lan_xuat_canh',
                 'xuat_hang.ma_loai_hinh',
                 'xuat_hang_cont.so_luong_xuat',
+                'xuat_hang_cont.so_container',
                 'xuat_hang.trang_thai',
                 'xuat_hang.ngay_xuat_canh',
                 'xuat_hang.ten_phuong_tien_vt',
@@ -54,8 +55,8 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
 
         $doanhNghiep = DoanhNghiep::find($this->ma_doanh_nghiep);
         $result = [
-            ['CỤC HẢI QUAN TỈNH QUẢNG NINH'],
-            ['CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA'],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII'],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA'],
             ['', '', '', '', '', ''],
             ['BÁO CÁO PHIẾU XUẤT CỦA DOANH NGHIỆP', '', '', '', '', ''],
             ["Từ $this->tu_ngay đến $this->den_ngay ", '', '', '', '', ''], // Updated line
@@ -63,7 +64,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
             ['Mã doanh nghiệp: ' . $this->ma_doanh_nghiep, '', '', '', '', ''],
             ['Tên doanh nghiệp: ' . $doanhNghiep->ten_doanh_nghiep, '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['Stt', 'Số tờ khai', 'Tên hàng', 'Đơn vị tính', 'Số lượng', 'Lần xuất cảnh', 'Loại hình', 'Số lượng xuất', 'Phương tiện nhận hàng', 'Trạng thái', 'Ngày xuất hàng'],
+            ['Stt', 'Số tờ khai', 'Tên hàng', 'Đơn vị tính', 'Số lượng', 'Lần xuất cảnh', 'Loại hình', 'Số lượng xuất', 'Phương tiện nhận hàng', 'Trạng thái', 'Ngày xuất hàng','Số container'],
         ];
 
         $stt = 1;
@@ -85,6 +86,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                 $item->ten_phuong_tien_vt,
                 $item->trang_thai,
                 isset($item->ngay_xuat_canh) ? Carbon::parse($item->ngay_xuat_canh)->format('d-m-Y') : '',
+                $item->so_container,
             ];
         }
         return $result;
@@ -101,7 +103,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:K' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:L' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -119,6 +121,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                 }
                 $sheet->getColumnDimension('A')->setWidth(width: 5);
                 $sheet->getColumnDimension('C')->setWidth(width: 38);
+                $sheet->getColumnDimension('L')->setWidth(width: 20);
                 $sheet->getStyle('B')->getNumberFormat()->setFormatCode('0');
                 $sheet->getStyle('E')->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getStyle('H')->getNumberFormat()->setFormatCode('#,##0');
@@ -130,29 +133,29 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                 $sheet->mergeCells('A1:C1'); // CỤC HẢI QUAN
                 $sheet->mergeCells('D1:F1'); // CỘNG HÒA
                 $sheet->mergeCells('A2:C2');
-                $sheet->mergeCells('A4:K4'); // BÁO CÁO
-                $sheet->mergeCells('A5:K5'); // Tính đến ngày
+                $sheet->mergeCells('A4:L4'); // BÁO CÁO
+                $sheet->mergeCells('A5:L5'); // Tính đến ngày
                 $sheet->mergeCells('A7:F7'); // Mã doanh nghiệp
                 $sheet->mergeCells('A8:E8'); // Tên doanh nghiệp
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:K6')->applyFromArray([
+                $sheet->getStyle('A1:L6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:K6')->applyFromArray([
+                $sheet->getStyle('A2:L6')->applyFromArray([
                     'font' => ['bold' => true],
                 ]);
 
                 // Italic for date row
-                $sheet->getStyle('A5:K5')->applyFromArray([
+                $sheet->getStyle('A5:L5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A10:K10')->applyFromArray([
+                $sheet->getStyle('A10:L10')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -167,7 +170,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A10:K' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A10:L' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,

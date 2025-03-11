@@ -36,6 +36,12 @@
                                     STT
                                 </th>
                                 <th>
+                                    Số
+                                </th>
+                                <th>
+                                    Số tờ khai
+                                </th>
+                                <th>
                                     Doanh nghiệp
                                 </th>
                                 <th>
@@ -50,11 +56,13 @@
                                     <tr class="clickable-row"
                                         onclick="window.location='{{ route('quan-ly-kho.thong-tin-yeu-cau', $yeuCau->ma_yeu_cau) }}'">
                                         <td>{{ $index + 1 }}</td>
+                                        <td>{{ $yeuCau->ma_yeu_cau }}</td>
+                                        <td>{{ $yeuCau->so_to_khai_nhap_list }}</td>
                                         <td>{{ $yeuCau->ten_doanh_nghiep }}</td>
                                         <td>{{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</td>
                                         @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
                                             <td class="text-primary">{{ $yeuCau->trang_thai }}</td>
-                                        @elseif (trim($yeuCau->trang_thai) == 'Đã duyệt'|| trim($yeuCau->trang_thai) == 'Đã hoàn thành')
+                                        @elseif (trim($yeuCau->trang_thai) == 'Đã duyệt')
                                             <td class="text-success">{{ $yeuCau->trang_thai }}</td>
                                         @elseif (trim($yeuCau->trang_thai) == 'Doanh nghiệp đề nghị sửa yêu cầu')
                                             <td class="text-warning">{{ $yeuCau->trang_thai }}</td>
@@ -93,7 +101,7 @@
                         display: 'inline-block',
                         height: '40px'
                     });
-                    var column = this.api().column(3); // Status column index
+                    var column = this.api().column(5); // Status column index
                     var select = $(
                         '<select class="form-control"><option value="">TẤT CẢ</option></select>'
                     )
@@ -102,7 +110,6 @@
                         '<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>'
                     );
                     select.append('<option class="text-success" value="ĐÃ DUYỆT">ĐÃ DUYỆT</option>');
-                    select.append('<option class="text-success" value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>');
 
                     select.append(
                         '<option class="text-warning" value="DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU</option>'

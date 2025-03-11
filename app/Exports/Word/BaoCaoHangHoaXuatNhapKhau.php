@@ -46,7 +46,7 @@ class BaoCaoHangHoaXuatNhapKhau
         $headerTable->addRow();
         $cell1 = $headerTable->addCell(6000);
         $cell1->addText('CỤC HẢI QUAN TỈNH QUẢNG', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
-        $cell1->addText('CHI CỤC HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
+        $cell1->addText('HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
         $cell1->addText('Số:        /BC-HQ', ['size' => 12], ['alignment' => 'center']);
 
         // Second cell of the header
