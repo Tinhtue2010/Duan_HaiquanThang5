@@ -40,7 +40,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
-            ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+            ->where('nhap_hang.trang_thai', '2')
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',

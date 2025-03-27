@@ -121,11 +121,11 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
-            ->orderBy('xuat_hang.so_to_khai_xuat', 'asc') 
+            ->where('xuat_hang.trang_thai', '!=', '0')
+            ->orderBy('xuat_hang.so_to_khai_xuat', 'asc')
             ->pluck('xuat_hang.so_to_khai_xuat')
-            ->unique() 
-            ->values(); 
+            ->unique()
+            ->values();
 
 
         $soLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -147,6 +147,15 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
                 ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
                 ->join('xuat_hang', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
                 ->where('xuat_hang.so_to_khai_xuat', $soToKhaiXuat)
+                ->select(
+                    'xuat_hang.ngay_dang_ky',
+                    'xuat_hang_cont.phuong_tien_vt_nhap',
+                    'xuat_hang_cont.*',
+                    'hang_hoa.*',
+                    'hang_trong_cont.ma_hang',
+                    'hang_trong_cont.so_luong',
+                    'hang_trong_cont.is_da_chuyen_cont',
+                )
                 ->get();
 
             foreach ($lanXuats as $item) {

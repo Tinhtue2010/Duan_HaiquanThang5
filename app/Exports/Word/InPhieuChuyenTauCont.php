@@ -12,11 +12,11 @@ class InPhieuChuyenTauCont
 {
     public function inPhieuChuyenTauCont($ma_yeu_cau)
     {
-        $yeuCau = YeuCauTauCont::find( $ma_yeu_cau);
+        $yeuCau = YeuCauTauCont::find($ma_yeu_cau);
 
         $chiTiets = YeuCauTauContChiTiet::where('yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
             ->get();
-            
+
         $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('dmy');
         $currentDate = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau);
         $phpWord = new PhpWord();
@@ -45,7 +45,7 @@ class InPhieuChuyenTauCont
         $headerTable->addRow();
         $cell1 = $headerTable->addCell(6000);
         $cell1->addText($yeuCau->doanhNghiep->ten_doanh_nghiep ?? '', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
-        $cell1->addText('Số : '.$yeuCau->ma_yeu_cau.' – '.$date.' /CV', ['size' => 12], ['alignment' => 'center']);
+        $cell1->addText('Số : ' . $yeuCau->ma_yeu_cau . ' – ' . $date . ' /CV', ['size' => 12], ['alignment' => 'center']);
         $cell1->addLine(['weight' => 1, 'width' => 120, 'height' => 0, 'alignment' => 'center']);
         $cell1->addText('V/v: “chuyển hàng sang container mới, tàu mới  ”', ['italic' => true, 'size' => 12], ['alignment' => 'center']);
 
@@ -196,11 +196,14 @@ class InPhieuChuyenTauCont
         }
 
 
-
-        $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y');
-        $section->addText('          Đoàn tàu số: '.$yeuCau->ten_doan_tau, 'justify');
+        if($yeuCau->ngay_hoan_thanh){
+            $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y');
+        } else {
+            $date = '';
+        }
+        $section->addText('          Đoàn tàu số: ' . $yeuCau->ten_doan_tau, 'justify');
         $section->addText('          Thời gian thực hiện: Ngày ' . $date, 'justify');
-        $section->addText('          Đề nghị Quý Chi cục tạo điều kiện thuận lợi để Công ty thực hiện nội dung công việc như trên, chúng tôi cam kết chịu trách nhiệm bảo quản nguyên trạng hàng hóa, niêm phong hải quan theo đúng quy định.', [], 'justify');
+        $section->addText('          Đề nghị quý cơ quan tạo điều kiện thuận lợi để Công ty thực hiện nội dung công việc như trên, chúng tôi cam kết chịu trách nhiệm bảo quản nguyên trạng hàng hóa, niêm phong hải quan theo đúng quy định.', [], 'justify');
         $section->addText('Xin chân thành cảm ơn!', [], 'justify');
         $section->addTextBreak(1);
 
@@ -209,16 +212,18 @@ class InPhieuChuyenTauCont
         $headerTable2->addRow();
         $cell1 = $headerTable2->addCell(6000);
         $cell1->addText('Nơi nhận:', ['bold' => true]);
-        $cell1->addText('- Chi cục HQCK cảng VG (để b/c);');
+        $cell1->addText('- HQCK cảng Vạn Gia (để b/c);');
         $cell1->addText('- Lưu văn thư: 01 bản.');
+        if ($yeuCau->ngay_hoan_thanh) {
+            $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
+            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
 
-        $qrCodeText = 'Yêu cầu số '.$yeuCau->ma_yeu_cau.' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
-        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
+            $section->addImage($qrCodeUrl, [
+                'width' => 100,
+                'height' => 100,
+            ]);
+        }
 
-        $section->addImage($qrCodeUrl, [
-            'width' => 100,
-            'height' => 100,
-        ]);
 
         // Second cell of the header
         $cell2 = $headerTable2->addCell(6000);
@@ -241,7 +246,7 @@ class InPhieuChuyenTauCont
         $section->addText('ĐỘI KTGS và KS HẢI QUAN', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
         $section->addText('-2.  LĐ Đội KTGS và KSHQ');
         $section->addText('- Phân công Đ/C ...................................... thực hiện.');
-        $section->addText('- Đề xuất lãnh đạo Chi cục phê duyệt.');
+        $section->addText('- Đề xuất lãnh đạo phê duyệt.');
 
         $headerTable4 = $section->addTable(['cellMargin' => 0]);
         $headerTable4->addRow();
@@ -250,7 +255,7 @@ class InPhieuChuyenTauCont
         // $cell2->addText('KÝ, GHI RÕ HỌ TÊN', ['size' => 12], ['alignment' => 'center']);
         $section->addTextBreak(4);
 
-        $section->addText('Ý KIẾN PHÊ DUYỆT CỦA LÃNH ĐẠO CHI CỤC', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
+        $section->addText('Ý KIẾN PHÊ DUYỆT CỦA LÃNH ĐẠO', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
         $section->addText('Đồng ý đề xuất.', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
 
         // Save the document

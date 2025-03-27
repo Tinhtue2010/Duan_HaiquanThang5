@@ -150,15 +150,15 @@
                         '<select class="form-control"><option value="">TẤT CẢ</option></select>'
                     )
 
-                    select.append('<option class="text-success" value="ĐÃ DUYỆT">ĐÃ DUYỆT</option>');
+                    select.append('<option class="text-success" value="2">ĐÃ DUYỆT</option>');
                     select.append(
-                        '<option class="text-success" value="ĐÃ CHỌN PHƯƠNG TIỆN XUẤT CẢNH">ĐÃ CHỌN PHƯƠNG TIỆN XUẤT CẢNH</option>'
+                        '<option class="text-success" value="11">ĐÃ CHỌN PHƯƠNG TIỆN XUẤT CẢNH</option>'
                     );
                     select.append(
-                        '<option class="text-success" value="ĐÃ DUYỆT XUẤT HÀNG">ĐÃ DUYỆT XUẤT HÀNG</option>'
+                        '<option class="text-success" value="12">ĐÃ DUYỆT XUẤT HÀNG</option>'
                     );
                     select.append(
-                        '<option class="text-success" value="ĐÃ THỰC XUẤT HÀNG">ĐÃ THỰC XUẤT HÀNG</option>'
+                        '<option class="text-success" value="13">ĐÃ THỰC XUẤT HÀNG</option>'
                     );
                     $(column.header()).empty().append(select);
 

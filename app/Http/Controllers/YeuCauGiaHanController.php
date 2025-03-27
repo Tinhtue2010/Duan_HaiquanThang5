@@ -52,11 +52,11 @@ class YeuCauGiaHanController extends Controller
             $toKhaiDangXuLys = YeuCauGiaHanChiTiet::join('nhap_hang', 'yeu_cau_gia_han_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_gia_han', 'yeu_cau_gia_han_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_gia_han.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_gia_han.trang_thai', "Đang chờ duyệt")
+                ->where('yeu_cau_gia_han.trang_thai', "1")
                 ->pluck('yeu_cau_gia_han_chi_tiet.so_to_khai_nhap');
 
             $toKhaiNhaps = NhapHang::with('hangHoa')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+                ->where('nhap_hang.trang_thai', '2')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->where('nhap_hang.ma_loai_hinh', 'G21')
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
@@ -75,7 +75,7 @@ class YeuCauGiaHanController extends Controller
 
             $yeuCau = YeuCauGiaHan::create([
                 'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
-                'trang_thai' => 'Đang chờ duyệt',
+                'trang_thai' => '1',
                 'ngay_yeu_cau' => now()
             ]);
 
@@ -170,7 +170,7 @@ class YeuCauGiaHanController extends Controller
 
                 $yeuCau->ma_cong_chuc = $request->ma_cong_chuc;
                 $yeuCau->ngay_hoan_thanh = now();
-                $yeuCau->trang_thai = 'Đã duyệt';
+                $yeuCau->trang_thai = '2';
                 $yeuCau->save();
                 session()->flash('alert-success', 'Duyệt yêu cầu thành công!');
             }
@@ -210,7 +210,7 @@ class YeuCauGiaHanController extends Controller
     {
         $yeuCau = YeuCauGiaHan::find($ma_yeu_cau);
         if ($yeuCau) {
-            if ($yeuCau->trang_thai == "Đang chờ duyệt") {
+            if ($yeuCau->trang_thai == "1") {
 
                 $soToKhaiNhaps = YeuCauGiaHanChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');
 
@@ -228,7 +228,7 @@ class YeuCauGiaHanController extends Controller
                         $this->themTienTrinh($soToKhaiNhap, "Hệ thống đã hủy yêu cầu gia hạn tờ khai số " . $ma_yeu_cau . $ly_do, '');
                     }
                 }
-                $yeuCau->trang_thai = 'Đã hủy';
+                $yeuCau->trang_thai = '0';
                 $yeuCau->ghi_chu = $ghi_chu;
                 $yeuCau->save();
             }
@@ -244,19 +244,19 @@ class YeuCauGiaHanController extends Controller
             $toKhaiDangXuLys = YeuCauGiaHanChiTiet::join('nhap_hang', 'yeu_cau_gia_han_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_gia_han', 'yeu_cau_gia_han_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_gia_han.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_gia_han.trang_thai', "Đang chờ duyệt")
+                ->where('yeu_cau_gia_han.trang_thai', "1")
                 ->pluck('yeu_cau_gia_han_chi_tiet.so_to_khai_nhap');
 
             $toKhaiTrongPhieu = YeuCauGiaHanChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');
             $toKhaiDangXuLys = $toKhaiDangXuLys->diff($toKhaiTrongPhieu);
             $toKhaiNhaps = NhapHang::with('hangHoa')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+                ->where('nhap_hang.trang_thai', '2')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->where('nhap_hang.ma_loai_hinh', 'G21')
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
             $chiTiets = NhapHang::with('hangHoa')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+                ->where('nhap_hang.trang_thai', '2')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereIn('nhap_hang.so_to_khai_nhap', $toKhaiTrongPhieu)
                 ->get();

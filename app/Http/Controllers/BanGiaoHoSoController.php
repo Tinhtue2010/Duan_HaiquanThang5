@@ -52,7 +52,7 @@ class BanGiaoHoSoController extends Controller
                         'so_to_khai_nhap' => $nhapHang->so_to_khai_nhap
                     ]);
                     $nhapHang->update([
-                        'trang_thai' => 'Đã bàn giao hồ sơ',
+                        'trang_thai' => '7',
                     ]);
                 }
 

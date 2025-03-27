@@ -20,7 +20,15 @@
                 <p>
                     < Quay lại quản lý yêu cầu niêm phong</p>
             </a>
-            <h2>Thêm yêu cầu niêm phong</h2>
+            <div class="row">
+                <div class="col-9">
+                    <h2>Thêm yêu cầu niêm phong</h2>
+                </div>
+                <div class="col-3 ">
+                    <button type="button" id="addContainer" class="btn btn-primary mt-2 float-end">Chọn nhanh</button>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
@@ -165,6 +173,32 @@
                 // Update the hidden input with JSON data
                 rowsDataInput.value = JSON.stringify(rowsData);
                 $('#xacNhanModal').modal('show');
+            });
+        });
+        document.getElementById("addContainer").addEventListener("click", function() {
+            $.ajax({
+                url: "{{ route('quan-ly-kho.get-so-container') }}", // Adjust with your route
+                type: "GET",
+                success: function(response) {
+                    console.log(response);
+                    let tbody = $("#displayTableYeuCau tbody");
+                    tbody.empty();
+                    if (response.containers && response.containers.length > 0) {
+                        $.each(response.containers, function(index, item) {
+                            tbody.append(`
+                                <tr>
+=                                    <td>${index + 1}</td>
+                                     <td>${item}</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        tbody.append('<tr><td colspan="2">Không có dữ liệu</td></tr>');
+                    }
+                }
             });
         });
     </script>

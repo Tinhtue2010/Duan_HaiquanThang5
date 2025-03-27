@@ -90,29 +90,27 @@
                         <tbody>
                             {{-- Load các dòng hàng ngay từ đầu --}}
                             @foreach ($containers as $index => $container)
-                                @if ($container->so_luong != 0)
-                                    <tr class="container-row" style="display: none;"
-                                        data-so-to-khai="{{ $container->so_to_khai_nhap }}"
-                                        data-item="{{ json_encode($container) }}">
-                                        <td style="display: none;">{{ $index + 1 }}</td>
-                                        <td>{{ $container->so_to_khai_nhap }}</td>
-                                        <td style="display: none;">{{ $container->ma_hang_cont }}</td>
-                                        <td>{{ $container->ten_hang }}</td>
-                                        <td>{{ $container->xuat_xu }}</td>
-                                        <td>{{ $container->don_vi_tinh }}</td>
-                                        <td>{{ $container->don_gia }}</td>
-                                        <td>{{ $container->so_container }}</td>
-                                        <td class="remaining-quantity">
-                                            {{ $container->so_luong + $container->so_luong_xuat }}</td>
-                                        <td>
-                                            <center>
-                                                <input type="number" class="form-control so_luong_xuat_input"
-                                                    id="so_luong_xuat_input" min="0" placeholder="0"
-                                                    style="width: 80px;" oninput="this.value = Math.abs(this.value)">
-                                            </center>
-                                        </td>
-                                    </tr>
-                                @endif
+                                <tr class="container-row" style="display: none;"
+                                    data-so-to-khai="{{ $container->so_to_khai_nhap }}"
+                                    data-item="{{ json_encode($container) }}">
+                                    <td style="display: none;">{{ $index + 1 }}</td>
+                                    <td>{{ $container->so_to_khai_nhap }}</td>
+                                    <td style="display: none;">{{ $container->ma_hang_cont }}</td>
+                                    <td>{{ $container->ten_hang }}</td>
+                                    <td>{{ $container->xuat_xu }}</td>
+                                    <td>{{ $container->don_vi_tinh }}</td>
+                                    <td>{{ $container->don_gia }}</td>
+                                    <td>{{ $container->so_container }}</td>
+                                    <td class="remaining-quantity">
+                                        {{ $container->so_luong + $container->so_luong_xuat }}</td>
+                                    <td>
+                                        <center>
+                                            <input type="number" class="form-control so_luong_xuat_input"
+                                                id="so_luong_xuat_input" min="0" placeholder="0" style="width: 80px;"
+                                                oninput="this.value = Math.abs(this.value)">
+                                        </center>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -141,6 +139,9 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $totalSoLuongXuat = $xuatHangConts->sum('so_luong_xuat');
+                            @endphp
                             @foreach ($xuatHangConts as $xuatHangCont)
                                 <tr data-ma-hang-cont="{{ $xuatHangCont->ma_hang_cont }}">
                                     <td style="display: none;">{{ $xuatHangCont->ma_hang_cont }}</td>
@@ -155,9 +156,16 @@
                                     <td class="text-center">
                                         <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                                     </td>
-                                <tr>
+                                </tr>
                             @endforeach
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7"><strong>Tổng:</strong></td>
+                                <td id="totalQty">{{ $totalSoLuongXuat }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -372,6 +380,8 @@
                 }
             });
 
+
+
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             let invalidEntry = false; // Flag to check invalid rows
             nhapYeuCauButton.addEventListener('click', function() {
@@ -435,6 +445,18 @@
                 $('#xacNhanModal').modal('show');
             });
 
+            function calculateTotal() {
+                let total = 0;
+                document.querySelectorAll("#xuatHangCont tbody tr").forEach(row => {
+                    let quantityCell = row.cells[8]; // 9th column (zero-based index)
+                    let quantity = parseFloat(quantityCell.textContent || quantityCell.querySelector(
+                        "input")?.value || 0);
+                    total += isNaN(quantity) ? 0 : quantity;
+                });
+
+                // Update the total in <tfoot>
+                document.getElementById("totalQty").textContent = total;
+            }
 
             $("#chonXuatBtn").click(function() {
                 $(".container-row").each(function() {
@@ -480,15 +502,15 @@
                         }
 
                         inputField.val("");
+                        calculateTotal();
                     }
                 });
             });
 
             $(document).on("click", ".deleteRowButton", function() {
                 $(this).closest("tr").remove(); // Remove the closest row when clicking "Xóa"
-
+                calculateTotal();
             });
-
         });
     </script>
     <script>

@@ -64,7 +64,7 @@
                                 <th>Số tờ khai tại container mới</th>
                                 <th>Số lượng tồn trong container (kiện)</th>
                                 <th>Tổng hàng hóa sau khi chuyển (kiện)</th>
-                                @if ($yeuCau->trang_thai == 'Đã duyệt')
+                                @if ($yeuCau->trang_thai == '2')
                                     <th>Thao tác</th>
                                 @endif
                             </tr>
@@ -82,7 +82,7 @@
                                     </td>
                                     <td>{{ $chiTiet->so_luong_ton_cont_moi }}</td>
                                     <td>{{ $chiTiet->so_luong_chuyen + $chiTiet->so_luong_ton_cont_moi }}</td>
-                                    @if ($yeuCau->trang_thai == 'Đã duyệt')
+                                    @if ($yeuCau->trang_thai == '2')
                                         <td>
                                             <a
                                                 href="{{ route('export.theo-doi-tru-lui', ['so_to_khai_nhap' => $chiTiet->so_to_khai_nhap]) }}">

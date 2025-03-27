@@ -61,7 +61,7 @@ class BaoCaoCapHai implements FromArray, WithEvents
             $subResult = [];
             $xuatHangs = XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
                 ->join('ptvt_xuat_canh_cua_phieu', 'xuat_hang.so_to_khai_xuat', '=', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat')
-                ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+                ->where('xuat_hang.trang_thai', '!=', '0')
                 ->where('xuat_hang.ngay_dang_ky', $this->tu_ngay)
                 ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
                 ->select(

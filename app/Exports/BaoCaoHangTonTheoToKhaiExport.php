@@ -66,7 +66,7 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
-            ->whereNotIn('xuat_hang.trang_thai',['Đã hủy','Đang chờ duyệt'])
+            ->whereNotIn('xuat_hang.trang_thai',['0','1'])
             ->get();
 
 

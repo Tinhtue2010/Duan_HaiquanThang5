@@ -29,17 +29,17 @@
                 @endif
 
                 <div class="col-6">
-                    @if (trim($xuatHang->trang_thai) == 'Đang chờ duyệt')
+                    @if (trim($xuatHang->trang_thai) == '1')
                         <a class="return-link" href="/quan-ly-xuat-hang">
                             <p>
                                 < Quay lại quản lý xuất hàng </p>
                         </a>
-                    @elseif(trim($xuatHang->trang_thai) == 'Đã duyệt')
+                    @elseif(trim($xuatHang->trang_thai) == '2')
                         <a class="return-link" href="/to-khai-da-xuat-hang">
                             <p>
                                 < Quay lại quản lý phiếu đã duyệt </p>
                         </a>
-                    @elseif(trim($xuatHang->trang_thai) == 'Đã hủy')
+                    @elseif(trim($xuatHang->trang_thai) == '0')
                         <a class="return-link" href="/to-khai-xuat-da-huy">
                             <p>
                                 < Quay lại quản lý phiếu xuất đã hủy </p>
@@ -51,7 +51,7 @@
                     {{-- <a href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
                         <button class="btn btn-success float-end mx-1">Xuất Excel </button>
                     </a> --}}
-                    @if (trim($xuatHang->trang_thai) == 'Đã duyệt')
+                    @if (trim($xuatHang->trang_thai) == '2')
                         <button onclick="printToKhai('divPrint')" class="btn btn-success float-end">In phiếu xuất</button>
                     @endif
                     <a href="{{ route('nhap-hang.show', ['so_to_khai_nhap' => $xuatHang->so_to_khai_nhap]) }}">
@@ -142,7 +142,7 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-                            @if (trim($xuatHang->trang_thai) == 'Đang chờ duyệt')
+                            @if (trim($xuatHang->trang_thai) == '1')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
@@ -195,7 +195,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã duyệt')
+                            @elseif(trim($xuatHang->trang_thai) == '2')
                                 <h2 class="text-warning">Đã duyệt</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/waiting-for-goods.png') }}">
                                 <h2 class="">Ngày duyệt:
@@ -214,12 +214,12 @@
                                         </a>
                                     </div>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã duyệt')
+                            @elseif(trim($xuatHang->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-success">Ngày xuất hàng:
                                     {{ \Carbon\Carbon::parse($xuatHang->ngay_xuat_canh)->format('d-m-Y') }}</h2>
-                            @elseif(trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt' || trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt')
+                            @elseif(trim($xuatHang->trang_thai) == '3' || trim($xuatHang->trang_thai) == '4')
                                 <h2 class="text-warning">Doanh nghiệp yêu cầu sửa phiếu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
@@ -248,7 +248,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã hủy')
+                            @elseif(trim($xuatHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h2 class="text-danger">Ngày hủy:

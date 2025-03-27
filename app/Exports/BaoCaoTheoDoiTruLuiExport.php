@@ -132,10 +132,11 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
             '8',
             '9',
         ];
-
+        $sum = 0;
         $stt = 1;
         foreach ($theoDoiChiTiet as $item) {
             if ($item->so_luong_chua_xuat != 0) {
+                $containers = explode(';', $nhapHang->container_ban_dau);
                 $result[] = [
                     $stt++,
                     '',
@@ -147,13 +148,13 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
                     $item->so_seal ?? '',
                     '',
-                    $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                    in_array($item->so_container, $containers) ? '' : $item->so_container,
                     '',
                 ];
+                $sum += $item->so_luong_chua_xuat;
             }
         }
-
-
+        $result[] = ['', '', '', 'Tổng cộng', '', '', '', $sum, '', '', ''];
         $result[] = [
             [''],
             [''],
@@ -317,12 +318,12 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                 ]);
 
 
-                $sheet->mergeCells('B' . $secondTableStart + 2 . ':B' . $lastStart - 3);
+                $sheet->mergeCells('B' . $secondTableStart + 2 . ':B' . $lastStart - 4);
                 $sheet->setCellValue('B' . $secondTableStart + 2, $tenCongViec);
-                $sheet->mergeCells('C' . $secondTableStart + 2 . ':C' . $lastStart - 3);
+                $sheet->mergeCells('C' . $secondTableStart + 2 . ':C' . $lastStart - 4);
                 $sheet->setCellValue('C' . $secondTableStart + 2, $this->theoDoi->so_ptvt_nuoc_ngoai);
 
-                $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 3);
+                $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 4);
                 $sheet->setCellValue('J' . $secondTableStart + 2, $this->theoDoi->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $this->theoDoi->phuong_tien_vt_nhap);
 
 
@@ -333,14 +334,14 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     ]
                 ]);
 
-
-                $sheet->getStyle('A' . $lastStart . ':L' . ($lastStart + 1))->applyFromArray([
+                $sheet->getStyle('A' . ($lastStart - 3) . ':L' . ($lastStart - 3))->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
+
                 $sheet->getStyle('A' . ($lastStart + 1) . ':L' . ($lastStart + 1))->getFont()->setItalic(true)->setBold(false);
                 $sheet->mergeCells('B' . $lastStart . ':C' . ($lastStart));
                 $sheet->mergeCells('B' . $lastStart + 1 . ':C' . ($lastStart + 1));

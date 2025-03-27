@@ -40,7 +40,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
         $xuatHang = XuatHang::find($this->so_to_khai_xuat);
         $this->xuatHang = $xuatHang;
         $this->ptvts = $xuatHang->ten_phuong_tien_vt;
-
+        $sumSoLuongXuat = 0;
         $data = [];
 
         // First, get all XuatHangConts with their related hang_hoa and hang_trong_cont data
@@ -72,7 +72,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
             ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
             ->whereIn('hang_hoa.ma_hang', $maHangList)
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->select(
                 'xuat_hang_cont.ma_xuat_hang_cont',
                 'xuat_hang_cont.ma_hang_cont',
@@ -132,6 +132,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
                         $record->so_container,
                         $record->ten_phuong_tien_vt,
                     ];
+                    $sumSoLuongXuat += $record->so_luong_xuat;
                 }
 
                 // Update exported quantity for this ma_hang
@@ -143,6 +144,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
 
 
 
+        $data[] = ['Tổng cộng','','','','','','',$sumSoLuongXuat];
         $data[] = ['Ghi chú: Công ty chúng tôi cam kết chịu trách nhiệm trước pháp luật đối với các nội dung thông tin khai báo như trên.'];
 
         $data[] = [''];
@@ -196,14 +198,13 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
             ->setFooter(0.3);
 
         $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
+        $sheet->getParent()->getDefaultStyle()->getFont()->setSize(14);
 
         $currentDate = Carbon::now()->format('d');  // Day of the month
         $currentMonth = Carbon::now()->format('m'); // Month number
         $currentYear = Carbon::now()->format('Y');  // Year
         $ngay_dang_ky = Carbon::parse($this->xuatHang->ngay_dang_ky)->format('d/m/Y');
 
-
-        $sheet->getParent()->getDefaultStyle()->getFont()->setSize(12);
         $sheet->getStyle('G')->getNumberFormat()->setFormatCode('#,##0');
         //1
         $sheet->mergeCells('A1:K1');
@@ -219,7 +220,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
         $sheet->mergeCells('A4:L4');
         $sheet->setCellValue('A4', "Ngày $currentDate tháng $currentMonth năm $currentYear");
         //5
-        $sheet->getRowDimension(5)->setRowHeight(height: 45);
+        $sheet->getRowDimension(5)->setRowHeight(height: 55);
         $sheet->getStyle('A5:L5')->getFont()->setBold(true);
 
         $sheet->getColumnDimension('A')->setWidth(width: 6);
@@ -252,11 +253,15 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
                 break;
             }
         }
+
+        $totalPos = $secondStart - 1;
         $sheet->mergeCells("A{$secondStart}:L{$secondStart}");
+        $sheet->mergeCells("A{$totalPos}:G{$totalPos}");
+        $this->centerCell($sheet, 'A'. $totalPos.':G' . $totalPos);
 
 
         $sheet->getStyle('A' . $secondStart . ':L' . $secondStart)->applyFromArray([
-            'font' => ['italic' => true, 'size' => 10, 'name' => 'Times New Roman'],
+            'font' => ['italic' => true, 'size' => 14, 'name' => 'Times New Roman'],
         ]);
 
         $this->centerCell($sheet, 'A5:L' . $lastRow);
@@ -310,7 +315,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
     {
         $drawings = []; // Array to store both QR code and barcode drawings
 
-        if (in_array($this->xuatHang->trang_thai, ["Đã duyệt", "Đã duyệt xuất hàng", "Đã thực xuất hàng", "Đã chọn phương tiện xuất cảnh"])) {
+        if (in_array($this->xuatHang->trang_thai, ["2", "12", "13", "11"])) {
             // Generate QR Code
             $qrContent = 'Cán bộ công chức phê duyệt: ' . ($this->xuatHang->congChuc->ten_cong_chuc ?? '');
             $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrContent);

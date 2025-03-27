@@ -61,12 +61,10 @@
                                         </td>
                                         <td>{{ $nhapHang->chuHang ? $nhapHang->chuHang->ten_chu_hang : 'Unknown' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }}</td>
-                                        @if (trim($nhapHang->trang_thai) == 'Đang chờ duyệt')
-                                            <td class="text-primary">{{ $nhapHang->trang_thai }}</td>
-                                        @elseif (trim($nhapHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa tờ khai')
-                                            <td class="text-warning">{{ $nhapHang->trang_thai }}</td>
-                                        @elseif (trim($nhapHang->trang_thai) == 'Quá hạn')
-                                            <td class="text-danger">{{ $nhapHang->trang_thai }}</td>
+                                        @if (trim($nhapHang->trang_thai) == '1')
+                                            <td class="text-primary">Đang chờ duyệt</td>
+                                        @elseif (trim($nhapHang->trang_thai) == '3')
+                                            <td class="text-warning">Doanh nghiệp yêu cầu sửa tờ khai</td>
                                         @else
                                             <td class="text-dark">{{ $nhapHang->trang_thai }}</td>
                                         @endif
@@ -108,8 +106,8 @@
                         '<select class="form-control"><option value="">TẤT CẢ</option></select>'
                     )
 
-                    select.append('<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>');
-                    select.append('<option class="text-warning" value="DOANH NGHIỆP YÊU CẦU SỬA">DOANH NGHIỆP YÊU CẦU SỬA</option>');
+                    select.append('<option class="text-primary" value="1">ĐANG CHỜ DUYỆT</option>');
+                    select.append('<option class="text-warning" value="3">DOANH NGHIỆP YÊU CẦU SỬA</option>');
 
                     $(column.header()).empty().append(select);
 

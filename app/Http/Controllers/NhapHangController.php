@@ -52,7 +52,7 @@ class NhapHangController extends Controller
 
     public function danhSachToKhai()
     {
-        $query = NhapHang::whereIn('trang_thai', ['Đang chờ duyệt', 'Doanh nghiệp yêu cầu sửa tờ khai']);
+        $query = NhapHang::whereIn('trang_thai', ['1', '3']);
 
         if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->value('ma_doanh_nghiep');
@@ -65,7 +65,7 @@ class NhapHangController extends Controller
 
     public function toKhaiDaNhapHang()
     {
-        $statuses = ['Đã nhập hàng', 'Đã xuất hết', 'Đã bàn giao hồ sơ', 'Quay về kho ban đầu', 'Đã tiêu hủy'];
+        $statuses = ['2', '4', '7', '6', '5'];
 
         $query = NhapHang::whereIn('trang_thai', $statuses)
             ->with(['doanhNghiep' => function ($query) {
@@ -85,12 +85,12 @@ class NhapHangController extends Controller
     public function  toKhaiDaHuy()
     {
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-            $data = NhapHangDaHuy::where('trang_thai', 'Đã hủy')
+            $data = NhapHangDaHuy::where('trang_thai', '0')
                 ->orderBy('id_huy', 'desc')
                 ->get();
         } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-            $data = NhapHangDaHuy::where('trang_thai', 'Đã hủy')
+            $data = NhapHangDaHuy::where('trang_thai', '0')
                 ->where('ma_doanh_nghiep', $maDoanhNghiep)
                 ->orderBy('id_huy', 'desc')
                 ->get();
@@ -123,14 +123,17 @@ class NhapHangController extends Controller
             return DB::transaction(function () use ($request) {
                 $formattedDate = $this->formatDate($request->ngay_thong_quan);
                 $nhapHang = NhapHang::find($request->so_to_khai_nhap);
-                if ($nhapHang && $nhapHang->trang_thai != 'Đã hủy') {
+                if ($nhapHang && $nhapHang->trang_thai != '0') {
                     return redirect()->back()->with('alert-danger', 'Số tờ khai nhập đã được sử dụng');
                 }
 
-                $this->themNhapHang($request, $formattedDate, 'Đang chờ duyệt');
+                $rowsData = json_decode($request->rows_data, true);
+                $containers = array_column($rowsData, 'so_container');
+                $uniqueContainers = array_unique($containers);
+                $so_containers = implode('; ', $uniqueContainers);
+
+                $this->themNhapHang($request, $formattedDate, '1', $so_containers);
                 $this->xuLyThemHangHoa($request);
-                $this->xuLyContainer($request);
-                $this->xuLySeal($request, now());
                 $this->themTienTrinh($request->so_to_khai_nhap, "Doanh nghiệp tạo tờ khai nhập hàng số " . $request->so_to_khai_nhap, '');
 
                 return redirect()
@@ -156,7 +159,7 @@ class NhapHangController extends Controller
             'tienTrinhs' => TienTrinh::where('so_to_khai_nhap', $so_to_khai_nhap)
                 ->leftJoin('cong_chuc', 'tien_trinh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
                 ->get(),
-            'congChucs' => CongChuc::where('is_chi_xem',0)->get(),
+            'congChucs' => CongChuc::where('is_chi_xem', 0)->get(),
             'chuHangs' => ChuHang::all(),
             'seals' => Seal::where('trang_thai', 0)->get()
         ]);
@@ -168,7 +171,7 @@ class NhapHangController extends Controller
     }
 
 
-    private function themNhapHang($request, $formattedDate, $trang_thai)
+    private function themNhapHang($request, $formattedDate, $trang_thai, $so_containers)
     {
         $doanhNghiep = $this->getDoanhNghiepHienTai();
         NhapHang::insert([
@@ -183,7 +186,7 @@ class NhapHangController extends Controller
             'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
             'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
             'trong_luong' => $request->trong_luong,
-            'container_ban_dau' => $request->so_container,
+            'container_ban_dau' => $so_containers,
             'created_at' => now(),
         ]);
     }
@@ -194,6 +197,8 @@ class NhapHangController extends Controller
         foreach ($rowsData as $row) {
             $this->themLoaiHang($row);
             $this->themHangHoa($request, $row);
+            $this->xuLyContainer($row['so_container']);
+            $this->xuLySeal($row['so_container'], now());
         }
     }
 
@@ -217,13 +222,14 @@ class NhapHangController extends Controller
             'don_gia' => $row['don_gia'],
             'tri_gia' => $row['tri_gia'],
             'so_to_khai_nhap' => $request->so_to_khai_nhap,
+            'so_container_khai_bao' => $row['so_container'],
         ]);
     }
-    private function xuLyContainer($request)
+    private function xuLyContainer($so_container)
     {
-        if (!Container::find($request->so_container)) {
+        if (!Container::find($so_container)) {
             Container::insert([
-                'so_container' => $request->so_container,
+                'so_container' => $so_container,
             ]);
         }
     }
@@ -275,7 +281,7 @@ class NhapHangController extends Controller
                 // Validate and prepare data
                 $formattedDate = $this->formatDate($request->ngay_thong_quan);
                 $nhapHang = $this->kiemTraSoToKhaiNhapSua($request);
-                if ($nhapHang->trang_thai == 'Đang chờ duyệt') {
+                if ($nhapHang->trang_thai == '1') {
                     $this->suaNhapHangDangChoDuyet($request, $nhapHang);
                 } else {
                     $this->suaNhapHangDaDuyet($request);
@@ -293,11 +299,15 @@ class NhapHangController extends Controller
     {
         $trang_thai = $nhapHang->trang_thai;
         $formattedDate = $this->formatDate($request->ngay_thong_quan);
-        $this->xoaNhapHangCu($request);
-        $this->themNhapHang($request, $formattedDate, $trang_thai);
-        $this->xuLyThemHangHoaSua($request, $trang_thai);
 
-        $this->xuLyContainer($request);
+        $rowsData = json_decode($request->rows_data, true);
+        $containers = array_column($rowsData, 'so_container');
+        $uniqueContainers = array_unique($containers);
+        $so_containers = implode('; ', $uniqueContainers);
+
+        $this->xoaNhapHangCu($request);
+        $this->themNhapHang($request, $formattedDate, $trang_thai, $so_containers);
+        $this->xuLyThemHangHoaSua($request, $trang_thai);
         $this->themTienTrinh($request->so_to_khai_nhap, "Doanh nghiệp sửa tờ khai nhập hàng số " . $request->so_to_khai_nhap, '');
     }
 
@@ -306,8 +316,14 @@ class NhapHangController extends Controller
         $doanhNghiep = $this->getDoanhNghiepHienTai();
         $formattedDate = $this->formatDate($request->ngay_thong_quan);
         $nhapHang = NhapHang::find($request->so_to_khai_nhap);
-        $nhapHang->trang_thai = 'Doanh nghiệp yêu cầu sửa tờ khai';
+        $nhapHang->trang_thai = '3';
         $nhapHang->save();
+
+        $rowsData = json_decode($request->rows_data, true);
+        $containers = array_column($rowsData, 'so_container');
+        $uniqueContainers = array_unique($containers);
+        $so_containers = implode('; ', $uniqueContainers);
+
         $nhapHangSua = NhapHangSua::create([
             'so_to_khai_nhap' => $request->so_to_khai_nhap,
             'ma_loai_hinh' => $request->ma_loai_hinh,
@@ -316,11 +332,11 @@ class NhapHangController extends Controller
             'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
             'ngay_dang_ky' => $formattedDate,
             'ngay_thong_quan' => $formattedDate,
-            'trang_thai' => 'Đã nhập hàng',
+            'trang_thai' => '2',
             'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
             'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
             'trong_luong' => $request->trong_luong,
-            'container_ban_dau' => $request->so_container,
+            'container_ban_dau' => $so_containers,
             'ma_cong_chuc' => $request->ma_cong_chuc,
             'created_at' => now(),
         ]);
@@ -337,16 +353,17 @@ class NhapHangController extends Controller
                 'don_vi_tinh' => $row['don_vi_tinh'],
                 'don_gia' => $row['don_gia'],
                 'tri_gia' => $row['tri_gia'],
+                'so_container_khai_bao' => $row['so_container'],
                 'so_to_khai_nhap' => $request->so_to_khai_nhap,
             ]);
         }
         $this->xuLyContainer($request);
-        $this->themTienTrinh($request->so_to_khai_nhap, "Doanh nghiệp yêu cầu sửa tờ khai nhập hàng số " . $request->so_to_khai_nhap, '');
+        $this->themTienTrinh($request->so_to_khai_nhap, "Công chức đã duyệt tờ khai nhập hàng số " . $request->so_to_khai_nhap, '');
     }
     public function huySuaYeuCau(Request $request)
     {
         $nhapHang = NhapHang::find($request->so_to_khai_nhap);
-        $nhapHang->trang_thai = 'Đã nhập hàng';
+        $nhapHang->trang_thai = '2';
         $nhapHang->save();
 
         NhapHangSua::find($request->so_to_khai_nhap)->delete();
@@ -387,7 +404,7 @@ class NhapHangController extends Controller
                 'ma_doanh_nghiep' => $nhapHangSua->ma_doanh_nghiep,
                 'ngay_dang_ky' => $nhapHangSua->ngay_dang_ky,
                 'ngay_thong_quan' => $nhapHangSua->ngay_thong_quan,
-                'trang_thai' => 'Đã nhập hàng',
+                'trang_thai' => '2',
                 'phuong_tien_vt_nhap' => $nhapHangSua->phuong_tien_vt_nhap,
                 'ptvt_ban_dau' => $nhapHangSua->ptvt_ban_dau,
                 'trong_luong' => $nhapHangSua->trong_luong,
@@ -404,11 +421,12 @@ class NhapHangController extends Controller
                     'don_vi_tinh' => $hangHoaSua->don_vi_tinh,
                     'don_gia' => $hangHoaSua->don_gia,
                     'tri_gia' => $hangHoaSua->tri_gia,
+                    'so_container_khai_bao' => $hangHoaSua->so_container_khai_bao,
                     'so_to_khai_nhap' => $request->so_to_khai_nhap,
                 ]);
                 HangTrongCont::insert([
                     'ma_hang' => $hangHoa->ma_hang,
-                    'so_container' => $nhapHangSua->container_ban_dau,
+                    'so_container' => $hangHoa->so_container_khai_bao,
                     'so_luong' => $hangHoa->so_luong_khai_bao,
                 ]);
             }
@@ -431,7 +449,7 @@ class NhapHangController extends Controller
     {
         return XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('so_to_khai_nhap', $so_to_khai_nhap)
-            ->where('trang_thai', '!=', 'Đã hủy')
+            ->where('trang_thai', '!=', '0')
             ->exists();
     }
 
@@ -440,7 +458,7 @@ class NhapHangController extends Controller
         $nhapHang = NhapHang::find($request->so_to_khai_nhap);
 
         if ($nhapHang && $request->so_to_khai_nhap != $request->so_to_khai_nhap) {
-            if ($nhapHang->trang_thai != 'Đã hủy') {
+            if ($nhapHang->trang_thai != '0') {
                 throw new \Exception('Số tờ khai nhập đã được sử dụng');
             }
         }
@@ -468,7 +486,7 @@ class NhapHangController extends Controller
             $this->themLoaiHang($row);
             $hangHoa = $this->themHangHoa($request, $row);
 
-            if ($trang_thai == "Đã nhập hàng") {
+            if ($trang_thai == "2") {
                 $this->themHangTrongCont($hangHoa, $request);
             }
         }
@@ -477,7 +495,7 @@ class NhapHangController extends Controller
     {
         HangTrongCont::insert([
             'ma_hang' => $hangHoa->ma_hang,
-            'so_container' => $request->so_container,
+            'so_container' => $hangHoa->so_container_khai_bao,
             'so_luong' => $hangHoa->so_luong_khai_bao,
         ]);
     }
@@ -509,7 +527,7 @@ class NhapHangController extends Controller
         $soLuongSum = $hangHoaRows->sum('so_luong_khai_bao');
         $triGiaSum = $hangHoaRows->sum('tri_gia');
         $tienTrinhs = null;
-        $congChucs = CongChuc::where('is_chi_xem',0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
         $chuHangs = ChuHang::all();
         return view('nhap-hang.thong-tin-nhap-hang', compact('nhapHang', 'hangHoaRows', 'soLuongSum', 'triGiaSum', 'tienTrinhs', 'congChucs', 'chuHangs')); // Pass data to the view
     }
@@ -550,7 +568,7 @@ class NhapHangController extends Controller
     public function duyetToKhaiNhap(Request $request)
     {
         $nhapHang = NhapHang::findOrFail($request->so_to_khai_nhap);
-        if ($nhapHang->trang_thai == "Đang chờ duyệt") {
+        if ($nhapHang->trang_thai == "1") {
             try {
                 return DB::transaction(function () use ($request, $nhapHang) {
                     $hangHoas = HangHoa::where('so_to_khai_nhap', $request->so_to_khai_nhap)->get();
@@ -559,7 +577,7 @@ class NhapHangController extends Controller
                     $hangTrongContData = $hangHoas->map(function ($hangHoa) use ($nhapHang) {
                         return [
                             'ma_hang' => $hangHoa->ma_hang,
-                            'so_container' => $nhapHang->container_ban_dau,
+                            'so_container' => $hangHoa->so_container_khai_bao,
                             'so_luong' => $hangHoa->so_luong_khai_bao,
                         ];
                     })->toArray();
@@ -567,7 +585,7 @@ class NhapHangController extends Controller
                     HangTrongCont::insert($hangTrongContData);
 
                     $nhapHang->update([
-                        'trang_thai' => 'Đã nhập hàng',
+                        'trang_thai' => '2',
                         'ma_cong_chuc' => $congChuc->ma_cong_chuc,
                     ]);
 
@@ -595,7 +613,7 @@ class NhapHangController extends Controller
         try {
             return DB::transaction(function () use ($request, $so_to_khai_nhap) {
                 $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
-                $nhapHang->update(['ghi_chu' => $request->ghi_chu, 'trang_thai' => 'Đã hủy']);
+                $nhapHang->update(['ghi_chu' => $request->ghi_chu, 'trang_thai' => '0']);
 
                 $huyNhapHang = $this->themNhapHangDaHuy($nhapHang);
                 $this->diChuyenHangHoaDaHuy($so_to_khai_nhap, $huyNhapHang->id_huy);
@@ -651,8 +669,10 @@ class NhapHangController extends Controller
 
     private function xoaThongTinToKhaiNhapDaHuy($so_to_khai_nhap, $nhapHang)
     {
-        if ($nhapHang->trang_thai == 'Đã nhập hàng') {
-            HangTrongCont::where('so_container', $nhapHang->container_ban_dau)->delete();
+        if ($nhapHang->trang_thai == '2') {
+            HangTrongCont::join('hang_hoa', 'hang_hoa.ma_hang', 'hang_trong_cont.ma_hang')
+                ->where('so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
+                ->delete();
         }
 
         $ma_hangs = HangHoa::where('so_to_khai_nhap', $so_to_khai_nhap)->pluck('ma_hang');
@@ -695,12 +715,16 @@ class NhapHangController extends Controller
         }
         $xuat_xu = '';
         $loai_hang = '';
+        $so_container = '';
 
         if ($request->xuat_xu) {
             $xuat_xu = $request->xuat_xu;
         }
         if ($request->loai_hang) {
             $loai_hang = $request->loai_hang;
+        }
+        if ($request->so_container) {
+            $so_container = $request->so_container;
         }
 
 
@@ -755,6 +779,7 @@ class NhapHangController extends Controller
                 'don_vi_tinh' => $row[$mappedColumns['đvt']] ?? '',
                 'don_gia'    => $triGia / $so_luong,
                 'tri_gia'    => $triGia,
+                'so_container'    => $so_container,
             ];
         }
         return response()->json(['data' => $data]);
@@ -844,7 +869,7 @@ class NhapHangController extends Controller
                             'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
                             'ngay_dang_ky' => $convertedDate,
                             'ngay_thong_quan' => $convertedDate,
-                            'trang_thai' => 'Đang chờ duyệt',
+                            'trang_thai' => '1',
                             'phuong_tien_vt_nhap' => '',
                             'ptvt_ban_dau' => '',
                             'container_ban_dau' => '',
@@ -889,13 +914,13 @@ class NhapHangController extends Controller
                 ->withInput();
         }
     }
-    private function xuLySeal($request, $formattedDate)
+    private function xuLySeal($so_container, $formattedDate)
     {
-        $record = NiemPhong::where('so_container', $request->so_container)->first();
+        $record = NiemPhong::where('so_container', $so_container)->first();
 
         if (!$record) {
             NiemPhong::insert([
-                'so_container' => $request->so_container,
+                'so_container' => $so_container,
                 'so_seal' => '',
                 'ngay_niem_phong' => $formattedDate,
             ]);
@@ -913,7 +938,7 @@ class NhapHangController extends Controller
     public function getNhapHangDaDuyets(Request $request)
     {
         if ($request->ajax()) {
-            $statuses = ['Đã nhập hàng', 'Đã xuất hết', 'Đã bàn giao hồ sơ', 'Quay về kho ban đầu', 'Đã tiêu hủy'];
+            $statuses = ['2', '4', '7', '6', '5'];
 
             $query = NhapHang::whereIn('trang_thai', $statuses)
                 ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
@@ -959,18 +984,19 @@ class NhapHangController extends Controller
                 })
                 ->editColumn('trang_thai', function ($nhapHang) {
                     $status = trim($nhapHang->trang_thai);
-                    $statusClasses = [
-                        'Đã nhập hàng' => 'text-success',
-                        'Đã xuất hết' => 'text-success',
-                        'Quay về kho ban đầu' => 'text-success',
-                        'Đã bàn giao hồ sơ' => 'text-success',
-                        'Đã tiêu hủy' => 'text-danger',
-                        'Quá hạn' => 'text-danger',
-                        'Doanh nghiệp yêu cầu sửa tờ khai' => 'text-warning',
-                    ];
-                    $class = $statusClasses[$status] ?? 'text-dark';
 
-                    return '<span class="' . $class . '">' . $status . '</span>';
+                    $statusLabels = [
+                        '2' => ['text' => 'Đã nhập hàng', 'class' => 'text-success'],
+                        '4' => ['text' => 'Đã xuất hết', 'class' => 'text-success'],
+                        '6' => ['text' => 'Quay về kho ban đầu', 'class' => 'text-success'],
+                        '7' => ['text' => 'Đã bàn giao hồ sơ', 'class' => 'text-success'],
+                        '5' => ['text' => 'Đã tiêu hủy', 'class' => 'text-danger'],
+                        '3' => ['text' => 'Doanh nghiệp yêu cầu sửa tờ khai', 'class' => 'text-warning'],
+                    ];
+
+                    return isset($statusLabels[$status])
+                        ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
+                        : '<span class="text-muted">Trạng thái không xác định</span>';
                 })
                 ->addColumn('action', function ($nhapHang) {
                     return '<a href="' . route('nhap-hang.show', $nhapHang->so_to_khai_nhap) . '" class="btn btn-primary btn-sm">Xem</a>';

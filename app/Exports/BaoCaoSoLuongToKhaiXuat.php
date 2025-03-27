@@ -49,9 +49,9 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
             ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
             ->join('hai_quan', 'hai_quan.ma_hai_quan', 'nhap_hang.ma_hai_quan')
-            ->whereIn('nhap_hang.trang_thai', ['Đã bàn giao hồ sơ', 'Đã xuất hết'])
+            ->whereIn('nhap_hang.trang_thai', ['7', '4'])
             ->whereBetween('xuat_hang.ngay_xuat_canh', [$this->tu_ngay, $this->den_ngay])
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->select(
                 'hang_hoa.ten_hang',
                 'hang_hoa.xuat_xu',

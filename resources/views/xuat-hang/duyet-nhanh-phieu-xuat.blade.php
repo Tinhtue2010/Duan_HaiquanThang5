@@ -20,7 +20,14 @@
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
-                            <div class="col-6">
+
+                            <div class="col-4">
+                                <label for="" class="mb-1 fw-bold">Số tờ khai nhập</label>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="" id="so_to_khai_nhap" placeholder="Số tờ khai nhập">
+                                </div>
+                            </div>
+                            <div class="col-4">
                                 <label for="" class="mb-1 fw-bold">Phương tiện vận tải xuất cảnh</label>
                                 <div class="form-group">
                                     <select class="form-control" name="so_ptvt_xuat_canh" id="ptvt-xc-dropdown-search">
@@ -34,7 +41,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <label for="" class="mb-1 fw-bold">Công chức phụ trách</label>
                                 <select class="form-control" name="" id="cong-chuc-dropdown-search">
                                     <option value=""></option>
@@ -122,7 +129,6 @@
     </div>
     <script>
         $(document).ready(function() {
-            // Xử lý chọn số lượng xuất
             let so_ptvt_xuat_canh = $('#ptvt-xc-dropdown-search').val();
             const tableBody = document.querySelector('#displayTableYeuCau tbody');
             let rowIndex = 0;

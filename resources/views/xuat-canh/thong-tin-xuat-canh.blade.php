@@ -28,7 +28,7 @@
                     </a>
                 </div>
                 <div class="col-6">
-                    @if (trim($xuatCanh->trang_thai) == 'Đã duyệt' || trim($xuatCanh->trang_thai) == 'Đã duyệt thực xuất')
+                    @if (trim($xuatCanh->trang_thai) == '2' || trim($xuatCanh->trang_thai) == '3')
                         <form action="{{ route('xuat-canh.export-to-khai-xuat-canh') }}" method="GET">
                             @csrf
                             @method('POST')
@@ -108,7 +108,7 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-                            @if (trim($xuatCanh->trang_thai) == 'Đang chờ duyệt')
+                            @if (trim($xuatCanh->trang_thai) == '1')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if ($xuatCanh->ghi_chu)
@@ -197,7 +197,7 @@
                                     @endif
                                 @endif
                         </div>
-                    @elseif(trim($xuatCanh->trang_thai) == 'Đã duyệt')
+                    @elseif(trim($xuatCanh->trang_thai) == '2')
                         <h2 class="text-success">Đã duyệt</h2>
                         <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                         <h2 class="text-primary">Công chức phụ trách:
@@ -229,7 +229,7 @@
                                     </div>
                                 </div>
                             </center>
-                        @elseif(trim($xuatCanh->trang_thai) == 'Đã duyệt')
+                        @elseif(trim($xuatCanh->trang_thai) == '2')
                             <center>
                                 <div class="col-6">
                                     <a href="#">
@@ -241,16 +241,16 @@
                                 </div>
                             </center>
                         @endif
-                    @elseif(trim($xuatCanh->trang_thai) == 'Đã duyệt thực xuất')
+                    @elseif(trim($xuatCanh->trang_thai) == '3')
                         <h2 class="text-success">Đã duyệt thực xuất</h2>
                         <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                         <h2 class="text-primary">Công chức phụ trách:
                             {{ $xuatCanh->congChuc->ten_cong_chuc ?? '' }}</h2>
                         <h2 class="text-success">Ngày duyệt:
                             {{ \Carbon\Carbon::parse($xuatCanh->ngay_duyet)->format('d-m-Y') }}</h2>
-                    @elseif(trim($xuatCanh->trang_thai) == 'Doanh nghiệp xin hủy (Chờ duyệt)' ||
-                            trim($xuatCanh->trang_thai) == 'Doanh nghiệp xin hủy (Đã duyệt)')
-                        <h2 class="text-danger">{{ $xuatCanh->trang_thai }}</h2>
+                    @elseif(trim($xuatCanh->trang_thai) == '4' ||
+                            trim($xuatCanh->trang_thai) == '5')
+                        <h2 class="text-danger">Doanh nghiệp xin hủy</h2>
                         <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                         <h3 class="text-dark">Lý do hủy: {{ $xuatCanh->ghi_chu }}</h3>
                         @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
@@ -289,9 +289,9 @@
                                 </div>
                             </div>
                         @endif
-                    @elseif(trim($xuatCanh->trang_thai) == 'Chấp nhận hủy' ||
-                            trim($xuatCanh->trang_thai) == 'Từ chối hủy' ||
-                            trim($xuatCanh->trang_thai) == 'Đã hủy')
+                    @elseif(trim($xuatCanh->trang_thai) == '6' ||
+                            trim($xuatCanh->trang_thai) == '7' ||
+                            trim($xuatCanh->trang_thai) == '0')
                         <h2 class="text-danger">Tờ khai đã hủy</h2>
                         <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                         <h2 class="text-danger">Ngày hủy:

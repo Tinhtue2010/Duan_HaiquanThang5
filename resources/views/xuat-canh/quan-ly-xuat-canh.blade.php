@@ -60,17 +60,22 @@
                                         <td>{{ $xuatCanh->PTVTXuatCanh->ten_phuong_tien_vt }}</td>
                                         <td>{{ $xuatCanh->doanhNghiep->ten_doanh_nghiep ?? '' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d-m-Y') }}</td>
-                                        @if (trim($xuatCanh->trang_thai) == 'Đang chờ duyệt')
-                                            <td class="text-primary">{{ $xuatCanh->trang_thai }}</td>
-                                        @elseif (trim($xuatCanh->trang_thai) == 'Đã duyệt'||trim($xuatCanh->trang_thai) == 'Đã duyệt thực xuất')
-                                            <td class="text-success">{{ $xuatCanh->trang_thai }}</td>
-                                        @elseif (trim($xuatCanh->trang_thai) == 'Doanh nghiệp xin hủy (Chờ duyệt)' ||
-                                                trim($xuatCanh->trang_thai) == 'Doanh nghiệp xin hủy (Đã duyệt)')
-                                            <td class="text-warning">{{ $xuatCanh->trang_thai }}</td>
-                                        @elseif (trim($xuatCanh->trang_thai) == 'Chấp nhận hủy' ||
-                                                trim($xuatCanh->trang_thai) == 'Từ chối hủy' ||
-                                                trim($xuatCanh->trang_thai) == 'Đã hủy')
-                                            <td class="text-danger">{{ $xuatCanh->trang_thai }}</td>
+                                        @if ($xuatCanh->trang_thai == '1')
+                                            <td class="text-primary">Đang chờ duyệt</td>
+                                        @elseif ($xuatCanh->trang_thai == '2')
+                                            <td class="text-success">Đã duyệt</td>
+                                        @elseif ($xuatCanh->trang_thai == '3')
+                                            <td class="text-success">Đã duyệt thực xuất</td>
+                                        @elseif ($xuatCanh->trang_thai == '4')
+                                            <td class="text-warning">Doanh nghiệp xin hủy (Chờ duyệt)</td>
+                                        @elseif ($xuatCanh->trang_thai == '5')
+                                            <td class="text-warning">Doanh nghiệp xin hủy (Đã duyệt)</td>
+                                        @elseif ($xuatCanh->trang_thai == '6')
+                                            <td class="text-danger">Chấp nhận hủy</td>
+                                        @elseif ($xuatCanh->trang_thai == '7')
+                                            <td class="text-danger">Từ chối hủy</td>
+                                        @elseif ($xuatCanh->trang_thai == '0')
+                                            <td class="text-danger">Đã hủy</td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -97,6 +102,7 @@
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
                 columnDefs: [{
                     orderable: false,
+                    targets: -1
                 }],
                 initComplete: function() {
                     $('.dataTables_filter input[type="search"]').css({
@@ -135,7 +141,7 @@
                     if (savedFilter) {
                         select.val(savedFilter);
                         column.search(savedFilter ? savedFilter : '', false, true).draw();
-                    }else{
+                    } else {
                         select.val("");
                     }
 

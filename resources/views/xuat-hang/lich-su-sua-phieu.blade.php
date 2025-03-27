@@ -42,16 +42,16 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $suaToKhai->so_to_khai_xuat }}</td>
                                         <td>{{ \Carbon\Carbon::parse($suaToKhai->ngay_tao)->format('d-m-Y') }}</td>
-                                        @if ($suaToKhai->trang_thai_phieu_xuat == 'Đang chờ duyệt')
+                                        @if ($suaToKhai->trang_thai_phieu_xuat == '1')
                                             <td class="text-primary">{{ $suaToKhai->trang_thai_phieu_xuat }}</td>
-                                        @elseif($suaToKhai->trang_thai_phieu_xuat == 'Đã duyệt')
+                                        @elseif($suaToKhai->trang_thai_phieu_xuat == '2')
                                             <td class="text-success">{{ $suaToKhai->trang_thai_phieu_xuat }}</td>
                                         @else
                                             <td class="text-success">{{ $suaToKhai->trang_thai_phieu_xuat }}</td>
                                         @endif                                        
-                                      @if ($suaToKhai->trang_thai == 'Đang chờ duyệt')
+                                      @if ($suaToKhai->trang_thai == '1')
                                             <td class="text-primary">{{ $suaToKhai->trang_thai }}</td>
-                                        @elseif($suaToKhai->trang_thai == 'Đã duyệt')
+                                        @elseif($suaToKhai->trang_thai == '2')
                                             <td class="text-success">{{ $suaToKhai->trang_thai }}</td>
                                         @else
                                             <td class="text-success">{{ $suaToKhai->trang_thai }}</td>

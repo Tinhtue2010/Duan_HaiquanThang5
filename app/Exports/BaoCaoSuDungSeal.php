@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\NhapHang;
+use App\Models\Seal;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
@@ -13,80 +14,55 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
-class BaoCaoTonChuHangExport implements FromArray, WithEvents
+class BaoCaoSuDungSeal implements FromArray, WithEvents
 {
-    protected $ma_chu_hang;
-    protected $ten_chu_hang;
-
-    public function __construct($ma_chu_hang, $ten_chu_hang)
-    {
-        $this->ma_chu_hang = $ma_chu_hang;
-        $this->ten_chu_hang = $ten_chu_hang;
-    }
-
     public function array(): array
     {
-        $currentDate = Carbon::now()->format('d');  // Day of the month
-        $currentMonth = Carbon::now()->format('m'); // Month number
-        $currentYear = Carbon::now()->format('Y');  // Year
-        $data = NhapHang::where('nhap_hang.ma_chu_hang', $this->ma_chu_hang)
-            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->join('chu_hang', 'chu_hang.ma_chu_hang', '=', 'nhap_hang.ma_chu_hang')
-            ->where('nhap_hang.trang_thai', '2')
+        $data = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->groupBy('seal.loai_seal', 'seal.ma_cong_chuc')
             ->select(
-                'nhap_hang.so_to_khai_nhap',
-                DB::raw("(SELECT SUM(hh.so_luong_khai_bao) 
-                      FROM hang_hoa hh 
-                      WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"), // Ensure correct summation
-                DB::raw("MIN(hang_hoa.ma_hang) as ma_hang"), // Pick any hang_hoa as representative
-                DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"), // Pick any hang_hoa as representative
-                DB::raw("(SELECT SUM(htc.so_luong) 
-                    FROM hang_hoa hh 
-                    JOIN hang_trong_cont htc ON hh.ma_hang = htc.ma_hang 
-                    WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong"),
+                'seal.loai_seal',
+                'seal.ma_cong_chuc',
+                'cong_chuc.ten_cong_chuc',
+                DB::raw('COUNT(*) as total_seals'),
+                DB::raw('SUM(CASE WHEN seal.trang_thai = 0 THEN 1 ELSE 0 END) as trang_thai_0_count'),
+                DB::raw('SUM(CASE WHEN seal.trang_thai = 1 THEN 1 ELSE 0 END) as trang_thai_1_count')
             )
-            ->groupBy('nhap_hang.so_to_khai_nhap')
             ->get();
 
         $result = [
-            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM', '', ''],
-            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', 'Độc lập - Tự do - Hạnh phúc', '', ''],
+            ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', ''],
+            ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['BÁO CÁO HÀNG CÒN TỒN TẠI CỬA KHẨU', '', '', '', '', ''],
-            ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
+            ['BÁO CÁO SỬ DỤNG SEAL NIÊM PHONG HẢI QUAN', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['Tên đại lý: ' . $this->ten_chu_hang, '', '', '', ''],
-            ['', '', '', '', '', 'Đơn vị tính: Thùng/Kiện'],
-            ['STT', 'SỐ TỜ KHAI', 'TÊN HÀNG', 'SL THEO KHAI BÁO', 'SL ĐÃ XUẤT', 'SỐ LƯỢNG TỒN'],
+            ['STT', 'TÊN CÔNG CHỨC', 'LOẠI SEAL', 'SỐ LƯỢNG (CÁI)', 'SỐ LƯỢNG SỬ DỤNG', 'SỐ LƯỢNG TỒN'],
         ];
-        $totalHangTon = 0;
-        $totalKhaiBao = 0;
 
         $stt = 1;
         foreach ($data as $item) {
-            if ($item->total_so_luong != 0) {
-                $result[] = [
-                    $stt++,
-                    $item->so_to_khai_nhap,
-                    $item->ten_hang,
-                    $item->total_so_luong_khai_bao,
-                    ($item->total_so_luong_khai_bao - $item->total_so_luong) == 0 ? '0' : ($item->total_so_luong_khai_bao - $item->total_so_luong),
-                    $item->total_so_luong,
-                ];
-                $totalHangTon += $item->total_so_luong;
-                $totalKhaiBao += $item->total_so_luong_khai_bao;
+            $loaiSeal = '';
+            if ($item->loai_seal == 1) {
+                $loaiSeal = "Seal dây cáp đồng";
+            } elseif ($item->loai_seal == 2) {
+                $loaiSeal = "Seal dây cáp thép";
+            } elseif ($item->loai_seal == 3) {
+                $loaiSeal = "Seal container";
+            } elseif ($item->loai_seal == 4) {
+                $loaiSeal = "Seal dây nhựa dẹt";
+            } elseif ($item->loai_seal == 5) {
+                $loaiSeal = "Seal định vị điện tử";
             }
+            $result[] = [
+                $stt++,
+                $item->ten_cong_chuc,
+                $loaiSeal,
+                $item->total_seals,
+                $item->trang_thai_1_count,
+                $item->trang_thai_0_count,
+            ];
         }
-        $result[] = [
-            '',
-            '',
-            '',
-            $totalKhaiBao,
-            $totalKhaiBao - $totalHangTon,
-            $totalHangTon,
-        ];
 
         $result[] = [
             [''],
@@ -133,9 +109,8 @@ class BaoCaoTonChuHangExport implements FromArray, WithEvents
                 $sheet->getStyle('F')->getNumberFormat()->setFormatCode('#,##0');
 
 
-                $sheet->getStyle('B')->getNumberFormat()->setFormatCode('0'); // Apply format
                 $sheet->getColumnDimension('B')->setWidth(width: 25);
-                $sheet->getColumnDimension('C')->setWidth(width: 38);
+                $sheet->getColumnDimension('C')->setWidth(width: 25);
 
                 $lastRow = $sheet->getHighestRow();
                 $sheet->getStyle('C1:C' . $lastRow)->getAlignment()->setWrapText(true);
@@ -146,20 +121,18 @@ class BaoCaoTonChuHangExport implements FromArray, WithEvents
                 $sheet->mergeCells('D2:F2'); // ĐỘC LẬP
                 $sheet->mergeCells('A4:F4'); // BÁO CÁO
                 $sheet->mergeCells('A5:F5'); // Tính đến ngày
-                $sheet->mergeCells('A7:F7'); // Mã
-                $sheet->mergeCells('A8:E8'); // Tên
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:F6')->applyFromArray([
+                $sheet->getStyle('A1:F7')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:F6')->applyFromArray([
+                $sheet->getStyle('A2:F7')->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
-                $sheet->getStyle('A6:F' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A7:F' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
@@ -171,7 +144,7 @@ class BaoCaoTonChuHangExport implements FromArray, WithEvents
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A10:F10')->applyFromArray([
+                $sheet->getStyle('A7:F7')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -186,7 +159,7 @@ class BaoCaoTonChuHangExport implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A10:F' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A7:F' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -219,10 +192,6 @@ class BaoCaoTonChuHangExport implements FromArray, WithEvents
                 $sheet->mergeCells('A' . ($chuKyStart + 4) . ':F' . ($chuKyStart + 4));
                 $sheet->getStyle('A' . ($chuKyStart + 4) . ':F' . ($chuKyStart + 4))->getFont()->setBold(true);
 
-                // Left align for specific cells
-                $sheet->getStyle('A7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle('A8')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle(cellCoordinate: 'F9')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             },
         ];
     }

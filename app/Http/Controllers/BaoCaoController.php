@@ -7,6 +7,7 @@ use App\Exports\BaoCaoChiTietXNKTheoDN;
 use App\Exports\BaoCaoDoanhNghiepXNKTheoDN;
 use App\Exports\BaoCaoTheoDoiTruLuiExport;
 use App\Exports\BaoCaoTonChuHangExport;
+use App\Exports\BaoCaoTauLuuTaiCang;
 use App\Exports\BaoCaoTonDoanhNghiepExport;
 use App\Exports\BaoCaoHangTonTheoToKhaiExport;
 use App\Exports\BaoCaoTiepNhanHangNgayExport;
@@ -27,6 +28,7 @@ use App\Exports\BaoCaoTheoDoiTruLuiTheoNgayExport;
 use App\Exports\BaoCaoDangKyXuatKhauHangHoa;
 use App\Exports\BaoCaoSangContChuyenTau;
 use App\Exports\BaoCaoGiamSatXuatKhau;
+use App\Exports\BaoCaoSuDungSeal;
 use App\Exports\BaoCaoContainerLuuTaiCangTheoCont;
 use App\Models\ChuHang;
 use App\Models\CongChuc;
@@ -77,20 +79,42 @@ class BaoCaoController extends Controller
     }
     public function theoDoiTruLuiTheoNgay(Request $request)
     {
-        $theoDoiTruLui = TheoDoiTruLui::find($request->ma_theo_doi);
-        $ngay_name = Carbon::parse($theoDoiTruLui->ngay_them)->format('d-m-Y');
-        $fileName = 'Phiếu theo dõi từ lùi của tờ khai ' . $request->so_to_khai_nhap . ' ngày ' . $ngay_name . '.xlsx';
-        if (!NhapHang::find($request->so_to_khai_nhap)) {
-            session()->flash('alert-danger', 'Không tìm thấy số tờ khai nhập này');
-            return redirect()->back();
-        };
-
-        if ($theoDoiTruLui->cong_viec == 1) {
-            return Excel::download(new BaoCaoTheoDoiTruLuiTheoNgayExport($theoDoiTruLui->so_to_khai_nhap, $theoDoiTruLui->ngay_them), $fileName);
+        if ($request->xuat_hang) {
+            $ngay_name = Carbon::parse($request->ngay_dang_ky)->format('d-m-Y');
+            $fileName = 'Phiếu theo dõi từ lùi của tờ khai ' . $request->so_to_khai_nhap . ' ngày ' . $ngay_name . '.xlsx';
+            return Excel::download(new BaoCaoTheoDoiTruLuiTheoNgayExport($request->so_to_khai_nhap, $request->ngay_dang_ky), $fileName);
         } else {
-            return Excel::download(new BaoCaoTheoDoiTruLuiExport($theoDoiTruLui->cong_viec, $theoDoiTruLui->ma_yeu_cau, $request->so_to_khai_nhap), $fileName);
+            $theoDoiTruLui = TheoDoiTruLui::find($request->ma_theo_doi);
+            $ngay_name = Carbon::parse($theoDoiTruLui->ngay_them)->format('d-m-Y');
+            $fileName = 'Phiếu theo dõi từ lùi của tờ khai ' . $request->so_to_khai_nhap . ' ngày ' . $ngay_name . '.xlsx';
+            if (!NhapHang::find($request->so_to_khai_nhap)) {
+                session()->flash('alert-danger', 'Không tìm thấy số tờ khai nhập này');
+                return redirect()->back();
+            };
+
+            if ($theoDoiTruLui->cong_viec == 1) {
+                return Excel::download(new BaoCaoTheoDoiTruLuiTheoNgayExport($theoDoiTruLui->so_to_khai_nhap, $theoDoiTruLui->ngay_them), $fileName);
+            } else {
+                return Excel::download(new BaoCaoTheoDoiTruLuiExport($theoDoiTruLui->cong_viec, $theoDoiTruLui->ma_yeu_cau, $request->so_to_khai_nhap), $fileName);
+            }
         }
     }
+    // public function theoDoiTruLuiTungLan(Request $request)
+    // {
+    //     $theoDoiTruLui = TheoDoiTruLui::find($request->ma_theo_doi);
+    //     $ngay_name = Carbon::parse($theoDoiTruLui->ngay_them)->format('d-m-Y');
+    //     $fileName = 'Phiếu theo dõi từ lùi của tờ khai ' . $request->so_to_khai_nhap . ' ngày ' . $ngay_name . '.xlsx';
+    //     if (!NhapHang::find($request->so_to_khai_nhap)) {
+    //         session()->flash('alert-danger', 'Không tìm thấy số tờ khai nhập này');
+    //         return redirect()->back();
+    //     };
+
+    //     if ($theoDoiTruLui->cong_viec == 1) {
+    //         return Excel::download(new BaoCaoTheoDoiTruLuiTheoNgayExport($theoDoiTruLui->so_to_khai_nhap, $theoDoiTruLui->ngay_them), $fileName);
+    //     } else {
+    //         return Excel::download(new BaoCaoTheoDoiTruLuiExport($theoDoiTruLui->cong_viec, $theoDoiTruLui->ma_yeu_cau, $request->so_to_khai_nhap), $fileName);
+    //     }
+    // }
 
     public function phieuXuatTheoXuong(Request $request)
     {
@@ -184,6 +208,11 @@ class BaoCaoController extends Controller
         $fileName = 'Báo cáo giám sát hàng hóa xuất khẩu từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
         return Excel::download(new BaoCaoGiamSatXuatKhau($tu_ngay, $den_ngay, $request->ma_cong_chuc), $fileName);
     }
+    public function suDungSeal(Request $request)
+    {
+        $fileName = 'Báo cáo sử dụng seal niêm phong.xlsx';
+        return Excel::download(new BaoCaoSuDungSeal(), $fileName);
+    }
 
     public function hangHoaChuaThucXuat(Request $request)
     {
@@ -204,6 +233,18 @@ class BaoCaoController extends Controller
         $date = $this->formatDateNow();
         $fileName = 'Báo cáo số lượng container lưu tại cảng ngày ' . $date . '.xlsx';
         return Excel::download(new BaoCaoContainerLuuTaiCang(), $fileName);
+    }
+    public function tauLuuTaiCang(Request $request)
+    {
+        $date = $this->formatDateNow();
+        $nhapHang = NhapHang::where('phuong_tien_vt_nhap', $request->phuong_tien_vt_nhap)
+            ->exists();
+        if (!$nhapHang) {
+            session()->flash('alert-danger', 'Không tìm thấy tàu này');
+            return redirect()->back();
+        }
+        $fileName = 'Báo cáo số lượng hàng tàu ' . $request->phuong_tien_vt_nhap . ' tại cảng ngày ' . $date . '.xlsx';
+        return Excel::download(new BaoCaoTauLuuTaiCang($request->phuong_tien_vt_nhap), $fileName);
     }
     public function containerLuuTaiCangTheoCont(Request $request)
     {
@@ -298,11 +339,19 @@ class BaoCaoController extends Controller
     public function getLanTruLui($so_to_khai_nhap)
     {
         $theoDoiTruLuis = TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)
+            ->when(request('cong_viec') == 1, function ($query) {
+                return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
+                    ->where('xuat_hang.trang_thai', '!=', 0);
+            })
             ->get()
-            ->groupBy('cong_viec' == 1 ? 'ngay_them' : 'ma_yeu_cau')
+            ->groupBy(function ($item) {
+                return $item->cong_viec == 1 ? $item->ngay_them : $item->ma_yeu_cau;
+            })
             ->map(function ($group) {
                 return $group->first();
             })
+            ->values()
+            ->sortByDesc('ngay_them')
             ->values();
 
         if (!$theoDoiTruLuis) {

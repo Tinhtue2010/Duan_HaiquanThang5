@@ -51,8 +51,7 @@ class BaoCaoDangKyXuatKhauHangHoa implements FromArray, WithEvents
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
-            ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Đã xuất hết', 'Đã bàn giao hồ sơ'])
-            // ->whereDate('xuat_hang.ngay_dang_ky', $tu_ngay)
+            ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
             ->orderBy('xuat_hang_cont.ma_xuat_hang_cont', 'asc')
             ->get();
         foreach ($hangHoas as $hangHoa) {
@@ -67,13 +66,13 @@ class BaoCaoDangKyXuatKhauHangHoa implements FromArray, WithEvents
         //         return $lastItem;
         //     })
         //     ->values();
-
+        $date = Carbon::createFromFormat('d/m/Y', $this->tu_ngay)->format('Y-m-d');
         $soToKhaiXuats = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->orderBy('xuat_hang.so_to_khai_xuat', 'asc') // Sorting from low to high
             ->pluck('xuat_hang.so_to_khai_xuat')
             ->unique()
@@ -99,15 +98,17 @@ class BaoCaoDangKyXuatKhauHangHoa implements FromArray, WithEvents
                 ->get();
 
             foreach ($lanXuats as $item) {
+
+                
                 if (!isset($groupedResults[$item->ma_hang_cont])) {
                     $groupedResults[$item->ma_hang_cont] = [
                         'ma_hang_cont' => $item->ma_hang_cont,
                         'so_to_khai_nhap' => $item->so_to_khai_nhap,
                         'ngay_thong_quan' => Carbon::createFromFormat('Y-m-d', $item->ngay_thong_quan)->format('d-m-Y'),
                         'ten_hang' => $item->ten_hang,
-                        'so_luong_xuat' => 0, // Initialize sum
+                        'so_luong_xuat' => 0,
                         'so_container' => $item->so_container,
-                        'phuong_tien_vt_nhap' => [], // Store unique values in an array
+                        'phuong_tien_vt_nhap' => [],
                         'ten_phuong_tien_vt' => $item->ten_phuong_tien_vt,
                         'ngay_dang_ky' => $item->ngay_dang_ky,
                         'hangHoaArr' => isset($hangHoaArr[$item->ma_hang_cont]) ? $hangHoaArr[$item->ma_hang_cont] : 'Hết',
@@ -132,6 +133,9 @@ class BaoCaoDangKyXuatKhauHangHoa implements FromArray, WithEvents
 
         $stt = 1;
         foreach ($groupedResults as $lastEntry) {
+            if (Carbon::parse($lastEntry['ngay_dang_ky'])->format('Y-m-d') != $date) {
+                continue;
+            }
             $result[] = [
                 $stt++,
                 $lastEntry['so_to_khai_nhap'],

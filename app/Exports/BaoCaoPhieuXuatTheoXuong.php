@@ -48,7 +48,7 @@ class BaoCaoPhieuXuatTheoXuong implements FromCollection, WithHeadings, WithStyl
             ->join('ptvt_xuat_canh_cua_phieu', 'xuat_hang.so_to_khai_xuat', '=', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $this->so_ptvt_xuat_canh)
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
-            ->where('xuat_hang.trang_thai', '!=', "Đã hủy")
+            ->where('xuat_hang.trang_thai', '!=', "0")
             ->whereDate('xuat_hang.ngay_dang_ky', $this->date)
             ->select(
                 'nhap_hang.so_to_khai_nhap',

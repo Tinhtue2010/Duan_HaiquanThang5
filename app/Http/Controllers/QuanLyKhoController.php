@@ -25,7 +25,7 @@ class QuanLyKhoController extends Controller
             ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
             ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
             ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
-            ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Đã xuất hết', 'Đã bàn giao hồ sơ'])
+            ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
             ->select('container.*', 'niem_phong.so_seal')
             ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
             ->groupBy('container.so_container', 'niem_phong.so_seal')
@@ -39,7 +39,7 @@ class QuanLyKhoController extends Controller
     {
         $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+            ->where('nhap_hang.trang_thai', '2')
             ->where('hang_trong_cont.so_container', $so_container)
             ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
             ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
@@ -107,7 +107,7 @@ class QuanLyKhoController extends Controller
         try {
             $total_so_luong = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+                ->where('nhap_hang.trang_thai', '2')
                 ->where('so_container', $soContainerMoi)
                 ->distinct()
                 ->sum('so_luong');
@@ -132,12 +132,9 @@ class QuanLyKhoController extends Controller
         try {
             $so_to_khai_nhap = $request->so_to_khai_nhap;
             $nhapHang = NhapHang::find($so_to_khai_nhap);
-
             if ($nhapHang) {
-
-
                 $containers = $nhapHang->hangHoa
-                    ->flatMap(fn($hangHoa) => $hangHoa->hangTrongCont->pluck('so_container'))
+                    ->flatMap(fn($hangHoa) => $hangHoa->hangTrongCont->where('so_luong', '>', 0)->pluck('so_container'))
                     ->unique()
                     ->implode(';');
 
@@ -191,7 +188,7 @@ class QuanLyKhoController extends Controller
     //         $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
     //             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
     //             ->where('hang_trong_cont.so_container', $request->soContainerMoi)
-    //             ->whereNotIn('nhap_hang.trang_thai', ['Quay về kho ban đầu', 'Đã tiêu hủy', 'Đã xuất hết', 'Đã bàn giao hồ sơ'])
+    //             ->whereNotIn('nhap_hang.trang_thai', ['6', '5', '4', '7'])
     //             ->distinct()
     //             ->pluck('nhap_hang.so_to_khai_nhap')
     //             ->implode('</br>');
@@ -222,13 +219,13 @@ class QuanLyKhoController extends Controller
                 $so_luong_ton_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
-                    ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
+                    ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->sum('hang_trong_cont.so_luong');
 
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
-                    ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
+                    ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->distinct()
                     ->pluck('nhap_hang.so_to_khai_nhap')
                     ->implode('</br>');
@@ -263,13 +260,13 @@ class QuanLyKhoController extends Controller
                 $so_luong_ton_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
-                    ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
+                    ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->sum('hang_trong_cont.so_luong');
 
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
-                    ->whereIn('nhap_hang.trang_thai', ['Đã nhập hàng', 'Doanh nghiệp yêu cầu sửa tờ khai'])
+                    ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->distinct()
                     ->pluck('nhap_hang.so_to_khai_nhap')
                     ->implode('</br>');
@@ -317,7 +314,7 @@ class QuanLyKhoController extends Controller
     public function kiemTraContainerDangChuyen(Request $request)
     {
         $existConts = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_chuyen_container.trang_thai', 'Đang chờ duyệt')
+            ->where('yeu_cau_chuyen_container.trang_thai', '1')
             ->where(function ($query) use ($request) {
                 $query->where('yeu_cau_container_chi_tiet.so_container_goc', $request->so_container)
                     ->orWhere('yeu_cau_container_chi_tiet.so_container_dich', $request->so_container);
@@ -325,7 +322,7 @@ class QuanLyKhoController extends Controller
             ->exists();
 
         $existTauConts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', '=', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_tau_cont.trang_thai', 'Đang chờ duyệt')
+            ->where('yeu_cau_tau_cont.trang_thai', '1')
             ->where(function ($query) use ($request) {
                 $query->where('yeu_cau_tau_cont_chi_tiet.so_container_goc', $request->so_container)
                     ->orWhere('yeu_cau_tau_cont_chi_tiet.so_container_dich', $request->so_container);
@@ -346,7 +343,7 @@ class QuanLyKhoController extends Controller
                 ->exists();
         } else if ($request->loai == 'tau_cont') {
             $exists = YeuCauTauContChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
-                ->where(function ( $query) use ($request) {
+                ->where(function ($query) use ($request) {
                     $query->where('so_container_goc', $request->so_container)
                         ->orWhere('so_container_dich', $request->so_container);
                 })
@@ -357,7 +354,7 @@ class QuanLyKhoController extends Controller
         }
 
         $existConts = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_chuyen_container.trang_thai', 'Đang chờ duyệt')
+            ->where('yeu_cau_chuyen_container.trang_thai', '1')
             ->where(function ($query) use ($request) {
                 $query->where('yeu_cau_container_chi_tiet.so_container_goc', $request->so_container)
                     ->orWhere('yeu_cau_container_chi_tiet.so_container_dich', $request->so_container);
@@ -365,7 +362,7 @@ class QuanLyKhoController extends Controller
             ->exists();
 
         $existTauConts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', '=', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_tau_cont.trang_thai', 'Đang chờ duyệt')
+            ->where('yeu_cau_tau_cont.trang_thai', '1')
             ->where(function ($query) use ($request) {
                 $query->where('yeu_cau_tau_cont_chi_tiet.so_container_goc', $request->so_container)
                     ->orWhere('yeu_cau_tau_cont_chi_tiet.so_container_dich', $request->so_container);

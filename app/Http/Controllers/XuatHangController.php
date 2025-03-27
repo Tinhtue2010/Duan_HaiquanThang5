@@ -19,6 +19,7 @@ use App\Models\XuatHangCont;
 use App\Models\ChiTietXuatCanh;
 use App\Models\TheoDoiHangHoa;
 use App\Models\TheoDoiTruLui;
+use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\XuatCanhChiTiet;
 use App\Models\XuatHangSua;
 use Illuminate\Http\Request;
@@ -40,15 +41,15 @@ class XuatHangController extends Controller
     public function danhSachToKhai()
     {
         $statuses = [
-            'Đang chờ duyệt',
-            'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt',
-            'Doanh nghiệp yêu cầu hủy phiếu chờ duyệt',
-            'Doanh nghiệp yêu cầu hủy phiếu đã duyệt',
-            'Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC',
-            'Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng',
-            'Doanh nghiệp yêu cầu sửa phiếu đã duyệt',
-            'Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC',
-            'Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng'
+            '1',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '10'
         ];
         $xuatHangs = $this->xuatHangService->getToKhaiXuat($statuses);
 
@@ -62,7 +63,7 @@ class XuatHangController extends Controller
 
     public function listToKhaiDaHuy()
     {
-        $statuses = ['Đã hủy'];
+        $statuses = ['0'];
         $xuatHangs = $this->xuatHangService->getToKhaiXuat($statuses);
 
         return view('xuat-hang.to-khai-xuat-da-huy', ['xuatHangs' => $xuatHangs]);
@@ -75,7 +76,7 @@ class XuatHangController extends Controller
         $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
         $ptvtXuatCanhs = PTVTXuatCanh::all();
         $nhapHangs = NhapHang::where('ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-            ->where('trang_thai', 'Đã nhập hàng')
+            ->where('trang_thai', '2')
             ->get();
 
         return view('xuat-hang.them-to-khai-xuat', data: compact('containers', 'loaiHinhs', 'nhapHangs', 'doanhNghiep', 'ptvtXuatCanhs')); // Pass the data to the view
@@ -119,6 +120,9 @@ class XuatHangController extends Controller
             return redirect()->back();
         }
     }
+
+
+
     public function duyetNhanhPhieuXuat(Request $request)
     {
         $ptvtXuatCanhs = PTVTXuatCanh::all();
@@ -163,7 +167,7 @@ class XuatHangController extends Controller
             ->get();
         $PTVTcount = $ptvts->count();
         $nhapHangs = NhapHang::where('ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-            ->where('trang_thai', 'Đã nhập hàng')
+            ->where('trang_thai', '2')
             ->get();
         $containers = $this->xuatHangService->getThongTinHangHoaHienTai();
         $xuatHangConts = XuatHangCont::join('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
@@ -192,23 +196,22 @@ class XuatHangController extends Controller
             $xuatHang = XuatHang::find($request->so_to_khai_xuat);
             $suaXuatHang = $this->xuatHangService->themSuaXuatHang($request, $xuatHang);
             $this->xuatHangService->themSuaPTVTCuaPhieu($suaXuatHang->ma_yeu_cau, $ptvtRowsData);
-            // $this->xuatHangService->themTruocSuaPTVTCuaPhieu($request->so_to_khai_xuat, $suaXuatHang->ma_yeu_cau);
-
             $this->xuatHangService->themChiTietSuaXuatHang($suaXuatHang, $rowsData);
-            // $this->xuatHangService->themChiTietTruocSua($suaXuatHang, $request);
-
             $this->xuatHangService->capNhatTrangThaiPhieuXuat($xuatHang);
-
             $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
                 ->select('so_to_khai_nhap')
                 ->distinct()
                 ->get();
+
             foreach ($xuatHangConts as $xuatHangCont) {
                 $this->xuatHangService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Doanh nghiệp yêu cầu sửa phiếu xuất hàng số " . $request->so_to_khai_xuat, '');
             }
-
             DB::commit();
-            session()->flash('alert-success', 'Thêm yêu cầu sửa phiếu xuất thành công!');
+            if ($xuatHang->trang_thai == 3) {
+                $this->duyetYeuCauSua($suaXuatHang->ma_yeu_cau);
+            }
+
+            session()->flash('alert-success', 'Sửa phiếu xuất thành công!');
             return redirect()->route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $request->so_to_khai_xuat]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -272,7 +275,7 @@ class XuatHangController extends Controller
         ));
     }
 
-    public function duyetYeuCauSua(Request $request, $ma_yeu_cau)
+    public function duyetYeuCauSua($ma_yeu_cau, Request $request = null)
     {
         try {
             DB::beginTransaction();
@@ -297,9 +300,29 @@ class XuatHangController extends Controller
                     ->where('xuat_canh_chi_tiet.so_to_khai_xuat', $suaXuatHang->so_to_khai_xuat)
                     ->delete();
             }
+
+            TheoDoiHangHoa::where('cong_viec', 1)
+                ->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)
+                ->delete();
+            TheoDoiTruLui::where('cong_viec', 1)
+                ->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)
+                ->delete();
+
+            $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->get();
+            foreach ($xuatHangConts as $xuatHangCont) {
+                $hangHoaXuat = $this->xuatHangService->getThongTinHangHoaXuat($xuatHangCont);
+                $this->xuatHangService->themTheoDoi($xuatHang, $xuatHangCont, $hangHoaXuat, '');
+            }
+
             $xuatHang->tong_so_luong = $this->xuatHangService->getTongSoLuongHangXuat($xuatHang->so_to_khai_xuat);
             $xuatHang->ten_phuong_tien_vt = $this->xuatHangService->getPTVTXuatCanhCuaPhieu($xuatHang->so_to_khai_xuat);
             $xuatHang->save();
+
+
+            XuatHangSua::findOrFail($ma_yeu_cau)->delete();
+            XuatHangChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
+            PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
+            PTVTXuatCanhCuaPhieuTruocSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
 
             DB::commit();
             return redirect()->route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]);
@@ -356,7 +379,7 @@ class XuatHangController extends Controller
     public function updateDuyetToKhai(Request $request)
     {
         $xuatHang = XuatHang::find($request->so_to_khai_xuat);
-        if ($xuatHang->trang_thai != "Đã duyệt") {
+        if ($xuatHang->trang_thai != "2") {
             try {
                 DB::beginTransaction();
                 $this->xuatHangService->xuLyDuyetPhieuXuat($request->ma_cong_chuc, $request->so_to_khai_xuat);
@@ -384,17 +407,16 @@ class XuatHangController extends Controller
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
             $this->duyetYeuCauHuy($xuatHang);
         } else {
-            if ($xuatHang->trang_thai == "Đang chờ duyệt") {
-                $xuatHang->trang_thai = 'Doanh nghiệp yêu cầu hủy phiếu chờ duyệt';
+            if ($xuatHang->trang_thai == 1) {
+                $this->huyPhieu($xuatHang);
+            } elseif ($xuatHang->trang_thai == 2) {
+                $xuatHang->trang_thai = 8;
                 $xuatHang->save();
-            } elseif ($xuatHang->trang_thai == "Đã duyệt") {
-                $xuatHang->trang_thai = 'Doanh nghiệp yêu cầu hủy phiếu đã duyệt';
+            } elseif ($xuatHang->trang_thai == 11) {
+                $xuatHang->trang_thai = 9;
                 $xuatHang->save();
-            } elseif ($xuatHang->trang_thai == "Đã chọn phương tiện xuất cảnh") {
-                $xuatHang->trang_thai = 'Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC';
-                $xuatHang->save();
-            } elseif ($xuatHang->trang_thai == "Đã duyệt xuất hàng") {
-                $xuatHang->trang_thai = 'Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng';
+            } elseif ($xuatHang->trang_thai == 12) {
+                $xuatHang->trang_thai = 10;
                 $xuatHang->save();
             } else {
                 $this->duyetYeuCauHuy($xuatHang);
@@ -412,9 +434,9 @@ class XuatHangController extends Controller
         return redirect()->back();
     }
 
-    public function duyetYeuCauHuy($xuatHang)
+    public function huyPhieu($xuatHang)
     {
-        if ($xuatHang != 'Đã hủy') {
+        if ($xuatHang != '0') {
             $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->get();
             foreach ($xuatHangConts as $xuatHangCont) {
                 $hang_trong_cont = HangTrongCont::find($xuatHangCont->ma_hang_cont);
@@ -425,11 +447,51 @@ class XuatHangController extends Controller
 
             XuatCanhChiTiet::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->delete();
             TheoDoiHangHoa::where('so_to_khai_nhap', $xuatHang->so_to_khai_nhap)
-                ->where('cong_viec', operator: 1)
+                ->where('cong_viec', 1)
                 ->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)
                 ->delete();
 
-            $xuatHang->trang_thai = 'Đã hủy';
+            $xuatHang->trang_thai = '0';
+            $xuatHang->ghi_chu = 'Doanh nghiệp hủy phiếu';
+            $xuatHang->save();
+
+            $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
+                ->select('so_to_khai_nhap')
+                ->distinct()
+                ->get();
+            foreach ($xuatHangConts as $xuatHangCont) {
+                $nhapHang = NhapHang::find($xuatHangCont->so_to_khai_nhap);
+                $nhapHang->trang_thai = '2';
+                $nhapHang->save();
+                $this->xuatHangService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Doanh nghiệp hủy phiếu xuất số " . $xuatHang->so_to_khai_xuat, '');
+            }
+        }
+        session()->flash('alert-success', 'Hủy phiếu xuất thành công!');
+        return redirect()->back();
+    }
+    public function duyetYeuCauHuy($xuatHang)
+    {
+        if ($xuatHang != '0') {
+            $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->get();
+            foreach ($xuatHangConts as $xuatHangCont) {
+                $hang_trong_cont = HangTrongCont::find($xuatHangCont->ma_hang_cont);
+                $hang_trong_cont->so_luong += $xuatHangCont->so_luong_xuat;
+                $hang_trong_cont->is_da_chuyen_cont = 0;
+                $hang_trong_cont->save();
+            }
+
+            XuatCanhChiTiet::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->delete();
+            TheoDoiHangHoa::where('so_to_khai_nhap', $xuatHang->so_to_khai_nhap)
+                ->where('cong_viec', 1)
+                ->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)
+                ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $xuatHang->so_to_khai_nhap)
+                ->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)
+                ->where('cong_viec', 1)
+                ->delete();
+
+
+            $xuatHang->trang_thai = '0';
             $xuatHang->ghi_chu = 'Công chức duyệt yêu cầu hủy';
             $xuatHang->save();
 
@@ -439,7 +501,7 @@ class XuatHangController extends Controller
                 ->get();
             foreach ($xuatHangConts as $xuatHangCont) {
                 $nhapHang = NhapHang::find($xuatHangCont->so_to_khai_nhap);
-                $nhapHang->trang_thai = 'Đã nhập hàng';
+                $nhapHang->trang_thai = '2';
                 $nhapHang->save();
                 $this->xuatHangService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Công chức duyệt yêu cầu hủy phiếu xuất số " . $xuatHang->so_to_khai_xuat, $this->xuatHangService->getCongChucHienTai()->ma_cong_chuc);
             }
@@ -455,14 +517,14 @@ class XuatHangController extends Controller
     public function thuHoiYeuCauHuy(Request $request)
     {
         $xuatHang = XuatHang::find($request->so_to_khai_xuat);
-        if ($xuatHang->trang_thai == "Doanh nghiệp yêu cầu hủy phiếu chờ duyệt") {
-            $xuatHang->trang_thai = 'Đang chờ duyệt';
-        } elseif ($xuatHang->trang_thai == "Doanh nghiệp yêu cầu hủy phiếu đã duyệt") {
-            $xuatHang->trang_thai = 'Đã duyệt';
-        } elseif ($xuatHang->trang_thai == "Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC") {
-            $xuatHang->trang_thai = 'Đã chọn phương tiện xuất cảnh';
-        } elseif ($xuatHang->trang_thai == "Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng") {
-            $xuatHang->trang_thai = 'Đã duyệt xuất hàng';
+        if ($xuatHang->trang_thai == "7") {
+            $xuatHang->trang_thai = '1';
+        } elseif ($xuatHang->trang_thai == "8") {
+            $xuatHang->trang_thai = '2';
+        } elseif ($xuatHang->trang_thai == "9") {
+            $xuatHang->trang_thai = '11';
+        } elseif ($xuatHang->trang_thai == "10") {
+            $xuatHang->trang_thai = '12';
         }
 
 
@@ -567,7 +629,10 @@ class XuatHangController extends Controller
             ->when(!empty($request->so_ptvt_xuat_canh), function ($query) use ($request) {
                 return $query->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $request->so_ptvt_xuat_canh);
             })
-            ->where('xuat_hang.trang_thai', 'Đang chờ duyệt')
+            ->when(!empty($request->so_to_khai_nhap), function ($query) use ($request) {
+                return $query->where('xuat_hang_cont.so_to_khai_nhap', $request->so_to_khai_nhap);
+            })
+            ->where('xuat_hang.trang_thai', '1')
             ->select('xuat_hang.*', 'doanh_nghiep.ten_doanh_nghiep', DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as tong_so_luong_xuat'))
             ->groupBy(
                 'doanh_nghiep.ten_doanh_nghiep',
@@ -603,7 +668,7 @@ class XuatHangController extends Controller
             // ->when(!empty($request->so_ptvt_xuat_canh), function ($query) use ($request) {
             //     return $query->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $request->so_ptvt_xuat_canh);
             // })
-            ->where('xuat_hang.trang_thai', 'Đã duyệt xuất hàng')
+            ->where('xuat_hang.trang_thai', '12')
             ->where('xuat_hang.ma_cong_chuc', $congChuc->ma_cong_chuc)
             ->select('xuat_hang.*', 'doanh_nghiep.ten_doanh_nghiep', DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as tong_so_luong_xuat'))
             ->groupBy(
@@ -637,10 +702,10 @@ class XuatHangController extends Controller
         }
 
         $statuses = [
-            'Đã duyệt',
-            'Đã chọn phương tiện xuất cảnh',
-            'Đã duyệt xuất hàng',
-            'Đã thực xuất hàng',
+            '2',
+            '11',
+            '12',
+            '13',
         ];
 
         $user = Auth::user();
@@ -687,10 +752,19 @@ class XuatHangController extends Controller
             ->addColumn('ten_doanh_nghiep', function ($xuatHang) {
                 return $xuatHang->ten_doanh_nghiep ?? 'N/A';
             })
-            ->editColumn('trang_thai', function ($xuatHang) use ($statuses) {
+            ->editColumn('trang_thai', function ($xuatHang) {
                 $status = trim($xuatHang->trang_thai);
-                $statusClass = in_array($status, $statuses) ? 'text-success' : 'text-dark';
-                return sprintf('<span class="%s">%s</span>', $statusClass, e($status));
+
+                $statusLabels = [
+                    '2' => ['text' => 'Đã duyệt', 'class' => 'text-success'],
+                    '11' => ['text' => 'Đã chọn phương tiện xuất cảnh', 'class' => 'text-success'],
+                    '12' => ['text' => 'Đã duyệt xuất hàng', 'class' => 'text-success'],
+                    '13' => ['text' => 'Đã thực xuất hàng', 'class' => 'text-success'],
+                ];
+
+                return isset($statusLabels[$status])
+                    ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
+                    : '<span class="text-muted">Trạng thái không xác định</span>';
             })
             ->rawColumns(['trang_thai', 'action'])
             ->make(true);

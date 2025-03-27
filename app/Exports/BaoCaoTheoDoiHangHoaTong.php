@@ -71,13 +71,13 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     ->join('hang_hoa', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.ma_hang', $theoDoiHangHoa->ma_hang)
                     ->where('xuat_hang.so_to_khai_xuat', $theoDoiHangHoa->ma_yeu_cau)
-                    ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+                    ->where('xuat_hang.trang_thai', '!=', '0')
                     ->select(
                         'xuat_hang_cont.ma_xuat_hang_cont',
                         'xuat_hang_cont.so_luong_xuat',
                         'xuat_hang_cont.so_container',
                         'xuat_hang.ten_phuong_tien_vt',
-                        'xuat_hang.so_seal_cuoi_ngay',
+                        'xuat_hang_cont.so_seal_cuoi_ngay',
                         'xuat_hang.ma_cong_chuc',
                         'xuat_hang.ghi_chu',
                         'hang_hoa.ten_hang',
@@ -161,7 +161,8 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
         $drawing->setCoordinates('L1'); // Position at top right (adjust column as needed)
         $drawing->setOffsetX(0); // Adjust horizontal position if needed
         $drawing->setOffsetY(0);  // Adjust vertical position if needed
-        $drawing->setHeight(20);  // Adjust size as needed
+        $drawing->setHeight(20);
+        $drawing->setWidth(180);
 
         return $drawing;
     }
@@ -190,6 +191,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     ->setFooter(0.3);
 
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
+                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(18);
 
 
                 foreach (['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'] as $column) {
@@ -202,7 +204,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                 $sheet->getColumnDimension('E')->setWidth(width: 10);
                 $sheet->getColumnDimension('J')->setWidth(width: 20);
                 $sheet->getColumnDimension('K')->setWidth(width: 20);
-                $sheet->getColumnDimension('L')->setWidth(width: 20);
+                $sheet->getColumnDimension('L')->setWidth(width: 15);
                 $sheet->getStyle('D')->getNumberFormat()->setFormatCode('0');
                 $sheet->getStyle('E')->getNumberFormat()->setFormatCode('0');
                 $sheet->getStyle('A11:L' . $sheet->getHighestRow())->getAlignment()->setWrapText(true);
@@ -287,6 +289,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     $bold = $richText->createTextRun($part);
                     $bold->getFont()->setName('Times New Roman'); // Set font to Times New Roman
                     $bold->getFont()->setBold(true); // Set text to bold
+                    $bold->getFont()->setSize(18);
                 }
             }
         }

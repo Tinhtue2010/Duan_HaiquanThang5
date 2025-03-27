@@ -137,6 +137,13 @@
                         <tbody>
 
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7"><strong>Tổng:</strong></td>
+                                <td id="totalQty"></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -342,6 +349,18 @@
                 }
             });
 
+            function calculateTotal() {
+                let total = 0;
+                document.querySelectorAll("#xuatHangCont tbody tr").forEach(row => {
+                    let quantityCell = row.cells[8]; // 9th column (zero-based index)
+                    let quantity = parseFloat(quantityCell.textContent || quantityCell.querySelector(
+                        "input")?.value || 0);
+                    total += isNaN(quantity) ? 0 : quantity;
+                });
+
+                // Update the total in <tfoot>
+                document.getElementById("totalQty").textContent = total;
+            }
 
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
@@ -449,7 +468,7 @@
                                 `;
                             $("#xuatHangCont tbody").append(newRow);
                         }
-
+                        calculateTotal();
                         inputField.val("");
                     }
                 });
@@ -457,7 +476,7 @@
 
             $(document).on("click", ".deleteRowButton", function() {
                 $(this).closest("tr").remove(); // Remove the closest row when clicking "Xóa"
-
+                calculateTotal();
             });
         });
     </script>

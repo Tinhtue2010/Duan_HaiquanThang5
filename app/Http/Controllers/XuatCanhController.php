@@ -70,7 +70,7 @@ class XuatCanhController extends Controller
                 $processedSoToKhaiNhap = []; // Store processed `so_to_khai_nhap`
 
                 foreach ($xuatHangs as $xuatHang) {
-                    $xuatHang->trang_thai = "Đã chọn phương tiện xuất cảnh";
+                    $xuatHang->trang_thai = "11";
                     $xuatHang->save();
                     $this->xuatCanhService->themChiTietXuatCanh($xuatCanh, $xuatHang);
 
@@ -113,7 +113,7 @@ class XuatCanhController extends Controller
 
     public function thongTinXuatCanh($ma_xuat_canh)
     {
-        $congChucs = CongChuc::where('is_chi_xem',0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
         if (XuatCanh::find($ma_xuat_canh)) {
             $xuatCanh = XuatCanh::find($ma_xuat_canh);
             $chiTiets = XuatCanhChiTiet::join('xuat_hang', 'xuat_hang.so_to_khai_xuat', 'xuat_canh_chi_tiet.so_to_khai_xuat')
@@ -143,7 +143,7 @@ class XuatCanhController extends Controller
                 )
                 ->get();
         }
-        $congChucs = CongChuc::where('is_chi_xem',0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
 
         //else {
         //     $xuatHang = XuatHangSecond::find($so_to_khai_xuat);
@@ -159,7 +159,7 @@ class XuatCanhController extends Controller
         try {
             DB::beginTransaction();
             $xuatCanh = XuatCanh::find($request->ma_xuat_canh);
-            $xuatCanh->trang_thai = "Đã duyệt";
+            $xuatCanh->trang_thai = "2";
             $xuatCanh->ma_cong_chuc = $request->ma_cong_chuc;
             $xuatCanh->ngay_duyet = now();
             $xuatCanh->save();
@@ -189,7 +189,8 @@ class XuatCanhController extends Controller
                             "Cán bộ công chức đã duyệt tờ khai xuất cảnh số " . $xuatCanh->ma_xuat_canh,
                             $this->xuatCanhService->getCongChucHienTai()->ma_cong_chuc
                         );
-                        $processedSoToKhaiNhap[] = $xuatHangCont->so_to_khai_nhap; // Mark as processed
+                        $this->xuatCanhService->kiemTraXuatHetHang($xuatHangCont->so_to_khai_nhap);
+                        $processedSoToKhaiNhap[] = $xuatHangCont->so_to_khai_nhap;
                     }
                 }
             }
@@ -209,7 +210,7 @@ class XuatCanhController extends Controller
         try {
             DB::beginTransaction();
             $xuatCanh = XuatCanh::find($request->ma_xuat_canh);
-            $xuatCanh->trang_thai = "Đã duyệt thực xuất";
+            $xuatCanh->trang_thai = "3";
             $xuatCanh->save();
 
             $xuatHangs = XuatHang::join('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
@@ -329,10 +330,10 @@ class XuatCanhController extends Controller
                 ->select('xuat_hang.*')
                 ->get();
 
-            if ($xuatCanh->trang_thai == 'Đang chờ duyệt') {
-                $xuatCanh->trang_thai = 'Doanh nghiệp xin hủy (Chờ duyệt)';
-            } elseif ($xuatCanh->trang_thai == 'Đã duyệt') {
-                $xuatCanh->trang_thai = 'Doanh nghiệp xin hủy (Đã duyệt)';
+            if ($xuatCanh->trang_thai == '1') {
+                $xuatCanh->trang_thai = '4';
+            } elseif ($xuatCanh->trang_thai == '2') {
+                $xuatCanh->trang_thai = '5';
             }
 
             $processedSoToKhaiNhap = []; // Track processed `so_to_khai_nhap`
@@ -367,10 +368,10 @@ class XuatCanhController extends Controller
             ->get();
 
         if ($xuatCanh) {
-            if ($xuatCanh->trang_thai == 'Doanh nghiệp xin hủy (Chờ duyệt)') {
-                $xuatCanh->trang_thai = 'Đang chờ duyệt';
-            } elseif ($xuatCanh->trang_thai == 'Doanh nghiệp xin hủy (Đã duyệt)') {
-                $xuatCanh->trang_thai = 'Đã duyệt';
+            if ($xuatCanh->trang_thai == '4') {
+                $xuatCanh->trang_thai = '1';
+            } elseif ($xuatCanh->trang_thai == '5') {
+                $xuatCanh->trang_thai = '2';
             }
 
             $processedSoToKhaiNhap = []; // Track processed `so_to_khai_nhap`
@@ -435,8 +436,15 @@ class XuatCanhController extends Controller
         $doanhNghieps = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $request->so_ptvt_xuat_canh)
-            ->where('xuat_hang.trang_thai', 'Đã duyệt')
-            ->whereDate('xuat_hang.ngay_dang_ky', today())
+            ->where('xuat_hang.trang_thai', '2')
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('xuat_hang.ngay_dang_ky', today())
+                        ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
+                } else {
+                    $query->whereDate('xuat_hang.ngay_dang_ky', today());
+                }
+            })
             ->select('doanh_nghiep.*')
             ->distinct()
             ->get();
@@ -473,13 +481,13 @@ class XuatCanhController extends Controller
                 })
                 ->editColumn('trang_thai', function ($xuatCanh) {
                     $status = trim($xuatCanh->trang_thai);
-                    if (in_array($status, ['Doanh nghiệp xin hủy (Chờ duyệt)', 'Doanh nghiệp xin hủy (Đã duyệt)', 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng'])) {
+                    if (in_array($status, ['4', '5', '6'])) {
                         return '<span class="text-warning">' . $status . '</span>';
-                    } elseif (in_array($status, ['Đã duyệt', 'Đã thực duyệt'])) {
+                    } elseif (in_array($status, ['2', 'Đã thực duyệt'])) {
                         return '<span class="text-success">' . $status . '</span>';
-                    } elseif (in_array($status, ['Đã hủy', 'Chấp nhận hủy', 'Từ chối hủy'])) {
+                    } elseif (in_array($status, ['0', '6', '7'])) {
                         return '<span class="text-danger">' . $status . '</span>';
-                    } elseif (in_array($status, ['Đang chờ duyệt'])) {
+                    } elseif (in_array($status, ['1'])) {
                         return '<span class="text-primary">' . $status . '</span>';
                     } else {
                         return '<span class="text-dark">' . $status . '</span>';

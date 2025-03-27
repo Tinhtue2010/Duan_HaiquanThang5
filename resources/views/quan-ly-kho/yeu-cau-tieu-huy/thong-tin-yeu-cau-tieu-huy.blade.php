@@ -51,7 +51,7 @@
                                 <th>Số container</th>
                                 <th>Ngày tờ khai</th>
                                 <th>Tên hàng</th>
-                                @if ($yeuCau->trang_thai == 'Đã duyệt')
+                                @if ($yeuCau->trang_thai == '2')
                                     <th>Thao tác</th>
                                 @endif
                             </tr>
@@ -66,7 +66,7 @@
 
                                     <td> {{ \Carbon\Carbon::parse($chiTiet->ngay_dang_ky)->format('d-m-Y') }}</td>
                                     <td>{!! $chiTiet->ten_hang !!}</td>
-                                    @if ($yeuCau->trang_thai == 'Đã duyệt')
+                                    @if ($yeuCau->trang_thai == '2')
                                         <td>
                                             <a
                                                 href="{{ route('export.theo-doi-tru-lui', ['cong_viec' => 6, 'ma_yeu_cau' => $yeuCau->ma_yeu_cau, 'so_to_khai_nhap' => $chiTiet->so_to_khai_nhap]) }}">
@@ -87,7 +87,7 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-                            @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
+                            @if (trim($yeuCau->trang_thai) == '1')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
@@ -139,7 +139,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($yeuCau->trang_thai) == 'Đã duyệt')
+                            @elseif(trim($yeuCau->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->congChuc->ten_cong_chuc ?? '' }}
@@ -169,7 +169,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($yeuCau->trang_thai) == 'Doanh nghiệp đề nghị sửa yêu cầu')
+                            @elseif(trim($yeuCau->trang_thai) == '3')
                                 <h2 class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
                                 <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->congChuc->ten_cong_chuc ?? '' }}</h2>
@@ -187,11 +187,11 @@
                                         </div>
                                     </center>
                                 </div>
-                            @elseif(trim($yeuCau->trang_thai) == 'Đã hủy')
+                            @elseif(trim($yeuCau->trang_thai) == '0')
                                 <h2 class="text-danger">Yêu cầu đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h3 class="text-dark">{{ $yeuCau->ghi_chu }}</h3>
-                            @elseif(trim($yeuCau->trang_thai) == 'Doanh nghiệp đề nghị hủy yêu cầu')
+                            @elseif(trim($yeuCau->trang_thai) == '4')
                                 <h2 class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h3 class="text-dark">{{ $yeuCau->ghi_chu }}</h3>

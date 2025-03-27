@@ -56,7 +56,7 @@ class BaoCaoSangContChuyenTau implements FromArray, WithEvents
             ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', 'hang_hoa.so_to_khai_nhap')
             ->whereBetween('yeu_cau_chuyen_container.ngay_yeu_cau', [$this->tu_ngay, $this->den_ngay])
-            ->where('yeu_cau_chuyen_container.trang_thai','Đã duyệt')
+            ->where('yeu_cau_chuyen_container.trang_thai','2')
             ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
                 return $query->where('yeu_cau_chuyen_container.ma_cong_chuc', $this->ma_cong_chuc);
             })
@@ -82,7 +82,7 @@ class BaoCaoSangContChuyenTau implements FromArray, WithEvents
             ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', 'hang_hoa.so_to_khai_nhap')
             ->whereBetween('yeu_cau_tau_cont.ngay_yeu_cau', [$this->tu_ngay, $this->den_ngay])
-            ->where('yeu_cau_tau_cont.trang_thai','Đã duyệt')
+            ->where('yeu_cau_tau_cont.trang_thai','2')
             ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
                 return $query->where('yeu_cau_tau_cont.ma_cong_chuc',$this->ma_cong_chuc);
             })
@@ -108,7 +108,7 @@ class BaoCaoSangContChuyenTau implements FromArray, WithEvents
             ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
             ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', 'hang_hoa.so_to_khai_nhap')
-            ->where('yeu_cau_chuyen_tau.trang_thai','Đã duyệt')
+            ->where('yeu_cau_chuyen_tau.trang_thai','2')
             ->whereBetween('yeu_cau_chuyen_tau.ngay_yeu_cau', [$this->tu_ngay, $this->den_ngay])
             ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
                 return $query->where('yeu_cau_chuyen_tau.ma_cong_chuc',$this->ma_cong_chuc);
@@ -134,7 +134,7 @@ class BaoCaoSangContChuyenTau implements FromArray, WithEvents
             ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
             ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', 'hang_hoa.so_to_khai_nhap')
-            ->where('yeu_cau_kiem_tra.trang_thai','Đã duyệt')
+            ->where('yeu_cau_kiem_tra.trang_thai','2')
             ->whereBetween('yeu_cau_kiem_tra.ngay_yeu_cau', [$this->tu_ngay, $this->den_ngay])
             ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
                 return $query->where('yeu_cau_kiem_tra.ma_cong_chuc',$this->ma_cong_chuc);

@@ -66,11 +66,11 @@ class YeuCauHangVeKhoController extends Controller
             $toKhaiDangXuLys = YeuCauHangVeKhoChiTiet::join('nhap_hang', 'yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_hang_ve_kho', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_hang_ve_kho.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_hang_ve_kho.trang_thai', "Đang chờ duyệt")
+                ->where('yeu_cau_hang_ve_kho.trang_thai', "1")
                 ->pluck('yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap');
 
             $toKhaiNhaps = NhapHang::with('hangHoa')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+                ->where('nhap_hang.trang_thai', '2')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
@@ -88,7 +88,7 @@ class YeuCauHangVeKhoController extends Controller
 
             $yeuCau = YeuCauHangVeKho::create([
                 'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
-                'trang_thai' => 'Đang chờ duyệt',
+                'trang_thai' => '1',
                 'ngay_yeu_cau' => now(),
             ]);
 
@@ -178,7 +178,7 @@ class YeuCauHangVeKhoController extends Controller
 
                 $yeuCau->ma_cong_chuc = $congChucPhuTrach->ma_cong_chuc;
                 $yeuCau->ngay_hoan_thanh = now();
-                $yeuCau->trang_thai = 'Đã duyệt';
+                $yeuCau->trang_thai = '2';
                 $yeuCau->save();
 
                 $chiTietYeuCaus = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
@@ -209,7 +209,7 @@ class YeuCauHangVeKhoController extends Controller
 
                     $nhapHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap);
                     $nhapHang->update([
-                        'trang_thai' => 'Quay về kho ban đầu'
+                        'trang_thai' => '6'
                     ]);
                     // $xuatHang = XuatHang::create([
                     //     'so_to_khai_nhap' => $nhapHang->so_to_khai_nhap,
@@ -274,13 +274,13 @@ class YeuCauHangVeKhoController extends Controller
         try {
             DB::beginTransaction();
             $yeuCau = YeuCauHangVeKho::find($request->ma_yeu_cau);
-            if ($yeuCau->trang_thai == "Đang chờ duyệt") {
+            if ($yeuCau->trang_thai == "1") {
                 if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
                     $this->huyYeuCauHangVeKhoFunc($request->ma_yeu_cau, $request->ghi_chu, "Cán bộ công chức", '');
                 } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
                     $this->huyYeuCauHangVeKhoFunc($request->ma_yeu_cau, $request->ghi_chu, "Doanh nghiệp", '');
                 }
-            } elseif ($yeuCau->trang_thai == "Đã duyệt") {
+            } elseif ($yeuCau->trang_thai == "2") {
                 $this->huyYeuCauDaDuyet($request);
             } else {
                 $this->duyetHuyYeuCau($request);
@@ -298,7 +298,7 @@ class YeuCauHangVeKhoController extends Controller
     public function huyHuyYeuCau(Request $request)
     {
         $yeuCau = YeuCauHangVeKho::find($request->ma_yeu_cau);
-        $yeuCau->trang_thai = 'Đã duyệt';
+        $yeuCau->trang_thai = '2';
 
         $soToKhaiNhaps = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_to_khai_nhap');
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
@@ -320,7 +320,7 @@ class YeuCauHangVeKhoController extends Controller
     public function huyYeuCauDaDuyet(Request $request)
     {
         $yeuCau = YeuCauHangVeKho::find($request->ma_yeu_cau);
-        $yeuCau->trang_thai = 'Doanh nghiệp đề nghị hủy yêu cầu';
+        $yeuCau->trang_thai = '4';
         $yeuCau->ghi_chu = $request->ghi_chu;
         $yeuCau->save();
 
@@ -346,7 +346,7 @@ class YeuCauHangVeKhoController extends Controller
                 $this->themTienTrinh($soToKhaiNhap, "Doanh nghiệp đã hủy đề nghị hủy yêu cầu đưa hàng về kho hàng số " . $request->ma_yeu_cau, '');
             }
         }
-        $yeuCau->trang_thai = 'Đã hủy';
+        $yeuCau->trang_thai = '0';
         $yeuCau->ghi_chu = "Công chức duyệt đề nghị hủy: " . $request->ghi_chu;
         $yeuCau->save();
     }
@@ -355,7 +355,7 @@ class YeuCauHangVeKhoController extends Controller
     {
         $yeuCau = YeuCauHangVeKho::find($ma_yeu_cau);
         if ($yeuCau) {
-            if ($yeuCau->trang_thai == "Đang chờ duyệt") {
+            if ($yeuCau->trang_thai == "1") {
 
                 $soToKhaiNhaps = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');
 
@@ -373,7 +373,7 @@ class YeuCauHangVeKhoController extends Controller
                         $this->themTienTrinh($soToKhaiNhap, "Hệ thống đã hủy yêu cầu đưa hàng trở lại kho ban đầu số " . $ma_yeu_cau . $ly_do, '');
                     }
                 }
-                $yeuCau->trang_thai = 'Đã hủy';
+                $yeuCau->trang_thai = '0';
                 $yeuCau->ghi_chu = $ghi_chu;
                 $yeuCau->save();
             }
@@ -386,13 +386,13 @@ class YeuCauHangVeKhoController extends Controller
             $toKhaiDangXuLys = YeuCauHangVeKhoChiTiet::join('nhap_hang', 'yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_hang_ve_kho', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_hang_ve_kho.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-                ->where('yeu_cau_hang_ve_kho.trang_thai', "Đang chờ duyệt")
+                ->where('yeu_cau_hang_ve_kho.trang_thai', "1")
                 ->pluck('yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap');
 
             $toKhaiTrongPhieu = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_to_khai_nhap');
             $toKhaiDangXuLys = $toKhaiDangXuLys->diff($toKhaiTrongPhieu);
             $toKhaiNhaps = NhapHang::with('hangHoa')
-                ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+                ->where('nhap_hang.trang_thai', '2')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
@@ -410,7 +410,7 @@ class YeuCauHangVeKhoController extends Controller
             // Decode the JSON data from the form
             $yeuCau = YeuCauHangVeKho::find($request->ma_yeu_cau);
 
-            if ($yeuCau->trang_thai == 'Đang chờ duyệt') {
+            if ($yeuCau->trang_thai == '1') {
                 $this->suaYeuCauDangChoDuyet($request, $yeuCau);
             } else {
                 $this->suaYeuCauDaDuyet($request, $yeuCau);
@@ -450,7 +450,7 @@ class YeuCauHangVeKhoController extends Controller
     }
     public function suaYeuCauDaDuyet($request, $yeuCau)
     {
-        $yeuCau->trang_thai = 'Doanh nghiệp đề nghị sửa yêu cầu';
+        $yeuCau->trang_thai = '3';
         $yeuCau->save();
         $suaYeuCau = YeuCauSua::create([
             'ten_doan_tau' => $request->ten_doan_tau,
@@ -512,7 +512,7 @@ class YeuCauHangVeKhoController extends Controller
             YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
             $this->xuLySuaYeuCau($chiTietSuaYeuCaus, $soToKhaiCanXuLy, $yeuCau);
 
-            $yeuCau->trang_thai = 'Đã duyệt';
+            $yeuCau->trang_thai = '2';
             if ($yeuCau->file_name && $suaYeuCau->file_name) {
                 $yeuCau->file_name = $suaYeuCau->file_name;
                 $yeuCau->file_path = $suaYeuCau->file_path;
@@ -537,7 +537,7 @@ class YeuCauHangVeKhoController extends Controller
                 ->where('cong_viec', 5)
                 ->delete();
             NhapHang::where('so_to_khai_nhap', $soToKhai)->update([
-                'trang_thai' => "Đã nhập hàng",
+                'trang_thai' => "2",
             ]);
         }
     }
@@ -549,7 +549,7 @@ class YeuCauHangVeKhoController extends Controller
             if (in_array($chiTietYeuCau->so_to_khai_nhap, $soToKhaiCanXuLy)) {
 
                 NhapHang::where('so_to_khai_nhap', $chiTietYeuCau->so_to_khai_nhap)->update([
-                    'trang_thai' => "Quay về kho ban đầu",
+                    'trang_thai' => "6",
                 ]);
                 $this->themTheoDoiTruLui($chiTietYeuCau->so_to_khai_nhap, $yeuCau);
                 $this->themTienTrinh($chiTietYeuCau->so_to_khai_nhap, "Đã sửa yêu cầu đưa hàng về kho ban đầu số " . $yeuCau->ma_yeu_cau  . ", cán bộ công chức phụ trách: " . $yeuCau->congChuc->ten_cong_chuc, $yeuCau->congChuc->ma_cong_chuc);
@@ -641,7 +641,7 @@ class YeuCauHangVeKhoController extends Controller
         $suaYeuCau->delete();
 
         $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
-        if ($yeuCau->trang_thai = 'Doanh nghiệp đề nghị sửa yêu cầu') {
+        if ($yeuCau->trang_thai = '3') {
             foreach ($chiTiets as $chiTiet) {
                 if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
                     $yeuCau->ghi_chu = "Doanh nghiệp hủy đề nghị sửa: " . $request->ghi_chu;
@@ -663,7 +663,7 @@ class YeuCauHangVeKhoController extends Controller
             }
         }
 
-        $yeuCau->trang_thai = 'Đã duyệt';
+        $yeuCau->trang_thai = '2';
         $yeuCau->save();
 
         session()->flash('alert-success', 'Hủy yêu cầu sửa thành công!');

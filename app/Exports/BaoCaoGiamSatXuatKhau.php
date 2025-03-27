@@ -61,7 +61,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('chu_hang', 'doanh_nghiep.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
             ->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc)
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->whereBetween('xuat_hang.ngay_xuat_canh', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.so_to_khai_nhap',
@@ -130,7 +130,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                         ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                         ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
                         ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-                        ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+                        ->where('xuat_hang.trang_thai', '!=', '0')
                         ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
                         ->where('xuat_hang.so_to_khai_xuat', $nhapHang->so_to_khai_xuat)
                         ->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc)
@@ -144,7 +144,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                         ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                         ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
                         ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-                        ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+                        ->where('xuat_hang.trang_thai', '!=', '0')
                         ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
                         ->where('xuat_hang.so_to_khai_xuat', $nhapHang->so_to_khai_xuat)
                         ->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc)
@@ -188,9 +188,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
             }
         }
 
-        $result = $this->deduplicateShipData(array_values(array_slice($result, 10)));
-
-        $nhapHangXuatHets = NhapHang::whereIn('nhap_hang.trang_thai', ['Đã bàn giao hồ sơ', 'Đã xuất hết'])
+        $nhapHangXuatHets = NhapHang::whereIn('nhap_hang.trang_thai', ['7', '4'])
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
             ->where('nhap_hang.ma_cong_chuc_ban_giao', $this->ma_cong_chuc)
@@ -229,93 +227,6 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
         return $result;
     }
 
-    function deduplicateShipData(array $data): array
-    {
-        // Group records by date
-        $groupedByDate = collect($data)->groupBy(function ($item) {
-            return $item[12]; // Date index
-        });
-
-        $result = [];
-
-        foreach ($groupedByDate as $date => $dateGroup) {
-            $processedIndices = [];
-
-            // Process each item in the date group
-            for ($i = 0; $i < count($dateGroup); $i++) {
-                // Skip if already processed
-                if (in_array($i, $processedIndices)) {
-                    continue;
-                }
-
-                $currentItem = $dateGroup[$i];
-                $currentShips = explode('; ', $currentItem[13]);
-                $duplicateIndices = [$i];
-
-                // Find duplicates
-                for ($j = 0; $j < count($dateGroup); $j++) {
-                    if ($i === $j || in_array($j, $processedIndices)) {
-                        continue;
-                    }
-
-                    $comparisonItem = $dateGroup[$j];
-                    $comparisonShips = explode('; ', $comparisonItem[13]);
-
-                    // Check if there's any overlap in ship names
-                    $hasOverlap = false;
-                    foreach ($currentShips as $ship) {
-                        if (in_array($ship, $comparisonShips)) {
-                            $hasOverlap = true;
-                            break;
-                        }
-                    }
-
-                    if ($hasOverlap) {
-                        $duplicateIndices[] = $j;
-                        $processedIndices[] = $j;
-                    }
-                }
-
-                // If we found duplicates, find the one with longest ship names string
-                if (count($duplicateIndices) > 1) {
-                    $longestStringIndex = $duplicateIndices[0];
-                    $maxLength = strlen($dateGroup[$longestStringIndex][13]);
-
-                    foreach ($duplicateIndices as $index) {
-                        $length = strlen($dateGroup[$index][13]);
-                        if ($length > $maxLength) {
-                            $maxLength = $length;
-                            $longestStringIndex = $index;
-                        }
-                    }
-
-                    // Create a new record with the longest ship names string
-                    $mergedItem = $dateGroup[$longestStringIndex]->toArray();
-
-                    // Sum the amounts from all duplicates
-                    foreach ($duplicateIndices as $index) {
-                        if ($index === $longestStringIndex) {
-                            continue;
-                        }
-
-                        // Sum the amounts (indices 4-8)
-                        for ($amountIndex = 4; $amountIndex <= 8; $amountIndex++) {
-                            $mergedItem[$amountIndex] += $dateGroup[$index][$amountIndex];
-                        }
-                    }
-
-                    $result[] = $mergedItem;
-                    $processedIndices[] = $i;
-                } else {
-                    // No duplicates found, add the original item
-                    $result[] = $currentItem->toArray();
-                    $processedIndices[] = $i;
-                }
-            }
-        }
-
-        return $result;
-    }
     public function registerEvents(): array
     {
         return [

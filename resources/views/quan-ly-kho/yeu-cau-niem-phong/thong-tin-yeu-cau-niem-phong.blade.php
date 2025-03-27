@@ -60,8 +60,8 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-                            @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
-                                <h2 class="text-primary">Đang chờ duyệt </h2>
+                            @if (trim($yeuCau->trang_thai) == '1')
+                                <h2 class="text-primary">Đang chờ duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
                                     <hr />
@@ -111,7 +111,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($yeuCau->trang_thai) == 'Đã duyệt')
+                            @elseif(trim($yeuCau->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}</h2>
@@ -168,11 +168,11 @@
                                         @endforeach
                                     </tbody>
                                 </table>
-                            @elseif(trim($yeuCau->trang_thai) == 'Đã hủy')
+                            @elseif(trim($yeuCau->trang_thai) == '0')
                                 <h2 class="text-danger">Yêu cầu đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h3 class="text-dark">Lý do hủy: {{ $yeuCau->ghi_chu }}</h3>
-                            @elseif(trim($yeuCau->trang_thai) == 'Doanh nghiệp đề nghị hủy yêu cầu')
+                            @elseif(trim($yeuCau->trang_thai) == '4')
                                 <h2 class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h3 class="text-dark">Lý do hủy: {{ $yeuCau->ghi_chu }}</h3>

@@ -119,7 +119,7 @@ class XuatHangService
             $query->select('so_to_khai_xuat', 'trang_thai');
         }])
             ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-            ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+            ->where('nhap_hang.trang_thai', '2')
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->leftJoin('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
@@ -207,7 +207,7 @@ class XuatHangService
         $xuatHang->ma_loai_hinh = $request->ma_loai_hinh;
         $xuatHang->ngay_dang_ky = now();
         $xuatHang->ten_doan_tau = $request->ten_doan_tau;
-        $xuatHang->trang_thai = "Đang chờ duyệt";
+        $xuatHang->trang_thai = "1";
         $xuatHang->ma_doanh_nghiep = $this->getDoanhNghiepHienTai()->ma_doanh_nghiep;
         $xuatHang->save();
         return $xuatHang;
@@ -246,6 +246,7 @@ class XuatHangService
     {
         foreach ($rowsData as $row) {
             $so_luong = HangTrongCont::find($row['ma_hang_cont'])->so_luong;
+            $phuong_tien_vt_nhap = NhapHang::find($row['so_to_khai_nhap'])->phuong_tien_vt_nhap;
             XuatHangCont::create([
                 'so_to_khai_xuat' => $soToKhaiXuat,
                 'ma_hang_cont' => $row['ma_hang_cont'],
@@ -253,6 +254,7 @@ class XuatHangService
                 'so_luong_ton' => $so_luong - $row['so_luong_xuat'],
                 'so_luong_xuat' => $row['so_luong_xuat'],
                 'so_container' => $row['so_container'],
+                'phuong_tien_vt_nhap' => $phuong_tien_vt_nhap,
                 'tri_gia' => $row['tri_gia'],
             ]);
         }
@@ -298,7 +300,7 @@ class XuatHangService
                 'nhap_hang.ngay_thong_quan',
                 'hang_trong_cont.so_container',
                 DB::raw('SUM(CASE 
-                WHEN xuat_hang.trang_thai IN ("Đang chờ duyệt", "Doanh nghiệp yêu cầu sửa phiếu chờ duyệt","Doanh nghiệp yêu cầu hủy phiếu chờ duyệt") 
+                WHEN xuat_hang.trang_thai IN ("1", "3","6") 
                 AND xuat_hang.so_to_khai_xuat != ' . $xuatHang->so_to_khai_xuat . ' 
                 THEN xuat_hang_cont.so_luong_xuat 
                 ELSE 0 
@@ -357,7 +359,7 @@ class XuatHangService
                 'nhap_hang.ngay_thong_quan',
                 'hang_trong_cont.so_container',
                 DB::raw('SUM(CASE 
-                WHEN xuat_hang.trang_thai IN ("Đang chờ duyệt", "Doanh nghiệp yêu cầu sửa phiếu chờ duyệt", "Doanh nghiệp yêu cầu hủy phiếu chờ duyệt") 
+                WHEN xuat_hang.trang_thai IN ("1", "3", "6") 
                 AND xuat_hang.so_to_khai_xuat != ' . $xuatHang->so_to_khai_xuat . ' 
                 THEN xuat_hang_cont.so_luong_xuat 
                 ELSE 0 
@@ -437,14 +439,14 @@ class XuatHangService
 
     public function capNhatTrangThaiPhieuXuat($xuatHang)
     {
-        if ($xuatHang->trang_thai == "Đang chờ duyệt") {
-            $newStatus = 'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt';
-        } elseif ($xuatHang->trang_thai == "Đã duyệt") {
-            $newStatus = 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt';
-        } elseif ($xuatHang->trang_thai == "Đã chọn phương tiện xuất cảnh") {
-            $newStatus = 'Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC';
-        } elseif ($xuatHang->trang_thai == "Đã duyệt xuất hàng") {
-            $newStatus = 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng';
+        if ($xuatHang->trang_thai == "1") {
+            $newStatus = '3';
+        } elseif ($xuatHang->trang_thai == "2") {
+            $newStatus = '4';
+        } elseif ($xuatHang->trang_thai == "11") {
+            $newStatus = '5';
+        } elseif ($xuatHang->trang_thai == "12") {
+            $newStatus = '6';
         }
         $xuatHang->update(['trang_thai' => $newStatus]);
     }
@@ -540,7 +542,7 @@ class XuatHangService
             $ten_hang = $hangHoa->ten_hang;
             $so_luong_trong_phieu  = $xuatHangCont->so_luong_xuat ?? 0;
             $so_luong_moi = $chiTietSuaXuatHang->so_luong_xuat ?? 0;
-            if ($so_luong_trong_phieu  < $so_luong_moi && $hangHoa->so_luong > $so_luong_moi) {
+            if ($so_luong_moi - $so_luong_trong_phieu > $hangHoa->so_luong) {
                 $thong_bao = "Số lượng hàng trong kho không đủ cho phiếu xuất sau khi sửa, hàng hóa: {$ten_hang} " .
                     "Số lượng trong phiếu: {$so_luong_trong_phieu}, " .
                     "số lượng sau khi sửa: {$so_luong_moi}, " .
@@ -598,14 +600,14 @@ class XuatHangService
 
         $xuatHang->ma_loai_hinh = $suaXuatHang->ma_loai_hinh;
         $trang_thai = "";
-        if ($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt') {
-            $trang_thai = "Đang chờ duyệt";
-        } elseif ($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt') {
-            $trang_thai = "Đã duyệt";
-        } elseif ($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC') {
-            $trang_thai = "Đã chọn phương tiện xuất cảnh";
-        } elseif ($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng') {
-            $trang_thai = "Đã duyệt xuất hàng";
+        if ($xuatHang->trang_thai == '3') {
+            $trang_thai = "1";
+        } elseif ($xuatHang->trang_thai == '4') {
+            $trang_thai = "2";
+        } elseif ($xuatHang->trang_thai == '5') {
+            $trang_thai = "11";
+        } elseif ($xuatHang->trang_thai == '6') {
+            $trang_thai = "12";
         } else {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
             return redirect()->back();
@@ -613,7 +615,7 @@ class XuatHangService
         $xuatHang->trang_thai = $trang_thai;
         $xuatHang->save();
 
-        // if ($trang_thai != "Đang chờ duyệt") {
+        // if ($trang_thai != "1") {
         $this->capNhatSoLuongHangTrongCont($chiTietSuaXuatHangs, $xuatHangConts);
         // }
 
@@ -630,11 +632,22 @@ class XuatHangService
             ->distinct()
             ->get();
         foreach ($xuatHangConts as $xuatHangCont) {
-            $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt yêu cầu sửa phiếu xuất số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
+            $so_to_khai_nhap = $xuatHangCont->so_to_khai_nhap;
+            $allZero = !HangTrongCont::whereHas('hangHoa', function ($query) use ($so_to_khai_nhap) {
+                $query->where('so_to_khai_nhap', $so_to_khai_nhap);
+            })->where('so_luong', '!=', 0)->exists();
+            
+            if (!$allZero) {
+                NhapHang::find($so_to_khai_nhap)
+                ->update([
+                    'trang_thai' => '2',
+                ]);
+            }
+            // $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt yêu cầu sửa phiếu xuất số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
         }
         $suaXuatHang->update([
-            'trang_thai' => "Đã duyệt",
-            'ma_cong_chuc' => $congChuc->ma_cong_chuc,
+            'trang_thai' => "2",
+            'ma_cong_chuc' => $congChuc->ma_cong_chuc ?? '',
             'trang_thai_phieu_xuat' =>  $trang_thai
         ]);
 
@@ -734,6 +747,7 @@ class XuatHangService
     public function themLaiXuatHangCont($xuatHang, $chiTietSuaXuatHangs)
     {
         $xuatHangConts = $chiTietSuaXuatHangs->map(function ($chiTietSuaXuatHang) use ($xuatHang) {
+            $phuong_tien_vt_nhap = NhapHang::find( $chiTietSuaXuatHang->so_to_khai_nhap)->phuong_tien_vt_nhap;
             return [
                 'so_to_khai_xuat' => $xuatHang->so_to_khai_xuat,
                 'so_to_khai_nhap' => $chiTietSuaXuatHang->so_to_khai_nhap,
@@ -742,6 +756,7 @@ class XuatHangService
                 'so_luong_ton' => $chiTietSuaXuatHang->so_luong_ton,
                 'so_container' => $chiTietSuaXuatHang->so_container,
                 'tri_gia' => $chiTietSuaXuatHang->tri_gia,
+                'phuong_tien_vt_nhap' => $phuong_tien_vt_nhap,
             ];
         });
 
@@ -784,7 +799,7 @@ class XuatHangService
         $xuatHang->update([
             'ghi_chu' => '',
             'ma_cong_chuc' => $maCongChuc,
-            'trang_thai' => 'Đã duyệt',
+            'trang_thai' => '2',
             'ngay_xuat_canh' => now()
         ]);
     }
@@ -797,7 +812,8 @@ class XuatHangService
         return XuatHangSua::create([
             'ma_loai_hinh' => $request->ma_loai_hinh,
             'so_to_khai_xuat' => $request->so_to_khai_xuat,
-            'trang_thai' => 'Đang chờ duyệt',
+            'ma_cong_chuc' => $xuatHang->ma_cong_chuc ?? '',
+            'trang_thai' => '1',
             'ngay_tao' => now(),
             'trang_thai_phieu_xuat' => $xuatHang->trang_thai,
             'ten_doan_tau' => $request->ten_doan_tau,
@@ -808,7 +824,7 @@ class XuatHangService
         $maCongChuc = $ma_cong_chuc;
         $xuatHang = XuatHang::find($so_to_khai_xuat);
         $xuatHang->ma_cong_chuc = $ma_cong_chuc;
-        if ($xuatHang->trang_thai != "Đã duyệt") {
+        if ($xuatHang->trang_thai != "2") {
             $this->capNhatPhieuXuatHang($xuatHang, $maCongChuc);
 
             $congChuc = $this->getCongChucHienTai();
@@ -827,10 +843,10 @@ class XuatHangService
     public function xuLyDuyetThucXuat($ma_cong_chuc, $so_to_khai_xuat)
     {
         $xuatHang = XuatHang::find($so_to_khai_xuat);
-        if ($xuatHang->trang_thai != "Đã thực xuất hàng") {
+        if ($xuatHang->trang_thai != "13") {
             $xuatHang->update([
                 'ghi_chu' => '',
-                'trang_thai' => 'Đã thực xuất hàng',
+                'trang_thai' => '13',
                 'ngay_xuat_canh' => now()
             ]);
             $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
@@ -852,7 +868,7 @@ class XuatHangService
     {
         $xuatHang = XuatHang::find($so_to_khai_xuat);
         if ($xuatHang) {
-            $xuatHang->trang_thai = 'Đã hủy';
+            $xuatHang->trang_thai = '0';
             $xuatHang->ghi_chu = $ghi_chu;
             $xuatHang->save();
 
@@ -880,7 +896,7 @@ class XuatHangService
     {
         $ghi_chu = "Hệ thống đã hủy phiếu xuất " . $ly_do;
         $xuatHangs = XuatHang::where('so_to_khai_nhap', $so_to_khai_nhap)
-            ->where('trang_thai', 'Đang chờ duyệt')
+            ->where('trang_thai', '1')
             ->get();
         foreach ($xuatHangs as $xuatHang) {
             $this->huyPhieuXuatFunc($xuatHang->so_to_khai_xuat, $ghi_chu, 'Hệ thống', $ly_do);

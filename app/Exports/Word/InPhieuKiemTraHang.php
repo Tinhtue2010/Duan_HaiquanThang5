@@ -52,7 +52,7 @@ class InPhieuKiemTraHang
         $headerTable->addRow();
         $cell1 = $headerTable->addCell(6000);
         $cell1->addText($yeuCau->doanhNghiep->ten_doanh_nghiep ?? '', ['bold' => true, 'size' => 12], ['alignment' => 'center']);
-        $cell1->addText('Số : '.$yeuCau->ma_yeu_cau.' – '.$date.' /CV', ['size' => 12], ['alignment' => 'center']);
+        $cell1->addText('Số : ' . $yeuCau->ma_yeu_cau . ' – ' . $date . ' /CV', ['size' => 12], ['alignment' => 'center']);
         $cell1->addLine(['weight' => 1, 'width' => 120, 'height' => 0, 'alignment' => 'center']);
         $cell1->addText('V/v: “kiểm tra hàng ”', ['italic' => true, 'size' => 12], ['alignment' => 'center']);
 
@@ -99,10 +99,10 @@ class InPhieuKiemTraHang
             $table->addCell(2000, ['valign' => 'center'])->addText($date, [], ['alignment' => 'center']);
             $cell = $table->addCell(5000, ['valign' => 'center']);
             $lines = explode('<br>', $chiTiet->ten_hang);
-            
+
             // Filter out empty lines and trim whitespace
             $lines = array_filter(array_map('trim', $lines));
-            
+
             foreach ($lines as $line) {
                 $cell->addText(
                     $line,
@@ -110,14 +110,16 @@ class InPhieuKiemTraHang
                     ['alignment' => 'center']
                 );
             }
-            
         }
 
-
-        $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y');
-        $section->addText('          Đoàn tàu số: '.$yeuCau->ten_doan_tau, 'justify');
+        if ($yeuCau->ngay_hoan_thanh) {
+            $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y');
+        } else {
+            $date = '';
+        }
+        $section->addText('          Đoàn tàu số: ' . $yeuCau->ten_doan_tau, 'justify');
         $section->addText('          Thời gian thực hiện: Ngày ' . $date, 'justify');
-        $section->addText('          Đề nghị Quý Chi cục tạo điều kiện thuận lợi để Công ty thực hiện nội dung công việc như trên, chúng tôi cam kết chịu trách nhiệm bảo quản nguyên trạng hàng hóa, niêm phong hải quan theo đúng quy định.', [], 'justify');
+        $section->addText('          Đề nghị quý cơ quan tạo điều kiện thuận lợi để Công ty thực hiện nội dung công việc như trên, chúng tôi cam kết chịu trách nhiệm bảo quản nguyên trạng hàng hóa, niêm phong hải quan theo đúng quy định.', [], 'justify');
         $section->addText('Xin chân thành cảm ơn!', [], 'justify');
         $section->addTextBreak(1);
 
@@ -126,16 +128,19 @@ class InPhieuKiemTraHang
         $headerTable2->addRow();
         $cell1 = $headerTable2->addCell(6000);
         $cell1->addText('Nơi nhận:', ['bold' => true]);
-        $cell1->addText('- Chi cục HQCK cảng VG (để b/c);');
+        $cell1->addText('- HQCK cảng Vạn Gia (để b/c);');
         $cell1->addText('- Lưu văn thư: 01 bản.');
 
-        $qrCodeText = 'Yêu cầu số '.$yeuCau->ma_yeu_cau.' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
-        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
+        if ($yeuCau->ngay_hoan_thanh) {
+            $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
+            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
 
-        $section->addImage($qrCodeUrl, [
-            'width' => 100,
-            'height' => 100,
-        ]);
+            $section->addImage($qrCodeUrl, [
+                'width' => 100,
+                'height' => 100,
+            ]);
+        }
+
 
         // Second cell of the header
         $cell2 = $headerTable2->addCell(6000);
@@ -144,7 +149,8 @@ class InPhieuKiemTraHang
 
         $section->addTextBreak();
         $section->addText('LĐ Đội KTGS và KSHQ:');
-        $section->addText('- Phân công Đ/C '.$yeuCau->congChuc->ten_cong_chuc.' thực hiện.');
+        $congChuc =  $yeuCau->congChuc->ten_cong_chuc ?? '';
+        $section->addText('- Phân công Đ/C ' . $congChuc . ' thực hiện.');
 
         $headerTable3 = $section->addTable(['cellMargin' => 0]);
 

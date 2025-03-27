@@ -15,10 +15,16 @@ use App\Models\YeuCauNiemPhongChiTiet;
 use App\Models\HangTrongCont;
 use App\Models\NhapHang;
 use App\Models\XuatHang;
+use App\Models\YeuCauChuyenContainer;
+use App\Models\YeuCauKiemTra;
+use App\Models\YeuCauTauCont;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Yajra\DataTables\Facades\DataTables;
+
 
 class YeuCauNiemPhongController extends Controller
 {
@@ -66,7 +72,7 @@ class YeuCauNiemPhongController extends Controller
 
             $yeuCau = YeuCauNiemPhong::create([
                 'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
-                'trang_thai' => 'Đang chờ duyệt',
+                'trang_thai' => '1',
                 'ngay_yeu_cau' => now()
             ]);
 
@@ -189,7 +195,7 @@ class YeuCauNiemPhongController extends Controller
 
         try {
             DB::beginTransaction();
-            if ($yeuCau) {
+            if ($yeuCau && $yeuCau->trang_thai == '1') {
                 $chiTietYeuCaus = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
 
                 foreach ($chiTietYeuCaus as $chiTietYeuCau) {
@@ -208,7 +214,7 @@ class YeuCauNiemPhongController extends Controller
                     $chiTietYeuCau->save();
 
                     $this->themContainerMoi($chiTietYeuCau->so_container);
-                    $suDungSeal = $this->suDungSeal($so_seal_moi, $request->so_container, $yeuCau->ma_cong_chuc);
+                    $suDungSeal = $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $yeuCau->ma_cong_chuc);
                     if (!$suDungSeal) {
                         session()->flash('alert-danger', 'Seal này đã được sử dụng');
                         return redirect()->back();
@@ -221,13 +227,24 @@ class YeuCauNiemPhongController extends Controller
 
                 $yeuCau->ma_cong_chuc = $request->ma_cong_chuc;
                 $yeuCau->ngay_hoan_thanh = now();
-                $yeuCau->trang_thai = 'Đã duyệt';
+                $yeuCau->trang_thai = '2';
                 $yeuCau->save();
                 session()->flash('alert-success', 'Duyệt yêu cầu thành công!');
             }
 
             DB::commit();
-            // return redirect()->back();
+
+            $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
+                ->where('yeu_cau_niem_phong.ma_yeu_cau', $request->ma_yeu_cau)
+                ->get();
+
+            foreach ($chiTietYeuCaus as $chiTietYeuCau) {
+                $this->capNhatSealTruLui($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
+                $this->capNhatSealXuatHang($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
+                $this->capNhatSealTheoDoi($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
+            }
+
+
             return redirect()->route('quan-ly-kho.danh-sach-yeu-cau-niem-phong');
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
@@ -235,17 +252,33 @@ class YeuCauNiemPhongController extends Controller
             return redirect()->back();
         }
     }
+
+
+
+
     public function capNhatSealXuatHang($so_container, $so_seal)
     {
         $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
         $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
 
-        XuatHang::where('xuat_hang.ngay_dang_ky', today())
+        XuatHang::where(function ($query) {
+            if (now()->hour < 9) {
+                $query->whereDate('ngay_dang_ky', today())
+                    ->orWhereDate('ngay_dang_ky', today()->subDay());
+            } else {
+                $query->whereDate('ngay_dang_ky', today());
+            }
+        })
             ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
-            ->where('xuat_hang.ngay_dang_ky', today())
-            ->update(['xuat_hang.so_seal_cuoi_ngay' => $so_seal]);
+            ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $so_seal]);
+
+        // XuatHang::join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+        //     ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
+        //     ->whereNull('xuat_hang_cont.so_seal_cuoi_ngay')
+        //     ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $so_seal]);
     }
+
     public function capNhatSealTruLui($so_container, $so_seal)
     {
         $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
@@ -253,16 +286,30 @@ class YeuCauNiemPhongController extends Controller
 
         TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', 'theo_doi_tru_lui.ma_theo_doi')
             ->whereIn('theo_doi_tru_lui_chi_tiet.so_container', [$so_container_no_space, $so_container_with_space])
-            ->where('ngay_them', today())
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_them', today())
+                        ->orWhereDate('ngay_them', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_them', today());
+                }
+            })
             ->update(['theo_doi_tru_lui_chi_tiet.so_seal' => $so_seal]);
     }
     public function capNhatSealTheoDoi($so_container, $so_seal)
     {
         $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
         $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-        
+
         TheoDoiHangHoa::whereIn('so_container', [$so_container_no_space, $so_container_with_space])
-            ->whereDate('thoi_gian', today())
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('thoi_gian', today())
+                        ->orWhereDate('thoi_gian', today()->subDay());
+                } else {
+                    $query->whereDate('thoi_gian', today());
+                }
+            })
             ->update(['so_seal' => $so_seal]);
     }
 
@@ -271,11 +318,11 @@ class YeuCauNiemPhongController extends Controller
         try {
             DB::beginTransaction();
             $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-            if ($yeuCau->trang_thai == "Đang chờ duyệt") {
-                $yeuCau->trang_thai = 'Đã hủy';
+            if ($yeuCau->trang_thai == "1") {
+                $yeuCau->trang_thai = '0';
                 $yeuCau->ghi_chu = $request->ghi_chu;
                 $yeuCau->save();
-            } elseif ($yeuCau->trang_thai == "Đã duyệt") {
+            } elseif ($yeuCau->trang_thai == "2") {
                 $this->huyYeuCauDaDuyet($request);
             } else {
                 $this->duyetHuyYeuCau($request);
@@ -293,14 +340,22 @@ class YeuCauNiemPhongController extends Controller
     public function huyYeuCauDaDuyet(Request $request)
     {
         $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-        $yeuCau->trang_thai = 'Doanh nghiệp đề nghị hủy yêu cầu';
+        $seals = YeuCauNiemPhongChiTiet::join('yeu_cau_niem_phong', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_niem_phong.ma_yeu_cau', $request->ma_yeu_cau)
+            ->pluck('yeu_cau_niem_phong_chi_tiet.so_seal_moi');
+        foreach ($seals as $seal) {
+            Seal::find($seal)->update([
+                'trang_thai' => '0'
+            ]);
+        }
+        $yeuCau->trang_thai = '4';
         $yeuCau->ghi_chu = $request->ghi_chu;
         $yeuCau->save();
     }
     public function huyHuyYeuCau(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-        $yeuCau->trang_thai = 'Đã duyệt';
+        $yeuCau = YeuCauNiemPhong::find(id: $request->ma_yeu_cau);
+        $yeuCau->trang_thai = '2';
 
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
             $yeuCau->ghi_chu = "Công chức từ chối đề nghị hủy: " . $request->ghi_chu;
@@ -331,7 +386,7 @@ class YeuCauNiemPhongController extends Controller
         $soContainers = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_container');
         $this->quayNguocYeuCau($soContainers, $yeuCau);
 
-        $yeuCau->trang_thai = 'Đã hủy';
+        $yeuCau->trang_thai = '0';
         $yeuCau->ghi_chu = "Công chức duyệt đề nghị hủy: " . $request->ghi_chu;
         $yeuCau->save();
     }
@@ -468,4 +523,67 @@ class YeuCauNiemPhongController extends Controller
             ]);
         }
     }
+    public function getSoContainer(Request $request)
+    {
+        $ma_doanh_nghiep = Auth::user()->doanhNghiep->ma_doanh_nghiep;
+        $xuatHangs = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', 'xuat_hang_cont.so_to_khai_xuat')
+            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->where('trang_thai', '!=', 0)
+            ->where('ngay_dang_ky', today())
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_dang_ky', today())
+                        ->orWhereDate('ngay_dang_ky', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_dang_ky', today());
+                }
+            })
+            ->pluck('xuat_hang_cont.so_container')
+            ->unique();
+
+        $tauConts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
+            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_yeu_cau', today())
+                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_yeu_cau', today());
+                }
+            })->pluck('yeu_cau_tau_cont_chi_tiet.so_container_dich')
+            ->unique();
+
+        $containers = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_container_chi_tiet.ma_yeu_cau', 'yeu_cau_chuyen_container.ma_yeu_cau')
+            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_yeu_cau', today())
+                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_yeu_cau', today());
+                }
+            })->pluck('yeu_cau_container_chi_tiet.so_container_dich')
+            ->unique();
+
+        $kiemTra = YeuCauKiemTra::join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau', 'yeu_cau_kiem_tra.ma_yeu_cau')
+            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_yeu_cau', today())
+                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_yeu_cau', today());
+                }
+            })->pluck('yeu_cau_kiem_tra_chi_tiet.so_container')
+            ->unique();
+
+        $containers = $xuatHangs
+            ->merge($tauConts)
+            ->merge($containers)
+            ->merge($kiemTra)
+            ->unique();
+
+        return response()->json(['containers' => $containers]);
+    }
+
 }

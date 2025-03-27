@@ -81,7 +81,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3"><strong>Tổng cộng</strong></td>
+                                    <td colspan="4"><strong>Tổng cộng</strong></td>
                                     <td><strong>{{ $soLuongSum }}</strong></td>
                                     <td></td>
                                     <td></td>
@@ -160,7 +160,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3"><strong>Tổng cộng</strong></td>
+                                    <td colspan="4"><strong>Tổng cộng</strong></td>
                                     <td><strong>{{ $suaSoLuongSum }}</strong></td>
                                     <td></td>
                                     <td></td>
@@ -200,7 +200,7 @@
                 <div class="col-3"></div>
                 <div class="col-6">
                     <div class="text-center">
-                        @if ($suaXuatHang->trang_thai == 'Đang chờ duyệt')
+                        @if ($suaXuatHang->trang_thai == '1')
                             @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                     DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                         $xuatHang->ma_doanh_nghiep)
@@ -237,7 +237,7 @@
                                     </div>
                                 </div>
                             @endif
-                        @elseif($suaXuatHang->trang_thai == 'Đã duyệt')
+                        @elseif($suaXuatHang->trang_thai == '2')
                             <div class="text-center">
                                 <h2 class="text-dark">Công chức duyệt phê duyệt:</h2>
                                 <h2 class="text-primary">{{ $suaXuatHang->congChuc->ten_cong_chuc ?? '' }}</h2>

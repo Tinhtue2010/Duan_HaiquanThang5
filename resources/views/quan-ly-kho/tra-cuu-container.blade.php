@@ -39,7 +39,7 @@
                             <tbody class="clickable-row">
                                 @foreach ($containers as $index => $container)
                                     <tr class="clickable-row"
-                                        onclick="window.location='{{ route('quan-ly-kho.to-khai-trong-container', $container->so_container) }}'">
+                                        @if (!empty($container->so_container)) onclick="window.location='{{ route('quan-ly-kho.to-khai-trong-container', $container->so_container) }}'" @endif>
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $container->so_container }}</td>
                                         <td>{{ $container->so_seal }}</td>

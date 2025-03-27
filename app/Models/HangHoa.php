@@ -23,6 +23,7 @@ class HangHoa extends Model
         'don_gia',
         'tri_gia',
         'don_vi_tinh',
+        'so_container_khai_bao',
     ];
     public function nhapHang()
     {

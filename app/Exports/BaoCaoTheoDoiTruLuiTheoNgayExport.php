@@ -133,7 +133,7 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->orderBy('xuat_hang.so_to_khai_xuat', 'asc') // Sorting from low to high
             ->pluck('xuat_hang.so_to_khai_xuat')
             ->unique() // Ensures unique values
@@ -149,6 +149,15 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
                 ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
                 ->join('xuat_hang', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
                 ->where('xuat_hang.so_to_khai_xuat', $soToKhaiXuat)
+                ->select(
+                    'xuat_hang.ngay_dang_ky',
+                    'xuat_hang_cont.phuong_tien_vt_nhap',
+                    'xuat_hang_cont.*',
+                    'hang_hoa.*',
+                    'hang_trong_cont.ma_hang',
+                    'hang_trong_cont.so_luong',
+                    'hang_trong_cont.is_da_chuyen_cont',
+                )
                 ->get();
 
             $start = null;
@@ -185,15 +194,18 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
                         '',
                         $item->so_luong_xuat,
                         $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
-                        // Only set so_seal_cuoi_ngay if this is the last occurrence of this ma_xuat_hang_cont
                         $index === $lastOccurrences[$item->ma_xuat_hang_cont] ? $item->so_seal_cuoi_ngay ?? '' : '',
                         $item->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                        $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                        $item->so_container == $item->so_container_khai_bao ? '' : $item->so_container,
                         '',
                     ];
 
                     $sum += $item->so_luong_xuat;
                     $end = $stt - 1 + 12; // Update end on each iteration
+                    $soLuongTon = 0;
+                    foreach ($hangHoaArr as $key => $value) {
+                        $soLuongTon += $value;
+                    }
                 }
             }
 

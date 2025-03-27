@@ -342,6 +342,9 @@
                         <br>
                         <input class="mt-2" type="checkbox" name="18" id="18" value="1">
                         <label for="myCheckbox">Báo cáo giám sát hàng hóa xuất khẩu</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="19" id="19" value="1">
+                        <label for="myCheckbox">Báo cáo sử dụng seal niêm phong hải quan</label>
 
                         <input type="hidden" name="ma_cong_chuc" id="modalInputMaCongChucBC">
                     </div>

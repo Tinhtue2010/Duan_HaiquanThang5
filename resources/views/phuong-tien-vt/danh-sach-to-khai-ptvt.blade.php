@@ -55,11 +55,11 @@
                                         <td>{{ $phuong_tien_vt->doanhNghiep->ten_doanh_nghiep }}</td>
                                         <td>{{ $phuong_tien_vt->ten_phuong_tien_vt }}</td>
                                         <td>{{ \Carbon\Carbon::parse($phuong_tien_vt->ngay_dang_ky)->format('d-m-Y') }}</td>
-                                        @if (trim($phuong_tien_vt->trang_thai) == 'Đang chờ duyệt' || trim($phuong_tien_vt->trang_thai) == 'Đang chờ duyệt (Từ chối hủy)')
+                                        @if (trim($phuong_tien_vt->trang_thai) == '1' || trim($phuong_tien_vt->trang_thai) == '1 (7)')
                                             <td class="text-primary">{{ $phuong_tien_vt->trang_thai }}</td>
-                                        @elseif (trim($phuong_tien_vt->trang_thai) == 'Đã duyệt')
+                                        @elseif (trim($phuong_tien_vt->trang_thai) == '2')
                                             <td class="text-success">{{ $phuong_tien_vt->trang_thai }}</td>
-                                        @elseif (trim($phuong_tien_vt->trang_thai) == 'Đã hủy')
+                                        @elseif (trim($phuong_tien_vt->trang_thai) == '0')
                                             <td class="text-danger">{{ $phuong_tien_vt->trang_thai }}</td>
                                         @elseif (trim($phuong_tien_vt->trang_thai) == 'Xin hủy tờ khai')
                                             <td class="text-warning">{{ $phuong_tien_vt->trang_thai }}</td>

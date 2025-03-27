@@ -36,7 +36,7 @@ class BaoCaoTonDoanhNghiepExport implements FromArray, WithEvents
         $data = NhapHang::where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', 'Đã nhập hàng')
+            ->where('nhap_hang.trang_thai', '2')
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 DB::raw("(SELECT SUM(hh.so_luong_khai_bao) 

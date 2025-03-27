@@ -60,14 +60,16 @@
                                         <td>{{ $yeuCau->so_to_khai_nhap_list }}</td>
                                         <td>{{ $yeuCau->ten_doanh_nghiep }}</td>
                                         <td>{{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</td>
-                                        @if (trim($yeuCau->trang_thai) == 'Đang chờ duyệt')
-                                            <td class="text-primary">{{ $yeuCau->trang_thai }}</td>
-                                        @elseif (trim($yeuCau->trang_thai) == 'Đã duyệt')
-                                            <td class="text-success">{{ $yeuCau->trang_thai }}</td>
-                                        @elseif (trim($yeuCau->trang_thai) == 'Đã hoàn thành')
-                                            <td class="text-success">{{ $yeuCau->trang_thai }}</td>
-                                        @elseif (trim($yeuCau->trang_thai) == 'Đã hủy')
-                                            <td class="text-danger">{{ $yeuCau->trang_thai }}</td>
+                                        @if ($yeuCau->trang_thai == 1)
+                                            <td class="text-primary">Đang chờ duyệt</td>
+                                        @elseif ($yeuCau->trang_thai == 2)
+                                            <td class="text-success">Đã duyệt</td>
+                                        @elseif ($yeuCau->trang_thai == 3)
+                                            <td class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</td>
+                                        @elseif ($yeuCau->trang_thai == 4)
+                                            <td class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</td>
+                                        @elseif ($yeuCau->trang_thai == 0)
+                                        <td class="text-danger">Đã hủy</td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -93,9 +95,15 @@
                 stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
                 columnDefs: [{
-                    orderable: false, targets: -1,
-                    width: "350px", targets: 2
-                }],
+                        orderable: false,
+                        width: "360px",
+                        targets: 2
+                    },
+                    {
+                        orderable: false,
+                        targets: -1
+                    }
+                ],
                 initComplete: function() {
                     $('.dataTables_filter input[type="search"]').css({
                         width: '350px',

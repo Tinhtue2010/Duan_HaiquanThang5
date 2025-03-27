@@ -33,11 +33,24 @@ class CongChucController extends Controller
             session()->flash('alert-danger', 'Tên đăng nhập này đã được sử dụng.');
             return redirect()->back();
         }
-        CongChuc::create([
+        $congChuc = CongChuc::create([
             'ma_cong_chuc' => $request->ma_cong_chuc,
             'ten_cong_chuc' => $request->ten_cong_chuc,
             'ma_tai_khoan' => $ma_tai_khoan,
         ]);
+
+        for ($i = 1; $i <= 20; $i++) {
+            $check = PhanQuyenBaoCao::where('ma_cong_chuc', $congChuc->ma_cong_chuc)
+                ->where('ma_bao_cao', $i)
+                ->exists();
+            if (!$check) {
+                PhanQuyenBaoCao::insert([
+                    'ma_cong_chuc' => $congChuc->ma_cong_chuc,
+                    'ma_bao_cao' => $i,
+                ]);
+            }
+        }
+
         session()->flash('alert-success', 'Thêm cán bộ công chức mới thành công');
         return redirect()->back();
     }
@@ -100,7 +113,6 @@ class CongChucController extends Controller
         foreach ($phanQuyens as $phanQuyen) {
             $phanQuyen->phan_quyen = $request->input($phanQuyen->ma_bao_cao) ? 1 : 0;
             $phanQuyen->save();
-
         }
         session()->flash('alert-success', 'Cập nhật thành công');
         return redirect()->back();

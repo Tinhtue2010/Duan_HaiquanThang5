@@ -52,14 +52,14 @@
                                     Số container
                                 </th>
                                 <th>
-                                    Trạng thái
+                                    
                                 </th>
                                 <th>
                                     Thao tác
                                 </th>
                             </thead>
                             <tbody>
-                                @foreach ($seals as $index => $seal)
+                                {{-- @foreach ($seals as $index => $seal)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $seal->so_seal }}</td>
@@ -94,7 +94,7 @@
                                                 Xóa
                                             </button></td>
                                     </tr>
-                                @endforeach
+                                @endforeach --}}
                             </tbody>
                         </table>
                     </div>
@@ -220,40 +220,146 @@
 
     <script>
         $(document).ready(function() {
-            $('#dataTable').DataTable({
+            var table = $('#dataTable').DataTable({
+                processing: true,
+                serverSide: true,
+                stateSave: true,
+                ajax: "{{ route('quan-ly-khac.getChiNiemPhong') }}",
+
                 language: {
                     searchPlaceholder: "Tìm kiếm",
                     search: "",
-                    "sInfo": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "sInfoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "sInfoFiltered": "Lọc từ _MAX_ mục",
-                    "sLengthMenu": "Hiện _MENU_ mục",
-                    "sEmptyTable": "Không có dữ liệu",
+                    sInfo: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    sInfoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+                    sInfoFiltered: "Lọc từ _MAX_ mục",
+                    sLengthMenu: "Hiện _MENU_ mục",
+                    sEmptyTable: "Không có dữ liệu",
                 },
-                stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
-            });
+                buttons: [{
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    }
+                ],
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false
+                    },
+                    {
+                        data: 'so_seal',
+                        name: 'so_seal'
+                    },
+                    {
+                        data: 'loai_seal',
+                        name: 'loai_seal'
+                    },
+                    {
+                        data: 'ten_cong_chuc',
+                        name: 'ten_cong_chuc'
+                    },
+                    {
+                        data: 'ngay_cap',
+                        name: 'ngay_cap',
+                    },
+                    {
+                        data: 'ngay_su_dung',
+                        name: 'ngay_su_dung',
+                    },
+                    {
+                        data: 'so_container',
+                        name: 'so_container',
+                    },
+                    {
+                        data: 'trang_thai',
+                        name: 'trang_thai',
+                        orderable: false
+                    },
+                    {
+                        data: 'thao_tac',
+                        name: 'thao_tac',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            return data; // ✅ Ensure raw HTML is returned
+                        }
+                    }
+                ],
+                columnDefs: [{
+                        width: "150px",
+                        targets: -1
+                    },
+                    {
+                        width: "230px",
+                        targets: 3
+                    }
+                ],
+                initComplete: function() {
+                    $('.dataTables_filter input[type="search"]').css({
+                        width: '350px',
+                        display: 'inline-block',
+                        height: '40px'
+                    });
+                    var column = this.api().column(7); // Status column index
+                    var select = $(
+                        '<select class="form-control"><option value="">TẤT CẢ</option></select>'
+                    )
+                    select.append(
+                        '<option class="text-success" value="0">CHƯA SỬ DỤNG</option>');
+                    select.append(
+                        '<option class="text-success" value="1">ĐÃ SỬ DỤNG</option>');
+                    select.append(
+                        '<option class="text-success" value="2">SEAL HỎNG</option>'
+                    );
+                    var header = $(column.header());
+                    header.append(select);
+                    select.on('change', function() {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val().trim());
+                        localStorage.setItem('qlSeal', val);
+                        column.search(val ? val : '', false, true).draw();
+                    });
 
-            $('.dataTables_filter input[type="search"]').css({
-                width: '350px',
-                display: 'inline-block',
-                height: '40px',
+                    var savedFilter = localStorage.getItem('qlSeal');
+                    if (savedFilter) {
+                        select.val(savedFilter);
+                        column.search(savedFilter ? savedFilter : '', false, true).draw();
+                    }
+
+                }
             });
         });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const deleteButtons = document.querySelectorAll('.btn-danger[data-bs-toggle="modal"]');
-            const modalSoSeal = document.getElementById('modalSoSeal');
+            const table = document.getElementById('dataTable'); // Use a static parent
 
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const soSeal = this.getAttribute('data-so-seal');
-                    const loaiSeal = this.getAttribute('data-loai-seal');
-                    modalSoSeal.textContent = soSeal;
-                    modalLoaiSeal.textContent = loaiSeal;
-                    modalInputSoSeal.value = soSeal;
-                });
+            table.addEventListener('click', function(event) {
+                if (event.target.classList.contains('btn-danger')) {
+                    const button = event.target;
+                    const soSeal = button.getAttribute('data-so-seal');
+                    const loaiSeal = button.getAttribute('data-loai-seal');
+
+                    // Ensure these elements exist
+                    const modalSoSeal = document.getElementById('modalSoSeal');
+                    const modalLoaiSeal = document.getElementById('modalLoaiSeal');
+                    const modalInputSoSeal = document.getElementById('modalInputSoSeal');
+
+                    if (modalSoSeal && modalLoaiSeal && modalInputSoSeal) {
+                        modalSoSeal.textContent = soSeal;
+                        modalLoaiSeal.textContent = loaiSeal;
+                        modalInputSoSeal.value = soSeal;
+                    }
+                }
             });
         });
     </script>

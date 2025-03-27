@@ -46,9 +46,8 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
 
         $today = Carbon::now()->format('Y-m-d'); // Format now() as yyyy-mm-dd
         $stt = 1;
+        $totalSoLuong = 0;
         $thongTinData = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->whereIn('nhap_hang.ma_hai_quan', $haiQuans->pluck('ma_hai_quan'))
-            ->whereIn('hang_hoa.loai_hang', $loaiHangs->pluck('ten_loai_hang'))
             ->whereDate('nhap_hang.created_at', $this->tu_ngay)
             ->select(
                 'nhap_hang.ma_hai_quan',
@@ -73,7 +72,17 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                 $data->total_so_luong,
                 $data->total_tri_gia,
             ];
+            $totalSoLuong += $data->count_so_to_khai;
         }
+        $result[] = [
+            '',
+            '',
+            '',
+            $totalSoLuong,
+            '',
+            '',
+            '',
+        ];
 
         $result[] = [
             [''],

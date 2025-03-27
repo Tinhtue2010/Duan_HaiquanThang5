@@ -48,8 +48,8 @@
                                         </td>
                                         <td>{{ $nhapHang->chuHang ? $nhapHang->chuHang->ten_chu_hang : 'Unknown' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }}</td>
-                                        @if (trim($nhapHang->trang_thai) == 'Đã hủy')
-                                            <td class="text-danger">{{ $nhapHang->trang_thai }}</td>
+                                        @if (trim($nhapHang->trang_thai) == '0')
+                                            <td class="text-danger">Đã hủy</td>
                                         @endif
                                     </tr>
                                 @endforeach

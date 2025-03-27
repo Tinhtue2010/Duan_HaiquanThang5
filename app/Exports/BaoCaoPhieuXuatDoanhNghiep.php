@@ -35,7 +35,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->leftJoin('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->leftJoin('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'hang_hoa.ten_hang',
@@ -74,6 +74,35 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
             // Increment counter for so_to_khai_nhap or initialize it to 1
             $counts[$item->so_to_khai_nhap] = ($counts[$item->so_to_khai_nhap] ?? 0) + 1;
 
+            $trangThai = '';
+            if($item->trang_thai == "1"){
+                $trangThai = "Đang chờ duyệt";
+            } elseif($item->trang_thai == "2"){
+                $trangThai = "Đã duyệt";
+            } elseif($item->trang_thai == "3"){
+                $trangThai = "Doanh nghiệp yêu cầu sửa phiếu chờ duyệt";
+            } elseif($item->trang_thai == "4"){
+                $trangThai = "Doanh nghiệp yêu cầu sửa phiếu đã duyệt";
+            } elseif($item->trang_thai == "5"){
+                $trangThai = "Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC";
+            } elseif($item->trang_thai == "6"){
+                $trangThai = "Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng";
+            } elseif($item->trang_thai == "7"){
+                $trangThai = "Doanh nghiệp yêu cầu hủy phiếu chờ duyệt";
+            } elseif($item->trang_thai == "8"){
+                $trangThai = "Doanh nghiệp yêu cầu hủy phiếu đã duyệt";
+            } elseif($item->trang_thai == "9"){
+                $trangThai = "Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC";
+            } elseif($item->trang_thai == "10"){
+                $trangThai = "Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng";
+            } elseif($item->trang_thai == "11"){
+                $trangThai = "Đã chọn phương tiện xuất cảnh";
+            } elseif($item->trang_thai == "12"){
+                $trangThai = "Đã duyệt xuất hàng";
+            } elseif($item->trang_thai == "13"){
+                $trangThai = "Đã thực xuất hàng";
+            }
+
             $result[] = [
                 $stt++, // Auto-incremented row number
                 $item->so_to_khai_nhap,
@@ -84,7 +113,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                 $item->ma_loai_hinh,
                 $item->so_luong_xuat,
                 $item->ten_phuong_tien_vt,
-                $item->trang_thai,
+                $trangThai,
                 isset($item->ngay_xuat_canh) ? Carbon::parse($item->ngay_xuat_canh)->format('d-m-Y') : '',
                 $item->so_container,
             ];

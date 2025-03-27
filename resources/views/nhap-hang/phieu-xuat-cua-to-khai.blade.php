@@ -63,22 +63,34 @@
                                     <td>{{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}</td>
                                     <td>{{ $xuatHang->tong_so_luong }}</td>
                                     <td>{{ $xuatHang->ten_phuong_tien_vt }}</td>
-                                    @if (trim($xuatHang->trang_thai) == 'Đang chờ duyệt')
-                                        <td class="text-primary">{{ $xuatHang->trang_thai }}</td>
-                                    @elseif (trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt' ||
-                                            trim($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt') ||
-                                            trim($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC') ||
-                                            trim($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng'))
-                                        <td class="text-warning">{{ $xuatHang->trang_thai }}</td>
-                                    @elseif (trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu hủy phiếu chờ duyệt' ||
-                                            trim($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu hủy phiếu đã duyệt') ||
-                                            trim($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC') ||
-                                            trim($xuatHang->trang_thai == 'Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng'))
-                                        <td class="text-danger">{{ $xuatHang->trang_thai }}</td>
-                                    @elseif(trim($xuatHang->trang_thai) == 'Đã hủy')
-                                        <td class="text-danger">{{ $xuatHang->trang_thai }}</td>
-                                    @else
-                                        <td class="text-success">{{ $xuatHang->trang_thai }}</td>
+                                    @if ($xuatHang->trang_thai == 1)
+                                        <td class="text-primary">Đang chờ duyệt</td>
+                                    @elseif($xuatHang->trang_thai == 3)
+                                        <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu chờ duyệt</td>
+                                    @elseif($xuatHang->trang_thai == 4)
+                                        <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu đã duyệt</td>
+                                    @elseif($xuatHang->trang_thai == 5)
+                                        <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC</td>
+                                    @elseif($xuatHang->trang_thai == 6)
+                                        <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng</td>
+                                    @elseif($xuatHang->trang_thai == 7)
+                                        <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu chờ duyệt</td>
+                                    @elseif($xuatHang->trang_thai == 8)
+                                        <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu đã duyệt</td>
+                                    @elseif($xuatHang->trang_thai == 9)
+                                        <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC</td>
+                                    @elseif($xuatHang->trang_thai == 10)
+                                        <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng</td>
+                                    @elseif($xuatHang->trang_thai == 2)
+                                        <td class="text-success">Đã duyệt</td>
+                                    @elseif($xuatHang->trang_thai == 11)
+                                        <td class="text-success">Đã chọn phương tiện xuất cảnh</td>
+                                    @elseif($xuatHang->trang_thai == 12)
+                                        <td class="text-success">Đã duyệt xuất hàng</td>
+                                    @elseif($xuatHang->trang_thai == 13)
+                                        <td class="text-success">Đã thực xuất hàng</td>
+                                    @elseif($xuatHang->trang_thai == 0)
+                                        <td class="text-danger">Đã hủy</td>
                                     @endif
                                 </tr>
                             @endforeach

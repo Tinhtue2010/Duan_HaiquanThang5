@@ -35,29 +35,29 @@
                 @endif
 
                 <div class="col-4">
-                    @if (trim($xuatHang->trang_thai) == 'Đang chờ duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu hủy phiếu đã duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu hủy phiếu đã chọn PTXC' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu hủy phiếu đã duyệt xuất hàng' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu chờ duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu đã chọn PTXC' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng')
+                    @if (trim($xuatHang->trang_thai) == '1' ||
+                            trim($xuatHang->trang_thai) == '3' ||
+                            trim($xuatHang->trang_thai) == '4' ||
+                            trim($xuatHang->trang_thai) == '5' ||
+                            trim($xuatHang->trang_thai) == '6' ||
+                            trim($xuatHang->trang_thai) == '7' ||
+                            trim($xuatHang->trang_thai) == '8' ||
+                            trim($xuatHang->trang_thai) == '9' ||
+                            trim($xuatHang->trang_thai) == '10')
                         <a class="return-link" href="/quan-ly-xuat-hang">
                             <p>
                                 < Quay lại quản lý xuất hàng </p>
                         </a>
-                    @elseif(trim($xuatHang->trang_thai) == 'Đã duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Đã chọn phương tiện xuất cảnh' ||
-                            trim($xuatHang->trang_thai) == 'Đã duyệt xuất hàng' ||
-                            trim($xuatHang->trang_thai) == 'Đã thực xuất hàng')
+                    @elseif(trim($xuatHang->trang_thai) == '2' ||
+                            trim($xuatHang->trang_thai) == '4' ||
+                            trim($xuatHang->trang_thai) == '11' ||
+                            trim($xuatHang->trang_thai) == '12' ||
+                            trim($xuatHang->trang_thai) == '13')
                         <a class="return-link" href="/to-khai-da-xuat-hang">
                             <p>
                                 < Quay lại quản lý phiếu đã duyệt </p>
                         </a>
-                    @elseif(trim($xuatHang->trang_thai) == 'Đã hủy')
+                    @elseif(trim($xuatHang->trang_thai) == '0')
                         <a class="return-link" href="/to-khai-xuat-da-huy">
                             <p>
                                 < Quay lại quản lý phiếu xuất đã hủy </p>
@@ -65,19 +65,17 @@
                     @endif
                 </div>
                 <div class="col-8">
-                    @if (trim($xuatHang->trang_thai) == 'Đã duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Đang chờ duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa phiếu đã duyệt' ||
-                            trim($xuatHang->trang_thai) == 'Đã chọn phương tiện xuất cảnh' ||
-                            trim($xuatHang->trang_thai) == 'Đã duyệt xuất hàng' ||
-                            trim($xuatHang->trang_thai) == 'Đã thực xuất hàng')
+                    @if (trim($xuatHang->trang_thai) == '2' ||
+                            trim($xuatHang->trang_thai) == '1' ||
+                            trim($xuatHang->trang_thai) == '4' ||
+                            trim($xuatHang->trang_thai) == '11' ||
+                            trim($xuatHang->trang_thai) == '12' ||
+                            trim($xuatHang->trang_thai) == '13')
                         </a>
-                        @if (trim($xuatHang->trang_thai) != 'Đang chờ duyệt')
-                            <a
-                                href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
-                                <button class="btn btn-success float-end me-1">In phiếu xuất</button>
-                            </a>
-                        @endif
+                        <a
+                            href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
+                            <button class="btn btn-success float-end me-1">In phiếu xuất</button>
+                        </a>
                         {{-- <a
                             href="{{ route('xuat-hang.lich-su-sua-phieu', ['so_to_khai_nhap' => $xuatHang->so_to_khai_nhap]) }}">
                             <button class="btn btn-primary float-end me-1">Lịch sử sửa phiếu</button>
@@ -121,6 +119,9 @@
                                 <th>ĐƠN GIÁ (USD)</th>
                                 <th>TRỊ GIÁ (USD)</th>
                                 <th>SỐ CONTAINER</th>
+                                @if ($xuatHang->trang_thai != 0 && $xuatHang->trang_thai != 1)
+                                    <th>THAO TÁC</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -139,6 +140,14 @@
                                     <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
                                     <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
                                     <td>{{ $hangHoa->so_container }}</td>
+                                    @if ($xuatHang->trang_thai != 0 && $xuatHang->trang_thai != 1)
+                                        <td>
+                                            <a
+                                                href="{{ route('export.theo-doi-tru-lui-theo-ngay', ['so_to_khai_nhap' => $hangHoa->so_to_khai_nhap, 'ngay_dang_ky' => $xuatHang->ngay_dang_ky, 'xuat_hang' => true]) }}">
+                                                <button class="btn btn-success float-end me-1">Theo dõi trừ lùi</button>
+                                            </a>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -163,7 +172,7 @@
                         <div class="text-center">
 
 
-                            @if (trim($xuatHang->trang_thai) == 'Đang chờ duyệt')
+                            @if (trim($xuatHang->trang_thai) == '1')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if ($xuatHang->ghi_chu)
@@ -219,7 +228,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã duyệt')
+                            @elseif(trim($xuatHang->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-primary">Công chức phụ trách:
@@ -254,7 +263,7 @@
                                         </div>
                                     </center>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã chọn phương tiện xuất cảnh')
+                            @elseif(trim($xuatHang->trang_thai) == '11')
                                 <h2 class="text-success">Đã chọn phương tiện xuất cảnh</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-primary">Công chức phụ trách:
@@ -289,7 +298,7 @@
                                         </div>
                                     </center>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã duyệt xuất hàng')
+                            @elseif(trim($xuatHang->trang_thai) == '12')
                                 <h2 class="text-success">Đã duyệt xuất hàng</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-primary">Công chức phụ trách:
@@ -324,15 +333,19 @@
                                         </div>
                                     </center>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã thực xuất hàng')
+                            @elseif(trim($xuatHang->trang_thai) == '13')
                                 <h2 class="text-success">Đã thực xuất hàng</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-primary">Công chức phụ trách:
                                     {{ $xuatHang->congChuc->ten_cong_chuc ?? '' }}</h2>
                                 <h2 class="text-success">Ngày duyệt:
                                     {{ \Carbon\Carbon::parse($xuatHang->ngay_xuat_canh)->format('d-m-Y') }}</h2>
-                            @elseif(\Illuminate\Support\Str::startsWith(trim($xuatHang->trang_thai), 'Doanh nghiệp yêu cầu sửa phiếu'))
-                                <h2 class="text-warning">{{ $xuatHang->trang_thai }}</h2>
+                            @elseif(
+                                $xuatHang->trang_thai == '3' ||
+                                    $xuatHang->trang_thai == '4' ||
+                                    $xuatHang->trang_thai == '5' ||
+                                    $xuatHang->trang_thai == '6')
+                                <h2 class="text-warning">Doanh nghiệp yêu cầu sửa phiếu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
                                 @if ($xuatHang->ghi_chu)
                                     <h3 class="text-dark">Ghi chú: {{ $xuatHang->ghi_chu }}</h3>
@@ -366,8 +379,12 @@
                                         </center>
                                     </div>
                                 @endif
-                            @elseif(\Illuminate\Support\Str::startsWith(trim($xuatHang->trang_thai), 'Doanh nghiệp yêu cầu hủy phiếu'))
-                                <h2 class="text-danger">{{ $xuatHang->trang_thai }}</h2>
+                            @elseif(
+                                $xuatHang->trang_thai == '7' ||
+                                    $xuatHang->trang_thai == '8' ||
+                                    $xuatHang->trang_thai == '9' ||
+                                    $xuatHang->trang_thai == '10')
+                                <h2 class="text-danger">Doanh nghiệp yêu cầu hủy phiếu</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 @if ($xuatHang->ghi_chu)
                                     <h3 class="text-dark">Ghi chú: {{ $xuatHang->ghi_chu }}</h3>
@@ -414,7 +431,7 @@
                                         </div>
                                     </center>
                                 @endif
-                            @elseif(trim($xuatHang->trang_thai) == 'Đã hủy')
+                            @elseif(trim($xuatHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h2 class="text-danger">Ngày hủy:

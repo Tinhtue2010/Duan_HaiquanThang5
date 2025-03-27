@@ -20,6 +20,8 @@ class XuatHangCont extends Model
         'so_luong_xuat',
         'so_luong_ton',
         'so_container',
+        'phuong_tien_vt_nhap',
+        'so_seal_cuoi_ngay',
         'tri_gia'
     ];
     

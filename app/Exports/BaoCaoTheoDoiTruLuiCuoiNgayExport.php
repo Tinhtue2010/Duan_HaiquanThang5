@@ -116,7 +116,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
-            ->where('xuat_hang.trang_thai', '!=', 'Đã hủy')
+            ->where('xuat_hang.trang_thai', '!=', '0')
             ->orderBy('xuat_hang.so_to_khai_xuat', 'asc') // Sorting from low to high
             ->pluck('xuat_hang.so_to_khai_xuat')
             ->unique() // Ensures unique values

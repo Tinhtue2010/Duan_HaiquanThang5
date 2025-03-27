@@ -30,21 +30,20 @@
                     </div>
                 @endif
                 <div class="col-4">
-                    @if (trim($nhapHang->trang_thai) == 'Đang chờ duyệt' || trim($nhapHang->trang_thai) == 'Đã duyệt (Chờ nhập hàng)')
+                    @if (trim($nhapHang->trang_thai) == '1' )
                         <a class="return-link" href="/quan-ly-nhap-hang">
                             <p>
                                 < Quay lại quản lý nhập hàng </p>
                         </a>
-                    @elseif(trim($nhapHang->trang_thai) == 'Đã nhập hàng' ||
-                            trim($nhapHang->trang_thai) == 'Đã nhập hàng (Đã gia hạn)' ||
-                            trim($nhapHang->trang_thai) == 'Đã xuất hết' ||
-                            trim($nhapHang->trang_thai) == 'Quay về kho ban đầu' ||
-                            trim($nhapHang->trang_thai) == 'Đã bàn giao hồ sơ')
+                    @elseif(trim($nhapHang->trang_thai) == '2' ||
+                            trim($nhapHang->trang_thai) == '4' ||
+                            trim($nhapHang->trang_thai) == '6' ||
+                            trim($nhapHang->trang_thai) == '7')
                         <a class="return-link" href="/to-khai-da-nhap-hang">
                             <p>
                                 < Quay lại quản lý tờ khai nhập đã nhập hàng </p>
                         </a>
-                    @elseif(trim($nhapHang->trang_thai) == 'Đã hủy')
+                    @elseif(trim($nhapHang->trang_thai) == '0')
                         <a class="return-link" href="/to-khai-nhap-da-huy">
                             <p>
                                 < Quay lại quản lý tờ khai nhập đã hủy</p>
@@ -52,7 +51,7 @@
                     @endif
                 </div>
                 <div class="col-8">
-                    @if (trim($nhapHang->trang_thai) == 'Đã nhập hàng')
+                    @if (trim($nhapHang->trang_thai) == '2')
                         <a
                             href="{{ route('nhap-hang.vi-tri-hang-hien-tai', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
                             <button class="btn btn-primary float-end">Thông tin hàng hiện tại</button>
@@ -81,7 +80,7 @@
                         {{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }} Đăng ký tại:
                         {{ $nhapHang->haiQuan ? $nhapHang->haiQuan->ten_hai_quan : $nhapHang->ma_hai_quan }}
                     </h2>
-                    <h2 class="text-center text-dark">Số container: {{ $nhapHang->container_ban_dau }} - Phương tiện vận
+                    <h2 class="text-center text-dark">Phương tiện vận
                         tải:
                         {{ $nhapHang->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHang->trong_luong }} tấn</h2>
                     <!-- Table for displaying added rows -->
@@ -96,7 +95,8 @@
                                 <th>Đơn vị tính</th>
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
-                                @if (trim($nhapHang->trang_thai) != 'Đang chờ duyệt' && trim($nhapHang->trang_thai) != 'Đã hủy')
+                                <th>Số container ban đầu</th>
+                                @if (trim($nhapHang->trang_thai) != '1' && trim($nhapHang->trang_thai) != '0')
                                     <th>Thao tác</th>
                                 @endif
                             </tr>
@@ -112,7 +112,8 @@
                                     <td>{{ $hangHoa->don_vi_tinh }}</td>
                                     <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
                                     <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
-                                    @if (trim($nhapHang->trang_thai) != 'Đang chờ duyệt' && trim($nhapHang->trang_thai) != 'Đã hủy')
+                                    <td>{{ $hangHoa->so_container_khai_bao }}</td>
+                                    @if (trim($nhapHang->trang_thai) != '1' && trim($nhapHang->trang_thai) != '0')
                                         <td>
                                             <form action="{{ route('export.theo-doi-hang-hoa') }}" method="GET">
                                                 <input type="hidden" name="ma_hang" value="{{ $hangHoa->ma_hang }}">
@@ -143,8 +144,8 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-                            @if (trim($nhapHang->trang_thai) == 'Đang chờ duyệt')
-                                <h2 class="text-primary">Đang chờ duyệt </h2>
+                            @if (trim($nhapHang->trang_thai) == '1')
+                                <h2 class="text-primary">Đang chờ duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
                                     <hr />
@@ -196,7 +197,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($nhapHang->trang_thai) == 'Đã nhập hàng')
+                            @elseif(trim($nhapHang->trang_thai) == '2')
                                 <h2 class="text-success">Đã nhập hàng</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-success">Ngày đến:
@@ -239,35 +240,33 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($nhapHang->trang_thai) == 'Quay về kho ban đầu')
+                            @elseif(trim($nhapHang->trang_thai) == '6')
                                 <h2 class="text-success">Đã quay về kho ban đầu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-success">Ngày xuất:
                                     {{ \Carbon\Carbon::parse($nhapHang->updated_at)->format('d-m-Y') }}</h2>
-                            @elseif(trim($nhapHang->trang_thai) == 'Đã xuất hết')
+                            @elseif(trim($nhapHang->trang_thai) == '4')
                                 <h2 class="text-success">Đã xuất hết hàng</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 </h2>
-                            @elseif(trim($nhapHang->trang_thai) == 'Đã bàn giao hồ sơ')
+                            @elseif(trim($nhapHang->trang_thai) == '7')
                                 <h2 class="text-success">Đã bàn giao hồ sơ</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 </h2>
-                            @elseif(trim($nhapHang->trang_thai) == 'Đã hủy')
+                            @elseif(trim($nhapHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h2 class="text-danger">Ngày hủy:
                                     {{ \Carbon\Carbon::parse($nhapHang->updated_at)->format('d-m-Y') }}</h2>
                                 <h3 class="text-dark">Lý do hủy: {{ $nhapHang->ghi_chu }}</h3>
-                            @elseif(trim($nhapHang->trang_thai) == 'Đã tiêu hủy')
+                            @elseif(trim($nhapHang->trang_thai) == '5')
                                 <h2 class="text-danger">Tờ khai đã tiêu hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h2 class="text-danger">Ngày tiêu hủy:
                                     {{ \Carbon\Carbon::parse($nhapHang->updated_at)->format('d-m-Y') }}</h2>
-                            @elseif(trim($nhapHang->trang_thai) == 'Doanh nghiệp yêu cầu sửa tờ khai')
+                            @elseif(trim($nhapHang->trang_thai) == '3')
                                 <h2 class="text-warning">Doanh nghiệp yêu cầu sửa tờ khai</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách:
-                                    {{ $nhapHang->congChuc->ten_cong_chuc ?? '' }}</h2>
                                 <div class="row">
                                     <center>
                                         <div class="col-6">
@@ -311,7 +310,7 @@
             @endif
         </div>
     </div>
-    @if (trim($nhapHang->trang_thai) != 'Đã hủy')
+    @if (trim($nhapHang->trang_thai) != '0')
         {{-- Tình trạng: Chờ duyệt --}}
         <div class="modal fade" id="xacNhanNhaphangModal" tabindex="-1" aria-labelledby="exampleModalLabel"
             aria-hidden="true">
@@ -324,14 +323,11 @@
                     <form action="{{ route('nhap-hang.duyet-to-khai-nhap') }}" method="POST">
                         @csrf
                         <div class="modal-body">
-                            <h5>Duyệt tờ khai và nhập hàng vào container
-                                {{ $nhapHang->so_container }} ?</h5>
+                            <h5>Xác nhận duyệt tờ khai nhập này ?
                         </div>
                         <div class="modal-footer">
                             <input type="hidden" name="hangHoaRows" value="{{ json_encode($hangHoaRows) }}">
                             <input type="hidden" name="so_to_khai_nhap" value="{{ $nhapHang->so_to_khai_nhap }}">
-                            <input type="hidden" name="so_container"
-                                value="{{ $nhapHang->hangHoa->first()?->so_container }}">
                             <button type="submit" class="btn btn-success">Xác nhận duyệt</button>
                     </form>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>

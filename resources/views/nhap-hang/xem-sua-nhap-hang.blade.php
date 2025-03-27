@@ -46,7 +46,7 @@
                         {{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }} Đăng ký tại:
                         {{ $nhapHang->haiQuan ? $nhapHang->haiQuan->ten_hai_quan : $nhapHang->ma_hai_quan }}
                     </h2>
-                    <h2 class="text-center text-dark">Số container: {{ $nhapHang->container_ban_dau }} - Phương tiện vận
+                    <h2 class="text-center text-dark">Phương tiện vận
                         tải:
                         {{ $nhapHang->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHang->trong_luong }} tấn</h2>
                     <div class="float-end mb-2 d-flex align-items-center justify-content-center">
@@ -63,6 +63,7 @@
                                 <th>Đơn vị tính</th>
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
+                                <th>Số container</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -76,6 +77,7 @@
                                     <td>{{ $hangHoa->don_vi_tinh }}</td>
                                     <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
                                     <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
+                                    <td>{{ $hangHoa->so_container_khai_bao }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -89,8 +91,7 @@
                         {{ \Carbon\Carbon::parse($nhapHangSua->ngay_dang_ky)->format('d-m-Y') }} Đăng ký tại:
                         {{ $nhapHangSua->haiQuan ? $nhapHangSua->haiQuan->ten_hai_quan : $nhapHangSua->ma_hai_quan }}
                     </h2>
-                    <h2 class="text-center text-dark">Số container: {{ $nhapHangSua->container_ban_dau }} - Phương tiện vận
-                        tải:
+                    <h2 class="text-center text-dark">Phương tiện vận tải:
                         {{ $nhapHangSua->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHangSua->trong_luong }} tấn</h2>
                     <table class="table table-bordered mt-2" id="displayTable"
                         style="vertical-align: middle; text-align: center;">
@@ -104,6 +105,7 @@
                                 <th>Đơn vị tính</th>
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
+                                <th>Số container</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -117,6 +119,7 @@
                                     <td>{{ $hangHoa->don_vi_tinh }}</td>
                                     <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
                                     <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
+                                    <td>{{ $hangHoa->so_container_khai_bao }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

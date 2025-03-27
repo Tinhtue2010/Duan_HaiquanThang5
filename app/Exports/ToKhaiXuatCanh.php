@@ -696,7 +696,7 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
     {
         $drawings = []; // Array to store both QR code and barcode drawings
         $xuatCanh = XuatCanh::find($this->ma_xuat_canh);
-        if (in_array($xuatCanh->trang_thai, ["Đã duyệt"])) {
+        if (in_array($xuatCanh->trang_thai, ["2"])) {
             // Generate QR Code
             $qrContent = 'Số tờ khai xuất cảnh: ' . $xuatCanh->ma_xuat_canh .
                 ', cán bộ công chức phê duyệt: ' . ($xuatCanh->congChuc->ten_cong_chuc ?? '');

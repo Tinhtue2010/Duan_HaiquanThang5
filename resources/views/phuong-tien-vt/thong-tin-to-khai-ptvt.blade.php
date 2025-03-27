@@ -89,7 +89,7 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-                            @if (trim($phuongTienVT->trang_thai) == 'Đang chờ duyệt')
+                            @if (trim($phuongTienVT->trang_thai) == '1')
                                 <h2 class="text-primary">{{ $phuongTienVT->trang_thai }}</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
@@ -133,7 +133,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif (trim($phuongTienVT->trang_thai) == 'Đang chờ duyệt (Từ chối hủy)')
+                            @elseif (trim($phuongTienVT->trang_thai) == '1 (7)')
                                 <h2 class="text-primary">{{ $phuongTienVT->trang_thai }}</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 <h3 class="text-dark">Lý do từ chối: {{ $phuongTienVT->ghi_chu }}</h3>
@@ -162,13 +162,13 @@
                                         </div>
                                     </div>
                                 @endif
-                            @elseif(trim($phuongTienVT->trang_thai) == 'Đã duyệt')
+                            @elseif(trim($phuongTienVT->trang_thai) == '2')
                                 <h2 class="text-primary">Đã duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
                                 <h2 class="text-success">Ngày duyệt:
                                     {{ \Carbon\Carbon::parse($phuongTienVT->ngay_thong_quan)->format('d-m-Y') }}</h2>
                                 <h3 class="text-dark">Ghi chú: {{ $phuongTienVT->ghi_chu }}</h3>
-                            @elseif(trim($phuongTienVT->trang_thai) == 'Đã hủy')
+                            @elseif(trim($phuongTienVT->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
                                 <h2 class="text-danger">Ngày hủy:

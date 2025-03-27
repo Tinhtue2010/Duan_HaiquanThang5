@@ -15,13 +15,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
-class BaoCaoContainerLuuTaiCangTheoCont implements FromArray, WithEvents
+class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
 {
-    protected $so_container;
 
-    public function __construct($so_container)
+    protected $phuong_tien_vt_nhap;
+
+    public function __construct($phuong_tien_vt_nhap)
     {
-        $this->so_container = $so_container;
+        $this->phuong_tien_vt_nhap = $phuong_tien_vt_nhap;
     }
     public function array(): array
     {
@@ -33,7 +34,7 @@ class BaoCaoContainerLuuTaiCangTheoCont implements FromArray, WithEvents
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['BÁO CÁO SỐ LƯỢNG CONTAINER LƯU TẠI CẢNG', '', '', '', '', ''],
+            ['BÁO CÁO SỐ LƯỢNG HHANGFTẠI CẢNG', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
             ['', '', '', '', '', ''],
@@ -41,48 +42,52 @@ class BaoCaoContainerLuuTaiCangTheoCont implements FromArray, WithEvents
 
         ];
 
-
-        $nhapHangs = NhapHang::with(['hangHoa.hangTrongCont'])
-            ->where('trang_thai', '2')
-            ->select([
-                'nhap_hang.*',
-                'hai_quan.ten_hai_quan',
-                'doanh_nghiep.ten_doanh_nghiep',
-                'doanh_nghiep.ma_doanh_nghiep',
-                'doanh_nghiep.dia_chi'
-            ])
-            ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
-            ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+        $containers = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
+            ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
+            ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
+            ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
+            ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
+            ->groupBy('nhap_hang.so_container', 'niem_phong.so_seal')
+            ->orderByRaw('total_so_luong DESC')
             ->get();
 
-        $stt = 1;
         $totalHangTon = 0;
-        foreach ($nhapHangs as $nhapHang) {
-            foreach ($nhapHang->hangHoa as $hangHoa) {
-                foreach ($hangHoa->hangTrongCont as $hangTrongCont) {
-                    if($hangTrongCont->so_luong != 0){
-                        if($hangTrongCont->so_container == $this->so_container &&  $hangTrongCont->is_da_chuyen_cont == 0){
-                            $result[] = [
-                                'stt' => $stt++,
-                                'so_to_khai_nhap' => $nhapHang->so_to_khai_nhap,
-                                'ngay_dang_ky' => Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y'),
-                                'ten_hai_quan' => $nhapHang->ten_hai_quan,
-                                'ten_doanh_nghiep' => $nhapHang->ten_doanh_nghiep,
-                                'ma_doanh_nghiep' => $nhapHang->ma_doanh_nghiep,
-                                'dia_chi' => $nhapHang->dia_chi,
-                                'ten_hang' => $hangHoa->ten_hang,
-                                'xuat_xu' => $hangHoa->xuat_xu,
-                                'so_luong_khai_bao' => $hangHoa->so_luong_khai_bao,
-                                'don_vi_tinh' => $hangHoa->don_vi_tinh,
-                                'trong_luong' => $nhapHang->trong_luong,
-                                'tri_gia' => $hangHoa->tri_gia,
-                                'so_luong' => $hangTrongCont->so_luong,
-                                'so_container' => $hangTrongCont->so_container ?? null,
-                            ];
-                            $totalHangTon +=  $hangTrongCont->so_luong;
-                        }
-                    }
-                }
+        $totalKhaiBao = 0;
+        $stt = 1;
+
+        foreach ($containers as $container) {
+            $item = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+                ->where('hang_trong_cont.so_container', $container->so_container)
+                ->first();
+            $so_luong_khai_bao = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->where('hang_trong_cont.so_container', $container->so_container)
+                ->sum('hang_hoa.so_luong_khai_bao');
+            
+            if ($container->total_so_luong != 0) {
+                $result[] = [
+                    $stt++,
+                    $item->so_to_khai_nhap,
+                    Carbon::parse($item->ngay_dang_ky)->format('d-m-Y'),
+                    $item->ten_hai_quan,
+                    $item->ten_doanh_nghiep,
+                    $item->ma_doanh_nghiep,
+                    $item->dia_chi,
+                    $item->ten_hang,
+                    $item->xuat_xu,
+                    $so_luong_khai_bao,
+                    $item->don_vi_tinh,
+                    $item->trong_luong,
+                    $item->tri_gia,
+                    $container->total_so_luong,
+                    $item->so_container,
+                ];
+                $totalHangTon += $container->total_so_luong;
+                $totalKhaiBao += $so_luong_khai_bao;
             }
         }
 
@@ -96,7 +101,7 @@ class BaoCaoContainerLuuTaiCangTheoCont implements FromArray, WithEvents
             '',
             '',
             '',
-            '',
+            $totalKhaiBao,
             '',
             '',
             '',

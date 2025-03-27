@@ -55,14 +55,8 @@
                                         <td>{{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}</td>
                                         <td>{{ $xuatHang->tong_so_luong }}</td>
                                         <td>{{ $xuatHang->ten_phuong_tien_vt ?? '' }}</td>
-                                        @if (trim($xuatHang->trang_thai) == 'Đang chờ duyệt')
-                                            <td class="text-primary">{{ $xuatHang->trang_thai }}</td>
-                                        @elseif (trim($xuatHang->trang_thai) == 'Đã duyệt')
-                                            <td class="text-warning">{{ $xuatHang->trang_thai }}</td>
-                                        @elseif (trim($xuatHang->trang_thai) == "Đã hủy")
-                                            <td class="text-danger">{{ $xuatHang->trang_thai }}</td>
-                                        @else
-                                            <td class="text-dark">{{ $xuatHang->trang_thai }}</td>
+                                        @if (trim($xuatHang->trang_thai) == "0")
+                                            <td class="text-danger">Đã hủy</td>
                                         @endif
                                     </tr>
                                 @endforeach

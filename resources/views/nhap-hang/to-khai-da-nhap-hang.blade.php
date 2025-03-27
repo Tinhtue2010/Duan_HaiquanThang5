@@ -134,17 +134,17 @@
                     )
 
                     select.append(
-                        '<option class="text-success" value="ĐÃ NHẬP HÀNG">ĐÃ NHẬP HÀNG</option>');
+                        '<option class="text-success" value="2">ĐÃ NHẬP HÀNG</option>');
                     select.append(
-                        '<option class="text-success" value="ĐÃ XUẤT HẾT">ĐÃ XUẤT HẾT</option>');
+                        '<option class="text-success" value="4">ĐÃ XUẤT HẾT</option>');
                     select.append(
-                        '<option class="text-success" value="ĐÃ BÀN GIAO HỒ SƠ">ĐÃ BÀN GIAO HỒ SƠ</option>'
+                        '<option class="text-success" value="7">ĐÃ BÀN GIAO HỒ SƠ</option>'
                     );
                     select.append(
-                        '<option class="text-success" value="QUAY VỀ KHO BAN ĐẦU">QUAY VỀ KHO BAN ĐẦU</option>'
+                        '<option class="text-success" value="6">QUAY VỀ KHO BAN ĐẦU</option>'
                     );
                     select.append(
-                        '<option class="text-danger" value="ĐÃ TIÊU HỦY">ĐÃ TIÊU HỦY</option>');
+                        '<option class="text-danger" value="5">ĐÃ TIÊU HỦY</option>');
 
                     var header = $(column.header());
                     header.append(select);
