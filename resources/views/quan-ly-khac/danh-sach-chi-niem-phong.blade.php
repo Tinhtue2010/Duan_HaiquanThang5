@@ -52,7 +52,7 @@
                                     Số container
                                 </th>
                                 <th>
-                                    
+
                                 </th>
                                 <th>
                                     Thao tác
@@ -182,7 +182,7 @@
                                     <option></option>
                                     @foreach ($congChucs as $congChuc)
                                         <option value="{{ $congChuc->ma_cong_chuc }}">
-                                            {{ $congChuc->ten_cong_chuc }}
+                                            {{ $congChuc->ten_cong_chuc }} ({{ $congChuc->taiKhoan->ten_dang_nhap ?? '' }})
                                         </option>
                                     @endforeach
                                 </select>

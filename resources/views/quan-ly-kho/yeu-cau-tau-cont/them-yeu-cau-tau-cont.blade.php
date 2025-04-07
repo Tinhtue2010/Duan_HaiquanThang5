@@ -289,7 +289,6 @@
                                 $('.select2-dropdown').each(function() {
                                     let select = $(this);
 
-                                    // If the selected value is not in the current options, add it
                                     if (select.find(
                                             `option[value="${selectedValue}"]`)
                                         .length === 0) {
@@ -299,7 +298,6 @@
                                         select.append(newOption);
                                     }
 
-                                    // Set the new value and trigger Select2 change
                                     select.val(selectedValue).trigger('change');
                                 });
                             });

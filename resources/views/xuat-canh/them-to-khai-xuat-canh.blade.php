@@ -74,14 +74,23 @@
                                 <th>STT</th>
                                 <th>Số</th>
                                 <th>Công ty</th>
+                                <th>Đại lý</th>
                                 <th>Loại hình</th>
                                 <th>Số lượng</th>
                                 <th>Ngày đăng ký</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
 
                         </tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                <td colspan="5">Tổng:</td>
+                                <td id="totalQty"></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -112,6 +121,8 @@
                         <input type="hidden" name="ma_doanh_nghiep_chon" id="ma_doanh_nghiep_chon_hidden">
                         <input type="hidden" name="ten_thuyen_truong" id="ten_thuyen_truong_hidden">
                         <input type="hidden" name="so_ptvt_xuat_canh" id="so_ptvt_xuat_canh_hidden">
+                        <input type="hidden" name="rows_data" id="rowsDataInput">
+
                         <button id="submitData" type="submit" class="btn btn-success">Nhập tờ khai xuất cảnh</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </form>
@@ -136,6 +147,17 @@
                 document.getElementById('ten_thuyen_truong_hidden').value = tenThuyenTruong;
                 document.getElementById('ma_doanh_nghiep_chon_hidden').value = maDoanhNghiepChon;
 
+                const rows = $('#toKhaiXuatTable tbody tr')
+                    .map(function() {
+                        const cells = $(this).find('td');
+                        return {
+                            so_to_khai_xuat: $(cells[1]).text(),
+                        };
+                    })
+                    .get();
+
+                $('#rowsDataInput').val(JSON.stringify(rows));
+
                 if (!tenThuyenTruong) {
                     alert('Vui lòng chọn tên thuyền trưởng');
                     return false;
@@ -151,8 +173,19 @@
             function convertDateFormat(dateStr) {
                 return dateStr.split("-").reverse().join("-");
             }
+            
+            function calculateTotal() {
+                let total = 0;
+                document.querySelectorAll("#toKhaiXuatTable tbody tr").forEach(row => {
+                    let quantityCell = row.cells[5];
+                    let quantity = parseFloat(quantityCell.textContent || 0);
+                    total += isNaN(quantity) ? 0 : quantity;
+                });
 
-            function updateSealDropdown() {
+                document.getElementById("totalQty").textContent = total;
+            }
+
+            function updateTable() {
                 let so_ptvt_xuat_canh = $('#ptvt-xc-dropdown-search').val();
                 $.ajax({
                     url: "{{ route('xuat-canh.getPhieuXuats') }}", // Adjust with your route
@@ -163,6 +196,7 @@
 
                     success: function(response) {
                         let tbody = $("#toKhaiXuatTable tbody");
+                        let tfoot = $("#toKhaiXuatTable tfoot");
                         tbody.empty(); // Clear previous data
                         let totalTongSoLuongXuat = 0; // Initialize total sum
 
@@ -175,25 +209,22 @@
                                     <td>${index + 1}</td>
                                     <td>${item.so_to_khai_xuat}</td>
                                     <td>${item.ten_doanh_nghiep}</td>
+                                    <td>${item.ten_chu_hang}</td>
                                     <td>${item.ma_loai_hinh}</td>
                                     <td>${item.tong_so_luong_xuat}</td>
                                     <td>${convertDateFormat(item.ngay_dang_ky)}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                                    </td>     
                                 </tr>
                             `);
                             });
-                            tbody.append(`
-                                <tr style="font-weight: bold; background-color: #f8f9fa;">
-                                    <td colspan="4" style="text-center: right;">Tổng cộng:</td>
-                                    <td>${totalTongSoLuongXuat}</td>
-                                    <td></td>
-                                </tr>
-                            `);
+                            calculateTotal();
                         } else {
-                            tbody.append('<tr><td colspan="8">Không có dữ liệu</td></tr>');
+                            tbody.append('<tr><td colspan="9">Không có dữ liệu</td></tr>');
                         }
                     }
                 });
-
             }
 
             function updateDoanhNghiepsDropdown() {
@@ -207,7 +238,6 @@
                     },
 
                     success: function(response) {
-                        console.log(response);
                         doanhNghiepDropdown.empty().append(
                             '<option value="">Chọn doanh nghiệp</option>'); // Clear and add default
                         if (response.doanhNghieps && response.doanhNghieps.length > 0) {
@@ -222,14 +252,29 @@
 
             }
 
+            const tableBody = document.querySelector('#toKhaiXuatTable tbody');
+
+            tableBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('deleteRowButton')) {
+                    const row = e.target.closest('tr');
+                    row.remove();
+
+                    // Reorder the STT column after deletion
+                    Array.from(tableBody.querySelectorAll('tr')).forEach((tr, index) => {
+                        tr.querySelector('td:first-child').textContent = index + 1;
+                    });
+                    calculateTotal();
+                }
+            });
+
+
+
             $('#ptvt-xc-dropdown-search').on('change', function() {
                 document.getElementById('so_ptvt_xuat_canh_hidden').value = document.getElementById(
                     'ptvt-xc-dropdown-search').value.trim();
                 updateDoanhNghiepsDropdown();
                 $('#toKhaiXuatTable tr').each(function() {
-                    updateSealDropdown($(this));
-
-
+                    updateTable($(this));
                 });
             });
         });

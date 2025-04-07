@@ -42,7 +42,6 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
                 'hang_hoa.so_luong_khai_bao',
                 'hang_hoa.don_vi_tinh',
                 'xuat_hang.so_to_khai_xuat',
-                'xuat_hang.lan_xuat_canh',
                 'xuat_hang.ma_loai_hinh',
                 'xuat_hang_cont.so_luong_xuat',
                 'xuat_hang_cont.so_container',

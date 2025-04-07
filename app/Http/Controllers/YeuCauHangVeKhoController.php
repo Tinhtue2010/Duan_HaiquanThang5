@@ -24,9 +24,72 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\XuatHangService;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 
 class YeuCauHangVeKhoController extends Controller
 {
+    public function getYeuCauHangVeKho(Request $request)
+    {
+        if ($request->ajax()) {
+            if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+                $data = YeuCauHangVeKho::join('doanh_nghiep', 'yeu_cau_hang_ve_kho.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->join('yeu_cau_hang_ve_kho_chi_tiet', 'yeu_cau_hang_ve_kho.ma_yeu_cau', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau')
+                    ->select(
+                        'doanh_nghiep.*',
+                        'yeu_cau_hang_ve_kho.*',
+                        DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+    
+                    )
+                    ->groupBy('yeu_cau_hang_ve_kho.ma_yeu_cau')
+                    ->orderBy('ma_yeu_cau', 'desc')
+                    ->get();
+            } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+                $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
+                $data = YeuCauHangVeKho::join('doanh_nghiep', 'yeu_cau_hang_ve_kho.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->join('yeu_cau_hang_ve_kho_chi_tiet', 'yeu_cau_hang_ve_kho.ma_yeu_cau', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau')
+                    ->where('yeu_cau_hang_ve_kho.ma_doanh_nghiep', $maDoanhNghiep)
+                    ->select(
+                        'doanh_nghiep.*',
+                        'yeu_cau_hang_ve_kho.*',
+                        DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+    
+                    )
+                    ->groupBy('yeu_cau_hang_ve_kho.ma_yeu_cau')
+                    ->orderBy('ma_yeu_cau', 'desc')
+                    ->get();
+            }
+
+            return DataTables::of($data)
+                ->addIndexColumn() // Adds auto-incrementing index
+                ->editColumn('ngay_yeu_cau', function ($yeuCau) {
+                    return Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y');
+                })
+                ->addColumn('ten_doanh_nghiep', function ($yeuCau) {
+                    return $yeuCau->ten_doanh_nghiep ?? 'N/A';
+                })
+                ->addColumn('so_to_khai_nhap_list', function ($yeuCau) {
+                    return $yeuCau->so_to_khai_nhap_list ?? 'N/A';
+                })
+                ->editColumn('trang_thai', function ($yeuCau) {
+                    $status = trim($yeuCau->trang_thai);
+
+                    $statusLabels = [
+                        '1' => ['text' => 'Đang chờ duyệt', 'class' => 'text-primary'],
+                        '2' => ['text' => 'Đã duyệt', 'class' => 'text-success'],
+                        '3' => ['text' => 'Doanh nghiệp đề nghị sửa yêu cầu', 'class' => 'text-warning'],
+                        '4' => ['text' => 'Doanh nghiệp đề nghị hủy yêu cầu', 'class' => 'text-danger'],
+                        '0' => ['text' => 'Đã hủy', 'class' => 'text-danger'],
+                    ];
+                    return isset($statusLabels[$status])
+                        ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
+                        : '<span class="text-muted">Trạng thái không xác định</span>';
+                })
+                ->rawColumns(['trang_thai', 'action']) // Allows HTML in status & action columns
+                ->make(true);
+        }
+    }
+
     public function danhSachYeuCauHangVeKho()
     {
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
@@ -541,6 +604,14 @@ class YeuCauHangVeKhoController extends Controller
             ]);
         }
     }
+    public function thayDoiCongChucHangVeKho(Request $request)
+    {
+        YeuCauHangVeKho::find($request->ma_yeu_cau)->update([
+            'ma_cong_chuc' => $request->ma_cong_chuc
+        ]);
+        session()->flash('alert-success', 'Thay đổi công chức thành công');
+        return redirect()->back();
+    }
 
     public function xuLySuaYeuCau($chiTietSuaYeuCaus, $soToKhaiCanXuLy, $yeuCau)
     {
@@ -709,4 +780,6 @@ class YeuCauHangVeKhoController extends Controller
     {
         return CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
     }
+
+
 }

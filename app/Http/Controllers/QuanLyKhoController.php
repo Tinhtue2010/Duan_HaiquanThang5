@@ -16,6 +16,7 @@ use App\Models\YeuCauTauContChiTiet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Yajra\DataTables\Facades\DataTables;
 
 class QuanLyKhoController extends Controller
 {
@@ -401,5 +402,24 @@ class QuanLyKhoController extends Controller
         $formattedResult = $result->values()->toArray();
 
         return response()->json($formattedResult);
+    }
+    public function getTraCuuContainer(Request $request)
+    {
+        if ($request->ajax()) {
+            $containers = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
+                ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
+                ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
+                ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
+                ->select('container.*', 'niem_phong.so_seal')
+                ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
+                ->groupBy('container.so_container', 'niem_phong.so_seal')
+                ->orderByRaw('total_so_luong DESC')
+                ->get();
+
+            return DataTables::of($containers)
+                ->addIndexColumn()
+                ->make(true);
+        }
     }
 }

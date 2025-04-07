@@ -12,7 +12,6 @@ use App\Models\HangTrongCont;
 use App\Models\NhapHang;
 use App\Models\NiemPhong;
 use App\Models\Seal;
-use App\Models\SealMoi;
 use App\Models\TienTrinh;
 use App\Models\YeuCauChuyenContainer;
 use App\Models\TheoDoiHangHoa;
@@ -24,11 +23,13 @@ use App\Models\YeuCauContainerHangHoaSua;
 use App\Models\YeuCauSua;
 use App\Models\YeuCauTauCont;
 use App\Models\YeuCauTauContChiTiet;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\Facades\DataTables;
 
 class YeuCauContainerController extends Controller
 {
@@ -428,10 +429,9 @@ class YeuCauContainerController extends Controller
 
         $chiTiets = YeuCauContainerChiTiet::with('yeuCauContainerHangHoa')->where('ma_yeu_cau', $ma_yeu_cau)->get();
 
-        $sealMois = SealMoi::where('ma_yeu_cau', $ma_yeu_cau)->get();
         $seals = Seal::where('seal.trang_thai', 0)->get();
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
-        return view('quan-ly-kho.yeu-cau-container.thong-tin-yeu-cau-container', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'sealMois', 'seals', 'congChucs')); // Pass data to the view
+        return view('quan-ly-kho.yeu-cau-container.thong-tin-yeu-cau-container', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'seals', 'congChucs')); // Pass data to the view
     }
 
     public function xemSuaYeuCau(Request $request)
@@ -557,6 +557,9 @@ class YeuCauContainerController extends Controller
         }
 
         $hangTrongCont->save();
+        if ($hangTrongCont->so_luong < 0) {
+            $hangTrongCont->so_luong = 0;
+        }
         if ($hangTrongCont->so_luong == 0) {
             $hangTrongCont->is_da_chuyen_cont = 1;
         }
@@ -845,6 +848,14 @@ class YeuCauContainerController extends Controller
             $this->themTienTrinh($soToKhaiNhap, "Doanh nghiệp đề nghị hủy yêu cầu chuyển container số " . $request->ma_yeu_cau, '');
         }
     }
+    public function thayDoiCongChucContainer(Request $request)
+    {
+        YeuCauChuyenContainer::find($request->ma_yeu_cau)->update([
+            'ma_cong_chuc' => $request->ma_cong_chuc
+        ]);
+        session()->flash('alert-success', 'Thay đổi công chức thành công');
+        return redirect()->back();
+    }
 
     public function duyetHuyYeuCau(Request $request)
     {
@@ -882,48 +893,6 @@ class YeuCauContainerController extends Controller
         $yeuCau->save();
         session()->flash('alert-success', 'Duyệt hoàn thành yêu cầu thành công');
         return redirect()->back();
-    }
-
-    public function suaSealContainer(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-
-
-            $yeuCau = YeuCauChuyenContainer::find($request->ma_yeu_cau);
-            $sealMoi = SealMoi::where('ma_yeu_cau', $request->ma_yeu_cau)
-                ->where('so_container', $request->so_container)
-                ->first();
-
-            if ($request->so_seal) {
-                $so_seal_moi = $request->so_seal;
-            } else {
-                $availableSeals = $this->getSealNhoNhat($request->loai_seal, $yeuCau->ma_cong_chuc);
-                if (!$availableSeals) {
-                    session()->flash('alert-danger', 'Không đủ số seal niêm phong để cấp cho yêu cầu này');
-                    return redirect()->back();
-                }
-                $so_seal_moi = $availableSeals->shift();
-            }
-
-            $sealMoi->so_seal_moi = $so_seal_moi;
-            $sealMoi->save();
-
-            $suDungSeal = $this->suDungSeal($so_seal_moi, $request->so_container, $yeuCau->ma_cong_chuc);
-            if (!$suDungSeal) {
-                session()->flash('alert-danger', 'Seal này đã được sử dụng');
-                return redirect()->back();
-            }
-            $this->updateNiemPhong($so_seal_moi, $request->so_container, $yeuCau->ma_cong_chuc);
-            session()->flash('alert-success', 'Sửa seal niêm phong thành công');
-
-            DB::commit();
-            return redirect()->back();
-        } catch (\Exception $e) {
-            session()->flash('alert-danger', 'Có lỗi xảy ra');
-            Log::error('Error in suaSealContainer: ' . $e->getMessage());
-            return redirect()->back();
-        }
     }
 
     public function themContainerMoi($so_container)
@@ -1093,5 +1062,65 @@ class YeuCauContainerController extends Controller
     private function getCongChucHienTai()
     {
         return CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
+    }
+    public function getYeuCauContainer(Request $request)
+    {
+        if ($request->ajax()) {
+            if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+                $data = YeuCauChuyenContainer::join('nhap_hang', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
+                    ->join('doanh_nghiep', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+                    ->select(
+                        'doanh_nghiep.*',
+                        'yeu_cau_chuyen_container.*',
+                        DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_container_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_container_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+                    )
+                    ->groupBy('yeu_cau_chuyen_container.ma_yeu_cau')
+                    ->orderBy('ma_yeu_cau', 'desc')
+                    ->get();
+            } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+                $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
+                $data = YeuCauChuyenContainer::join('nhap_hang', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
+                    ->join('doanh_nghiep', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+                    ->where('yeu_cau_chuyen_container.ma_doanh_nghiep', $maDoanhNghiep)
+                    ->select(
+                        'doanh_nghiep.*',
+                        'yeu_cau_chuyen_container.*',
+                        DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_container_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_container_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
+                    )
+                    ->groupBy('yeu_cau_chuyen_container.ma_yeu_cau')
+                    ->orderBy('ma_yeu_cau', 'desc')
+                    ->get();
+            }
+
+            return DataTables::of($data)
+                ->addIndexColumn() // Adds auto-incrementing index
+                ->editColumn('ngay_yeu_cau', function ($yeuCau) {
+                    return Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y');
+                })
+                ->addColumn('ten_doanh_nghiep', function ($yeuCau) {
+                    return $yeuCau->ten_doanh_nghiep ?? 'N/A';
+                })
+                ->addColumn('so_to_khai_nhap_list', function ($yeuCau) {
+                    return $yeuCau->so_to_khai_nhap_list ?? 'N/A';
+                })
+                ->editColumn('trang_thai', function ($yeuCau) {
+                    $status = trim($yeuCau->trang_thai);
+
+                    $statusLabels = [
+                        '1' => ['text' => 'Đang chờ duyệt', 'class' => 'text-primary'],
+                        '2' => ['text' => 'Đã duyệt', 'class' => 'text-success'],
+                        '3' => ['text' => 'Doanh nghiệp đề nghị sửa yêu cầu', 'class' => 'text-warning'],
+                        '4' => ['text' => 'Doanh nghiệp đề nghị hủy yêu cầu', 'class' => 'text-danger'],
+                        '0' => ['text' => 'Đã hủy', 'class' => 'text-danger'],
+                    ];
+                    return isset($statusLabels[$status])
+                        ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
+                        : '<span class="text-muted">Trạng thái không xác định</span>';
+                })
+                ->rawColumns(['trang_thai', 'action']) // Allows HTML in status & action columns
+                ->make(true);
+        }
     }
 }

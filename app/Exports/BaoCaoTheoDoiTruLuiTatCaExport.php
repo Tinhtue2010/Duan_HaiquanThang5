@@ -91,8 +91,8 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
             $this->createRichTextBoldItalic('Số lượng hàng hóa xuất khẩu ', '(Kiện)'),
             $this->createRichTextBoldItalic('Số Lượng hàng hóa chưa xuất khẩu ', '(Kiện)'),
             'Số seal hải quan niêm phong',
-            $this->createRichTextBoldItalic('Số hiệu PTVT ', '(tàu Việt Nam nếu có thay đổi)'),
-            $this->createRichTextBoldItalic('Số hiệu Container', '(nếu có thay đổi)'),
+            'Số hiệu PTVT ',
+            'Số hiệu Container',
             'Ghi chú'
         ];
         $result[] = [
@@ -175,9 +175,9 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
                     '',
                     $item->so_luong_xuat,
                     $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
-                    $item->so_seal_cuoi_ngay ?? '',
-                    $item->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                    $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                    $item->so_seal_cuoi_ngay ? $item->so_seal_cuoi_ngay : '',
+                    $item->phuong_tien_vt_nhap,
+                    $item->so_container,
                     '',
                 ];
                 $sum += $item->so_luong_xuat;

@@ -52,27 +52,7 @@
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
-                                @foreach ($data as $index => $yeuCau)
-                                    <tr class="clickable-row"
-                                        onclick="window.location='{{ route('quan-ly-kho.thong-tin-yeu-cau-kiem-tra', $yeuCau->ma_yeu_cau) }}'">
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $yeuCau->ma_yeu_cau }}</td>
-                                        <td>{{ $yeuCau->so_to_khai_nhap_list }}</td>
-                                        <td>{{ $yeuCau->ten_doanh_nghiep }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</td>
-                                        @if ($yeuCau->trang_thai == 1)
-                                            <td class="text-primary">Đang chờ duyệt</td>
-                                        @elseif ($yeuCau->trang_thai == 2)
-                                            <td class="text-success">Đã duyệt</td>
-                                        @elseif ($yeuCau->trang_thai == 3)
-                                            <td class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</td>
-                                        @elseif ($yeuCau->trang_thai == 4)
-                                            <td class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</td>
-                                        @elseif ($yeuCau->trang_thai == 0)
-                                        <td class="text-danger">Đã hủy</td>
-                                        @endif
-                                    </tr>
-                                @endforeach
+
                             </tbody>
                         </table>
                     </div>
@@ -80,24 +60,83 @@
             </div>
         </div>
     </div>
+
+
     <script>
         $(document).ready(function() {
-            $('#dataTable').DataTable({
+            var table = $('#dataTable').DataTable({
+                processing: true,
+                serverSide: true,
+                stateSave: true,
+                ajax: "{{ route('quan-ly-kho.getYeuCauKiemTra') }}",
+
                 language: {
                     searchPlaceholder: "Tìm kiếm",
                     search: "",
-                    "sInfo": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "sInfoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "sInfoFiltered": "Lọc từ _MAX_ mục",
-                    "sLengthMenu": "Hiện _MENU_ mục",
-                    "sEmptyTable": "Không có dữ liệu",
+                    sInfo: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    sInfoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+                    sInfoFiltered: "Lọc từ _MAX_ mục",
+                    sLengthMenu: "Hiện _MENU_ mục",
+                    sEmptyTable: "Không có dữ liệu",
                 },
-                stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
+                buttons: [{
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    }
+                ],
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex'
+                    },
+                    {
+                        data: 'ma_yeu_cau',
+                        name: 'ma_yeu_cau'
+                    },
+                    {
+                        data: 'so_to_khai_nhap_list',
+                        name: 'so_to_khai_nhap_list'
+                    },
+                    {
+                        data: 'ten_doanh_nghiep',
+                        name: 'ten_doanh_nghiep'
+                    },
+                    {
+                        data: 'ngay_yeu_cau',
+                        name: 'ngay_yeu_cau'
+                    },
+                    {
+                        data: 'trang_thai',
+                        name: 'trang_thai',
+                        orderable: false
+                    }
+
+                ],
                 columnDefs: [{
-                    orderable: false,
-                    targets: -1
-                }],
+                        orderable: false,
+                        width: "350px",
+                        targets: 2
+                    },
+                    {
+                        orderable: false,
+                        targets: -1
+                    }
+                ],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).addClass('clickable-row').attr('onclick',
+                        `window.location='{{ url('/thong-tin-yeu-cau-kiem-tra') }}/${data.ma_yeu_cau}'`
+                    );
+                },
                 initComplete: function() {
                     $('.dataTables_filter input[type="search"]').css({
                         width: '350px',
@@ -113,8 +152,13 @@
                         '<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>'
                     );
                     select.append('<option class="text-success" value="ĐÃ DUYỆT">ĐÃ DUYỆT</option>');
-                    select.append('<option class="text-warning" value="DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU</option>');
-                    select.append('<option class="text-danger" value="DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU</option>');
+
+                    select.append(
+                        '<option class="text-warning" value="DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU</option>'
+                    );
+                    select.append(
+                        '<option class="text-danger" value="DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU</option>'
+                    );
                     select.append('<option class="text-danger" value="ĐÃ HỦY">ĐÃ HỦY</option>');
 
                     $(column.header()).empty().append(select);
@@ -126,20 +170,14 @@
                     });
 
                     var savedFilter = localStorage.getItem('kiemTra');
-                    if (savedFilter) {
-                        select.val(savedFilter);
-                        column.search(savedFilter ? savedFilter : '', false, true).draw();
-                    } else {
-                        select.val("");
+                    if (!savedFilter) {
+                        savedFilter = '';
+                        localStorage.setItem('kiemTra', savedFilter);
                     }
 
+                    select.val(savedFilter);
+                    column.search(savedFilter, false, true).draw();
                 },
-            });
-
-            $('.dataTables_filter input[type="search"]').css({
-                width: '350px',
-                display: 'inline-block',
-                height: '40px',
             });
         });
     </script>

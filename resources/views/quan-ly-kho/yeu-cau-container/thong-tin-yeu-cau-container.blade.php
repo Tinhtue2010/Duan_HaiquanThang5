@@ -159,7 +159,23 @@
                             @elseif(trim($yeuCau->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/success.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? ''}}</h2>
+                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}
+                                </h2>
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
+                                    <div class="row mt-4">
+                                        <center>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#thayDoiCongChucModal"
+                                                        class="btn btn-warning ">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Thay đổi công chức</button>
+                                                </a>
+                                            </div>
+                                        </center>
+                                    </div>
+                                @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $yeuCau->ma_doanh_nghiep)
@@ -188,7 +204,8 @@
                             @elseif(trim($yeuCau->trang_thai) == '3')
                                 <h2 class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}</h2>
+                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}
+                                </h2>
                                 <div class="row">
                                     <center>
                                         <div class="col-6">
@@ -387,6 +404,44 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="thayDoiCongChucModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Xác nhận duyệt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('quan-ly-kho.thay-doi-cong-chuc-container') }}" method="POST">
+                    <div class="modal-body">
+                        <p class="fw-bold">Thay đổi công chức phụ trách</p>
+                        <div class="form-group">
+                            <label class="label-text mb-1" for="">Cán bộ công chức phụ trách</label>
+                            <select class="form-control" id="cong-chuc-dropdown-search-2" name="ma_cong_chuc" required>
+                                <option></option>
+                                @foreach ($congChucs as $congChuc)
+                                    <option value="{{ $congChuc->ma_cong_chuc }}">
+                                        {{ $congChuc->ten_cong_chuc }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        @csrf
+                        @method('POST')
+                        <input type="hidden" value="{{ $yeuCau->ma_yeu_cau }}" name="ma_yeu_cau">
+                        <button type="submit" class="btn btn-success">
+                            Xác nhận
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

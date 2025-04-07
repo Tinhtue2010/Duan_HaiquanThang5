@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\DoanhNghiep;
 use App\Models\HangHoa;
+use App\Models\HangTrongCont;
 use App\Models\NhapHang;
 use App\Models\PTVTXuatCanhCuaPhieu;
 use App\Models\TheoDoiTruLui;
@@ -31,6 +32,7 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
     protected $nhapHang;
     protected $sum;
     protected $array;
+
 
     public function __construct($so_to_khai_nhap, $tu_ngay)
     {
@@ -94,8 +96,8 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
             $this->createRichTextBoldItalic('Số lượng hàng hóa xuất khẩu ', '(Kiện)'),
             $this->createRichTextBoldItalic('Số Lượng hàng hóa chưa xuất khẩu ', '(Kiện)'),
             'Số seal hải quan niêm phong',
-            $this->createRichTextBoldItalic('Số hiệu PTVT ', '(tàu Việt Nam nếu có thay đổi)'),
-            $this->createRichTextBoldItalic('Số hiệu Container', '(nếu có thay đổi)'),
+            'Số hiệu PTVT ',
+            'Số hiệu Container',
             'Ghi chú'
         ];
         $result[] = [
@@ -184,21 +186,41 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
                     if ($start === null) {
                         $start = $stt + 12; // First occurrence
                     }
+                    $total = array_sum($hangHoaArr);
+                    $sumSoLuong = HangTrongCont::where('so_container', $item->so_container)
+                        ->sum('so_luong');
+                    if ($total == 0 && $sumSoLuong == 0) {
+                        $result[] = [
+                            $stt++,
+                            '',
+                            '',
+                            $item->ten_hang,
+                            '',
+                            '',
+                            $item->so_luong_xuat,
+                            $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
+                            '',
+                            $item->phuong_tien_vt_nhap,
+                            $item->so_container,
+                            '',
+                        ];
+                    } else {
+                        $result[] = [
+                            $stt++,
+                            '',
+                            '',
+                            $item->ten_hang,
+                            '',
+                            '',
+                            $item->so_luong_xuat,
+                            $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
+                            $item->so_seal_cuoi_ngay ? $item->so_seal_cuoi_ngay : '',
+                            $item->phuong_tien_vt_nhap,
+                            $item->so_container,
+                            '',
+                        ];
+                    }
 
-                    $result[] = [
-                        $stt++,
-                        '',
-                        '',
-                        $item->ten_hang,
-                        '',
-                        '',
-                        $item->so_luong_xuat,
-                        $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
-                        $index === $lastOccurrences[$item->ma_xuat_hang_cont] ? $item->so_seal_cuoi_ngay ?? '' : '',
-                        $item->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                        $item->so_container == $item->so_container_khai_bao ? '' : $item->so_container,
-                        '',
-                    ];
 
                     $sum += $item->so_luong_xuat;
                     $end = $stt - 1 + 12; // Update end on each iteration

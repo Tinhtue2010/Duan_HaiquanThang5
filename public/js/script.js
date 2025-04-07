@@ -19,24 +19,7 @@ $(document).ready(function () {
     $(document).on('select2:open', function () {
         $('.select2-search__field').attr('placeholder', 'Nhập để tìm kiếm'); // Set the placeholder
     });
-    // $('#doanh-nghiep-dropdown-search').select2({
-    //     placeholder: "Chọn cục hải quan",
-    //     allowClear: true,
-    //     language: "vi", // Set the language (if needed)
-    //     minimumInputLength: 0,
-    //     dropdownAutoWidth: true, // Automatically adjust the dropdown width
-    //     dropdownParent: $(document.body), // Ensure dropdown appears under the input field
-    //     ajax: {
-    //         dataType: 'json',
-    //         delay: 250, // Delay for AJAX search
-    //         processResults: function (data) {
-    //             return {
-    //                 results: data.items
-    //             };
-    //         }
-    //     },
-    //     searchInputPlaceholder: "Nhập để tìm kiếm", // Customize your placeholder text
-    // });
+
     $('#doanh-nghiep-dropdown-search-2').select2({
         placeholder: "Chọn cục hải quan",
         allowClear: true,
@@ -304,7 +287,8 @@ $(document).ready(function () {
     $('#cong-chuc-dropdown-search').select2();
     $('#loai-seal-dropdown-search').select2();
     $('#loai-seal-dropdown-search-2').select2();
-    
+    $('#cong-chuc-dropdown-search-2').select2();
+
     // Reinitialize Select2 when modal opens
     $('#xacNhanNhaphangModal ').on('shown.bs.modal', function () {
         $('#loai-seal-dropdown-search').select2('destroy');
@@ -348,6 +332,19 @@ $(document).ready(function () {
             dropdownAutoWidth: true,
             width: '100%',
             dropdownParent: $('#xacNhanModal .modal-body'),
+        });
+    });
+    $('#thayDoiCongChucModal ').on('shown.bs.modal', function () {
+        $('#cong-chuc-dropdown-search-2').select2('destroy');
+        $('#cong-chuc-dropdown-search-2').select2({
+            tags: true,
+            placeholder: "Chọn công chức",
+            allowClear: true,
+            language: "vi",
+            minimumInputLength: 0,
+            dropdownAutoWidth: true,
+            width: '100%',
+            dropdownParent: $('#thayDoiCongChucModal .modal-body'),
         });
     });
     $('#suaSealModal ').on('shown.bs.modal', function () {
@@ -408,8 +405,6 @@ $(document).ready(function () {
             width: '100%',
             dropdownParent: $('#inToKhaiModal .modal-body'),
         });
-
-
     });
 
 
@@ -495,6 +490,10 @@ $(document).ready(function () {
         placeholder: "Chọn công chức",
         allowClear: true,
     });
+    $('#tau-dropdown-search').select2({
+        placeholder: "Chọn tàu",
+        allowClear: true,
+    });
 });
 
 
@@ -547,7 +546,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 setTimeout(() => {
                     submitButton.disabled = false;
                     submitButton.textContent = originalText; // Restore the original text
-                }, 3000); // 3000ms = 3 seconds
+                }, 5000); // 3000ms = 3 seconds
             }
         });
     });
@@ -560,4 +559,4 @@ setTimeout(() => {
     if (alertElement) { // Ensure the element exists before attempting to remove it
         alertElement.remove();
     }
-}, 5000);
+}, 10000);

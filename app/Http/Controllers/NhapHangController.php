@@ -37,19 +37,6 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class NhapHangController extends Controller
 {
-    private function getDanhSachToKhai(string $trangThai, string $view)
-    {
-        $query = NhapHang::where('trang_thai', $trangThai);
-
-        if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-            $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->value('ma_doanh_nghiep');
-            $query->where('ma_doanh_nghiep', $maDoanhNghiep);
-        }
-
-        $data = $query->orderBy('ngay_dang_ky', 'desc')->get();
-        return view($view, compact('data'));
-    }
-
     public function danhSachToKhai()
     {
         $query = NhapHang::whereIn('trang_thai', ['1', '3']);
@@ -110,6 +97,8 @@ class NhapHangController extends Controller
             'chuHangs' => ChuHang::all(),
             'haiQuans' => HaiQuan::all(),
             'doanhNghiep' => $doanhNghiep,
+            'xuatXus' => $this->getXuatXu(),
+            'donViTinhs' => $this->getDonViTinh(),
             'loaiHinhs' => LoaiHinh::all(),
             'loaiHangs' => LoaiHang::all(),
             'loaiHangFiles' => LoaiHang::all(),
@@ -165,12 +154,6 @@ class NhapHangController extends Controller
         ]);
     }
 
-    private function getDoanhNghiepHienTai()
-    {
-        return DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->firstOrFail();
-    }
-
-
     private function themNhapHang($request, $formattedDate, $trang_thai, $so_containers)
     {
         $doanhNghiep = $this->getDoanhNghiepHienTai();
@@ -190,59 +173,7 @@ class NhapHangController extends Controller
             'created_at' => now(),
         ]);
     }
-    private function xuLyThemHangHoa($request)
-    {
-        $rowsData = json_decode($request->rows_data, true);
 
-        foreach ($rowsData as $row) {
-            $this->themLoaiHang($row);
-            $this->themHangHoa($request, $row);
-            $this->xuLyContainer($row['so_container']);
-            $this->xuLySeal($row['so_container'], now());
-        }
-    }
-
-    private function themLoaiHang($row)
-    {
-        if (!LoaiHang::where('ten_loai_hang', $row['loai_hang'])->exists()) {
-            LoaiHang::create([
-                'ten_loai_hang' => $row['loai_hang'],
-                'don_vi_tinh' => $row['don_vi_tinh'],
-            ]);
-        }
-    }
-    private function themHangHoa($request, $row)
-    {
-        return HangHoa::create([
-            'ten_hang' => $row['ten_hang'],
-            'loai_hang' => $row['loai_hang'],
-            'xuat_xu' => $row['xuat_xu'],
-            'so_luong_khai_bao' => $row['so_luong'],
-            'don_vi_tinh' => $row['don_vi_tinh'],
-            'don_gia' => $row['don_gia'],
-            'tri_gia' => $row['tri_gia'],
-            'so_to_khai_nhap' => $request->so_to_khai_nhap,
-            'so_container_khai_bao' => $row['so_container'],
-        ]);
-    }
-    private function xuLyContainer($so_container)
-    {
-        if (!Container::find($so_container)) {
-            Container::insert([
-                'so_container' => $so_container,
-            ]);
-        }
-    }
-
-    private function themTienTrinh($so_to_khai_nhap, $ten_cong_viec, $ma_cong_chuc)
-    {
-        TienTrinh::insert([
-            'so_to_khai_nhap' => $so_to_khai_nhap,
-            'ten_cong_viec' => $ten_cong_viec,
-            'ngay_thuc_hien' => now(),
-            'ma_cong_chuc' => $ma_cong_chuc
-        ]);
-    }
     public function suaToKhaiNhap($so_to_khai_nhap)
     {
         if ($this->kiemTraTinhTrangXuatHang($so_to_khai_nhap)) {
@@ -255,12 +186,47 @@ class NhapHangController extends Controller
         return view('nhap-hang.sua-to-khai-nhap', [
             'nhapHang' => $nhapHang,
             'hangHoaRows' => $nhapHang->hangHoa,
+            'xuatXus' => $this->getXuatXu(),
+            'donViTinhs' => $this->getDonViTinh(),
             'haiQuans' => HaiQuan::all(),
             'doanhNghiep' => $doanhNghiep,
             'loaiHinhs' => LoaiHinh::all(),
             'loaiHangs' => LoaiHang::all(),
             'chuHangs' => ChuHang::all(),
         ]);
+    }
+    public function suaToKhaiNhapCongChuc($so_to_khai_nhap)
+    {
+        $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
+        if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+            if ($this->kiemTraTinhTrangXuatHang($so_to_khai_nhap)) {
+                return redirect()->back()->with('alert-danger', 'Không thể sửa tờ khai này do đã chọn hàng để xuất');
+            }
+            $doanhNghiep = $this->getDoanhNghiepHienTai();
+
+            return view('nhap-hang.sua-to-khai-nhap', [
+                'nhapHang' => $nhapHang,
+                'hangHoaRows' => $nhapHang->hangHoa,
+                'xuatXus' => $this->getXuatXu(),
+                'donViTinhs' => $this->getDonViTinh(),
+                'haiQuans' => HaiQuan::all(),
+                'doanhNghiep' => $doanhNghiep,
+                'loaiHinhs' => LoaiHinh::all(),
+                'loaiHangs' => LoaiHang::all(),
+                'chuHangs' => ChuHang::all(),
+            ]);
+        } else {
+            return view('nhap-hang.sua-to-khai-nhap-cong-chuc', [
+                'nhapHang' => $nhapHang,
+                'hangHoaRows' => $nhapHang->hangHoa,
+                'xuatXus' => $this->getXuatXu(),
+                'donViTinhs' => $this->getDonViTinh(),
+                'haiQuans' => HaiQuan::all(),
+                'loaiHinhs' => LoaiHinh::all(),
+                'loaiHangs' => LoaiHang::all(),
+                'chuHangs' => ChuHang::all(),
+            ]);
+        }
     }
     public function xemSuaToKhai(Request $request)
     {
@@ -278,14 +244,22 @@ class NhapHangController extends Controller
     {
         try {
             return DB::transaction(function () use ($request) {
-                // Validate and prepare data
-                $formattedDate = $this->formatDate($request->ngay_thong_quan);
                 $nhapHang = $this->kiemTraSoToKhaiNhapSua($request);
-                if ($nhapHang->trang_thai == '1') {
-                    $this->suaNhapHangDangChoDuyet($request, $nhapHang);
+                $rowsData = json_decode($request->rows_data, true);
+                $containers = array_column($rowsData, 'so_container');
+                $uniqueContainers = array_unique($containers);
+                $so_containers = implode('; ', $uniqueContainers);
+
+                if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+                    if ($nhapHang->trang_thai == '1') {
+                        $this->suaNhapHangDangChoDuyet($request, $nhapHang, $so_containers);
+                    } else {
+                        $this->suaNhapHangDaDuyet($request, $so_containers);
+                    }
                 } else {
-                    $this->suaNhapHangDaDuyet($request);
+                    $this->suaNhapHangCongChuc($request, $so_containers);
                 }
+
                 return redirect()
                     ->route('nhap-hang.show', ['so_to_khai_nhap' => $request->so_to_khai_nhap])
                     ->with('alert-success', 'Sửa tờ khai thành công!');
@@ -295,12 +269,92 @@ class NhapHangController extends Controller
             return redirect()->back()->with('alert-danger', 'Có lỗi xảy ra trong hệ thống');
         }
     }
-    private function suaNhapHangDangChoDuyet($request, $nhapHang)
+
+    private function suaNhapHangCongChuc($request, $so_containers)
+    {
+        $rowsData = json_decode($request->rows_data, true);
+        $formattedDate = $this->formatDate($request->ngay_thong_quan);
+        $nhapHang = NhapHang::find($request->so_to_khai_nhap);
+
+        foreach ($rowsData as $row) {
+            $hangHoa = HangHoa::find($row['ma_hang']);
+
+            if ($hangHoa->so_container_khai_bao != $row['so_container'] || $nhapHang->phuong_tien_vt_nhap != $request->phuong_tien_vt_nhap) {
+                $this->suaXuatHangCont($request, $nhapHang, $row);
+            }
+            $this->suaSoContainerSoLuong($hangHoa, $row);
+
+            HangHoa::find($row['ma_hang'])->update([
+                'ten_hang' => $row['ten_hang'],
+                'loai_hang' => $row['loai_hang'],
+                'xuat_xu' => $row['xuat_xu'],
+                'so_luong_khai_bao' => $row['so_luong'],
+                'don_vi_tinh' => $row['don_vi_tinh'],
+                'don_gia' => $row['don_gia'],
+                'tri_gia' => $row['tri_gia'],
+                'so_container_khai_bao' => $row['so_container'],
+            ]);
+
+            NhapHang::find($request->so_to_khai_nhap)->update([
+                'ma_chu_hang' => $request->ma_chu_hang,
+                'ma_loai_hinh' => $request->ma_loai_hinh,
+                'ma_hai_quan' => $request->ma_hai_quan,
+                'ngay_dang_ky' => $formattedDate,
+                'ngay_thong_quan' => $formattedDate,
+                'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
+                'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
+                'trong_luong' => $request->trong_luong,
+                'container_ban_dau' => $so_containers,
+                'created_at' => now(),
+            ]);
+        }
+
+        $this->xuLyContainer($request);
+        $this->themTienTrinh($request->so_to_khai_nhap, "Công chức đã sửa tờ khai nhập số " . $request->so_to_khai_nhap, $this->getCongChucHienTai()->ma_cong_chuc);
+    }
+    private function suaXuatHangCont($request, $nhapHang, $row)
+    {
+        $hangTrongConts = HangTrongCont::where('ma_hang', $row['ma_hang'])
+            ->get();
+        foreach ($hangTrongConts as $hangTrongCont) {
+            XuatHangCont::where('so_to_khai_nhap', $request->so_to_khai_nhap)
+                ->where('ma_hang_cont', $hangTrongCont->ma_hang_cont)
+                ->where('so_container', $hangTrongCont->so_container)
+                ->where('phuong_tien_vt_nhap', $request->phuong_tien_vt_nhap)
+                ->update([
+                    'so_container' => $row['so_container'],
+                    'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap,
+                ]);
+        }
+    }
+    private function suaSoContainerSoLuong($hangHoa, $row)
+    {
+        if ($hangHoa->so_luong_khai_bao != $row['so_luong']) {
+            $so_luong_thay_doi = $row['so_luong'] - $hangHoa->so_luong_khai_bao;
+            HangTrongCont::where('ma_hang', $row['ma_hang'])
+                ->where('is_da_chuyen_cont', 0)
+                ->update([
+                    'ma_hang' => $hangHoa->ma_hang,
+                    'so_container' => $row['so_container'],
+                    'so_luong' => DB::raw('so_luong + ' . (int) $so_luong_thay_doi),
+                ]);
+        } else {
+            HangTrongCont::where('ma_hang', $row['ma_hang'])
+                ->update([
+                    'ma_hang' => $hangHoa->ma_hang,
+                    'so_container' => $row['so_container'],
+                ]);
+        }
+    }
+
+
+    private function suaNhapHangDangChoDuyet($request, $nhapHang, $so_containers)
     {
         $trang_thai = $nhapHang->trang_thai;
         $formattedDate = $this->formatDate($request->ngay_thong_quan);
 
         $rowsData = json_decode($request->rows_data, true);
+
         $containers = array_column($rowsData, 'so_container');
         $uniqueContainers = array_unique($containers);
         $so_containers = implode('; ', $uniqueContainers);
@@ -311,7 +365,7 @@ class NhapHangController extends Controller
         $this->themTienTrinh($request->so_to_khai_nhap, "Doanh nghiệp sửa tờ khai nhập hàng số " . $request->so_to_khai_nhap, '');
     }
 
-    private function suaNhapHangDaDuyet($request)
+    private function suaNhapHangDaDuyet($request, $so_containers)
     {
         $doanhNghiep = $this->getDoanhNghiepHienTai();
         $formattedDate = $this->formatDate($request->ngay_thong_quan);
@@ -319,12 +373,7 @@ class NhapHangController extends Controller
         $nhapHang->trang_thai = '3';
         $nhapHang->save();
 
-        $rowsData = json_decode($request->rows_data, true);
-        $containers = array_column($rowsData, 'so_container');
-        $uniqueContainers = array_unique($containers);
-        $so_containers = implode('; ', $uniqueContainers);
-
-        $nhapHangSua = NhapHangSua::create([
+        NhapHangSua::create([
             'so_to_khai_nhap' => $request->so_to_khai_nhap,
             'ma_loai_hinh' => $request->ma_loai_hinh,
             'ma_chu_hang' => $request->ma_chu_hang,
@@ -344,7 +393,6 @@ class NhapHangController extends Controller
         $rowsData = json_decode($request->rows_data, true);
 
         foreach ($rowsData as $row) {
-            $this->themLoaiHang($row);
             HangHoaSua::insert([
                 'ten_hang' => $row['ten_hang'],
                 'loai_hang' => $row['loai_hang'],
@@ -358,8 +406,9 @@ class NhapHangController extends Controller
             ]);
         }
         $this->xuLyContainer($request);
-        $this->themTienTrinh($request->so_to_khai_nhap, "Công chức đã duyệt tờ khai nhập hàng số " . $request->so_to_khai_nhap, '');
+        $this->themTienTrinh($request->so_to_khai_nhap, "Công chức đã duyệt tờ khai nhập hàng số " . $request->so_to_khai_nhap, $this->getCongChucHienTai()->ma_cong_chuc);
     }
+
     public function huySuaYeuCau(Request $request)
     {
         $nhapHang = NhapHang::find($request->so_to_khai_nhap);
@@ -396,7 +445,7 @@ class NhapHangController extends Controller
                 $hangHoa->delete();
             }
 
-            $nhapHang = NhapHang::create([
+            NhapHang::create([
                 'so_to_khai_nhap' => $nhapHangSua->so_to_khai_nhap,
                 'ma_loai_hinh' => $nhapHangSua->ma_loai_hinh,
                 'ma_chu_hang' => $nhapHangSua->ma_chu_hang,
@@ -445,83 +494,8 @@ class NhapHangController extends Controller
         }
     }
 
-    private function kiemTraTinhTrangXuatHang($so_to_khai_nhap)
-    {
-        return XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-            ->where('so_to_khai_nhap', $so_to_khai_nhap)
-            ->where('trang_thai', '!=', '0')
-            ->exists();
-    }
-
-    private function kiemTraSoToKhaiNhapSua($request)
-    {
-        $nhapHang = NhapHang::find($request->so_to_khai_nhap);
-
-        if ($nhapHang && $request->so_to_khai_nhap != $request->so_to_khai_nhap) {
-            if ($nhapHang->trang_thai != '0') {
-                throw new \Exception('Số tờ khai nhập đã được sử dụng');
-            }
-        }
-        return $nhapHang;
-    }
-
-    private function xoaHangTrongCont($nhapHang)
-    {
-        HangTrongCont::join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->where('hang_hoa.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-            ->delete();
-    }
-
-    private function xoaNhapHangCu($request)
-    {
-        NhapHang::find($request->so_to_khai_nhap)->delete();
-        HangHoa::where('so_to_khai_nhap', $request->so_to_khai_nhap)->delete();
-    }
-
-    private function xuLyThemHangHoaSua($request, $trang_thai)
-    {
-        $rowsData = json_decode($request->rows_data, true);
-
-        foreach ($rowsData as $row) {
-            $this->themLoaiHang($row);
-            $hangHoa = $this->themHangHoa($request, $row);
-
-            if ($trang_thai == "2") {
-                $this->themHangTrongCont($hangHoa, $request);
-            }
-        }
-    }
-    private function themHangTrongCont($hangHoa, $request)
-    {
-        HangTrongCont::insert([
-            'ma_hang' => $hangHoa->ma_hang,
-            'so_container' => $hangHoa->so_container_khai_bao,
-            'so_luong' => $hangHoa->so_luong_khai_bao,
-        ]);
-    }
-
-    private function formatDate($date)
-    {
-        return DateTime::createFromFormat('d/m/Y', $date)->format('Y/m/d');
-    }
-
     public function thongTinToKhaiHuy($id_huy)
     {
-        // $nhapHang = NhapHang::find($so_to_khai_nhap);
-        // $hangHoaRows = $nhapHang->hangHoa;
-        // return view('nhap-hang.thong-tin-nhap-hang', [
-        //     'nhapHang' => $nhapHang,
-        //     'hangHoaRows' => $hangHoaRows,
-        //     'soLuongSum' => $hangHoaRows->sum('so_luong_khai_bao'),
-        //     'triGiaSum' => $hangHoaRows->sum('tri_gia'),
-        //     'tienTrinhs' => TienTrinh::where('so_to_khai_nhap', $so_to_khai_nhap)
-        //         ->leftJoin('cong_chuc', 'tien_trinh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
-        //         ->get(),
-        //     'congChucs' => CongChuc::where('is_chi_xem',0)->get(),
-        //     'chuHangs' => ChuHang::all(),
-        //     'seals' => Seal::where('trang_thai', 0)->get()
-        // ]);
-
         $nhapHang = NhapHangDaHuy::find($id_huy);
         $hangHoaRows = $nhapHang->hangHoaDaHuy;
         $soLuongSum = $hangHoaRows->sum('so_luong_khai_bao');
@@ -552,6 +526,7 @@ class NhapHangController extends Controller
         $nhapHang = NhapHang::find($so_to_khai_nhap);
         return view('nhap-hang.vi-tri-hang-hien-tai', compact('hangTrongConts', 'nhapHang'));
     }
+
     public function phieuXuatCuaToKhai($so_to_khai_nhap)
     {
         $xuatHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
@@ -589,10 +564,7 @@ class NhapHangController extends Controller
                         'ma_cong_chuc' => $congChuc->ma_cong_chuc,
                     ]);
 
-                    // $this->xuLySealMoi($nhapHang, $request);
                     $this->themTienTrinh($request->so_to_khai_nhap, "Cán bộ công chức đã duyệt tờ khai, phân công cho cán bộ công chức " . $congChuc->ten_cong_chuc, $congChuc->ma_cong_chuc);
-                    // return redirect()->back()->with('alert-success', 'Trạng thái đã được cập nhật thành công!');
-
                     session()->flash('alert-success', 'Duyệt tờ khai thành công!');
                     return redirect()->route('nhap-hang.quan-ly-nhap-hang');
                 });
@@ -637,6 +609,48 @@ class NhapHangController extends Controller
                 ->withInput();
         }
     }
+
+    private function kiemTraTinhTrangXuatHang($so_to_khai_nhap)
+    {
+        return XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->where('so_to_khai_nhap', $so_to_khai_nhap)
+            ->where('trang_thai', '!=', '0')
+            ->exists();
+    }
+
+    private function xoaNhapHangCu($request)
+    {
+        NhapHang::find($request->so_to_khai_nhap)->delete();
+        HangHoa::where('so_to_khai_nhap', $request->so_to_khai_nhap)->delete();
+    }
+
+    private function xuLyThemHangHoaSua($request, $trang_thai)
+    {
+        $rowsData = json_decode($request->rows_data, true);
+
+        foreach ($rowsData as $row) {
+            $this->themLoaiHang($row);
+            $hangHoa = $this->themHangHoa($request, $row);
+
+            if ($trang_thai == "2") {
+                $this->themHangTrongCont($hangHoa, $request);
+            }
+        }
+    }
+    private function themHangTrongCont($hangHoa, $request)
+    {
+        HangTrongCont::insert([
+            'ma_hang' => $hangHoa->ma_hang,
+            'so_container' => $hangHoa->so_container_khai_bao,
+            'so_luong' => $hangHoa->so_luong_khai_bao,
+        ]);
+    }
+
+    private function formatDate($date)
+    {
+        return DateTime::createFromFormat('d/m/Y', $date)->format('Y/m/d');
+    }
+
     private function getCongChucHienTai()
     {
         return CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
@@ -660,6 +674,7 @@ class NhapHangController extends Controller
                 'don_gia' => $hangHoa->don_gia,
                 'tri_gia' => $hangHoa->tri_gia,
                 'so_luong_khai_bao' => $hangHoa->so_luong_khai_bao,
+                'so_container_khai_bao' => $hangHoa->so_container_khai_bao,
                 'id_huy' => $id_huy,
             ];
         })->toArray();
@@ -694,6 +709,7 @@ class NhapHangController extends Controller
     {
         $file = $request->file('hys_file'); // The uploaded file
         $requiredColumns = ['tên hàng', 'lượng', 'đvt', 'trị giá (usd)']; // Required columns
+        $optionalColumns = ['đơn giá (usd)']; // Optional column
         $extension = $file->getClientOriginalExtension();
 
         if ($extension === 'csv') {
@@ -728,19 +744,19 @@ class NhapHangController extends Controller
         }
 
 
-        // Find the header row
         $headerRowIndex = -1;
         $foundColumns = [];
+
         foreach ($csvData as $index => $row) {
             $normalizedRow = array_map('mb_strtolower', array_map('trim', $row));
 
-            foreach ($requiredColumns as $column) {
+            foreach (array_merge($requiredColumns, $optionalColumns) as $column) {
                 if (collect($normalizedRow)->contains(fn($col) => is_string($col) && str_contains($col, $column))) {
                     $foundColumns[] = $column;
                 }
             }
 
-            if (count($foundColumns) === count($requiredColumns)) {
+            if (count(array_intersect($requiredColumns, $foundColumns)) === count($requiredColumns)) {
                 $headerRowIndex = $index;
                 break;
             }
@@ -757,10 +773,16 @@ class NhapHangController extends Controller
         $header = array_map('mb_strtolower', array_map('trim', $csvData[$headerRowIndex]));
 
         $mappedColumns = [];
-        foreach ($requiredColumns as $column) {
-            $mappedColumns[$column] = collect($header)->search(function ($col) use ($column) {
-                return is_string($col) && str_contains($col, $column);
-            }) ?? -1;
+
+        foreach (array_merge($requiredColumns, $optionalColumns) as $column) {
+            $mappedColumns[$column] = collect($header)->search(fn($col) => is_string($col) && str_contains($col, $column));
+        }
+
+        // Optional columns default to -1 if missing
+        foreach ($optionalColumns as $column) {
+            if ($mappedColumns[$column] === false) {
+                $mappedColumns[$column] = -1;
+            }
         }
 
         // Prepare HangHoa records
@@ -769,15 +791,23 @@ class NhapHangController extends Controller
             if (!$row[$mappedColumns['tên hàng']]) {
                 return response()->json(['data' => $data]);
             }
+
             $triGia = (float) str_replace(',', '', $row[$mappedColumns['trị giá (usd)']] ?? 0);
-            $so_luong = (int) $row[$mappedColumns['lượng']] ?? 0;
+
+            // Check if 'đơn giá (usd)' exists in the row
+            $donGia = $mappedColumns['đơn giá (usd)'] !== -1
+                ? (float) str_replace(',', '', $row[$mappedColumns['đơn giá (usd)']] ?? 0)
+                : null;
+
+            $so_luong = (int) ($row[$mappedColumns['lượng']] ?? 0);
+
             $data[] = [
                 'ten_hang'   => $row[$mappedColumns['tên hàng']] ?? '',
                 'loai_hang'  => $loai_hang,
                 'xuat_xu'    => $xuat_xu,
                 'so_luong_khai_bao'   => $so_luong,
                 'don_vi_tinh' => $row[$mappedColumns['đvt']] ?? '',
-                'don_gia'    => $triGia / $so_luong,
+                'don_gia'    => $donGia ?? ($so_luong > 0 ? $triGia / $so_luong : 0), // Calculate if missing
                 'tri_gia'    => $triGia,
                 'so_container'    => $so_container,
             ];
@@ -785,135 +815,6 @@ class NhapHangController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    public function uploadFileNhap(Request $request)
-    {
-        try {
-            return DB::transaction(function () use ($request) {
-                // $haiQuans = HaiQuan::all();
-                // $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
-                // $loaiHinhs = LoaiHinh::all();
-                // $loaiHangs = LoaiHang::all();
-                $hangHoaRows = null;
-                $file = $request->file('hys_file'); // The uploaded file
-                $requiredColumns = ['ngày tk', 'số tk nhập', 'tên hàng', 'số lượng', 'đvt', 'trị giá (usd)', 'trọng lượng (kg)']; // Required columns
-                $optionalColumn = 'loại hàng'; // Optional column
-                $extension = $file->getClientOriginalExtension();
-
-                if ($extension === 'csv') {
-                    $csvData = array_map('str_getcsv', file($file->getRealPath()));
-                } else if (in_array($extension, ['xls', 'xlsx'])) {
-                    $spreadsheet = IOFactory::load($file->getRealPath());
-                    $worksheet = $spreadsheet->getActiveSheet();
-                    $csvData = [];
-                    foreach ($worksheet->getRowIterator() as $row) {
-                        $rowData = [];
-                        foreach ($row->getCellIterator() as $cell) {
-                            $rowData[] = $cell->getFormattedValue();
-                        }
-                        $csvData[] = $rowData;
-                    }
-                } else {
-                    return response()->json(['error' => 'Unsupported file type. Only .csv, .xls, and .xlsx are allowed.'], 400);
-                }
-
-                // Find the header row
-                $headerRowIndex = -1;
-                foreach ($csvData as $index => $row) {
-                    $normalizedRow = array_map('mb_strtolower', array_map('trim', $row));
-                    if (collect($requiredColumns)->every(function ($column) use ($normalizedRow) {
-                        return collect($normalizedRow)->contains(function ($col) use ($column) {
-                            return is_string($col) && str_contains($col, $column);
-                        });
-                    })) {
-                        $headerRowIndex = $index;
-                        break;
-                    }
-                }
-
-                // If no valid header row found
-                if ($headerRowIndex === -1) {
-                    session()->flash('alert-danger', 'Không tìm thấy dòng tiêu đề chứa tất cả các cột yêu cầu.');
-                    return redirect()->back();
-                }
-
-                // Extract header and normalize it
-                $header = array_map('mb_strtolower', array_map('trim', $csvData[$headerRowIndex]));
-
-                // Map column names to their positions
-                $mappedColumns = [];
-                foreach (array_merge($requiredColumns, [$optionalColumn]) as $column) {
-                    $mappedColumns[$column] = collect($header)->search(function ($col) use ($column) {
-                        return is_string($col) && str_contains($col, $column);
-                    }) ?? -1;
-                }
-
-                // Prepare HangHoa records
-                $hangHoaRows = [];
-                foreach (array_slice($csvData, $headerRowIndex + 1) as $row) {
-                    // $convertedDate = Carbon::createFromFormat('m/d/Y', $row[$mappedColumns['ngày tk']])->format('Y-m-d');
-                    $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
-                    if (!$row[$mappedColumns['số tk nhập']]) {
-                        session()->flash('alert-success', 'Nhập danh sách thành công');
-                        return redirect()->back();
-                    }
-                    $convertedDate = Carbon::createFromFormat('m/d/Y', $row[$mappedColumns['ngày tk']])->format('Y-m-d');
-                    $nhapHang = NhapHang::find($row[$mappedColumns['số tk nhập']]);
-                    $trong_luong = (float) str_replace(',', '', $row[$mappedColumns['trọng lượng (kg)']]) / 1000;
-
-                    if (!$nhapHang) {
-                        NhapHang::insert([
-                            'so_to_khai_nhap' => $row[$mappedColumns['số tk nhập']],
-                            'ma_chu_hang' => '',
-                            'ma_loai_hinh' => '',
-                            'ma_hai_quan' => '',
-                            'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
-                            'ngay_dang_ky' => $convertedDate,
-                            'ngay_thong_quan' => $convertedDate,
-                            'trang_thai' => '1',
-                            'phuong_tien_vt_nhap' => '',
-                            'ptvt_ban_dau' => '',
-                            'container_ban_dau' => '',
-                            'trong_luong' => $trong_luong,
-                            'created_at' => now(),
-                        ]);
-                    } else {
-                        $nhapHang->update([
-                            'trong_luong' => $nhapHang->trong_luong + $trong_luong
-
-                        ]);
-                    }
-                    $triGia = (float) str_replace(',', '', $row[$mappedColumns['trị giá (usd)']]);
-                    $so_luong = (int) $row[$mappedColumns['lượng']];
-                    $hangHoa = HangHoa::where('so_to_khai_nhap', $row[$mappedColumns['số tk nhập']])
-                        ->where('ten_hang', $row[$mappedColumns['tên hàng']])
-                        ->first();
-                    if (is_null($hangHoa)) {
-                        HangHoa::insert([
-                            'so_to_khai_nhap' => $row[$mappedColumns['số tk nhập']],
-                            'ten_hang'        => $row[$mappedColumns['tên hàng']] ?? '',
-                            'xuat_xu'         => '',
-                            'loai_hang'       => '',
-                            'so_luong_khai_bao' => $so_luong,
-                            'don_gia'         => $triGia / $so_luong,
-                            'tri_gia'         => $triGia ?? 0,
-                            'don_vi_tinh'     => $row[$mappedColumns['đvt']] ?? '',
-                        ]);
-                    } else {
-                        $hangHoa->update([
-                            'so_luong_khai_bao' => (int)$hangHoa->so_luong_khai_bao + (int)$row[$mappedColumns['lượng']] ?? 0,
-                            'tri_gia' => (float)$hangHoa->tri_gia + $triGia,
-                        ]);
-                    }
-                }
-                return redirect()->back();
-            });
-        } catch (\Exception $e) {
-            Log::error('Error uploadFileNhap: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('alert-danger', 'Có lỗi xảy ra trong quá trình xử lý.')
-                ->withInput();
-        }
-    }
     private function xuLySeal($so_container, $formattedDate)
     {
         $record = NiemPhong::where('so_container', $so_container)->first();
@@ -925,6 +826,320 @@ class NhapHangController extends Controller
                 'ngay_niem_phong' => $formattedDate,
             ]);
         }
+    }
+
+    private function kiemTraSoToKhaiNhapSua($request)
+    {
+        $nhapHang = NhapHang::find($request->so_to_khai_nhap);
+
+        if ($nhapHang && $request->so_to_khai_nhap != $request->so_to_khai_nhap) {
+            if ($nhapHang->trang_thai != '0') {
+                throw new \Exception('Số tờ khai nhập đã được sử dụng');
+            }
+        }
+        return $nhapHang;
+    }
+
+    private function getDoanhNghiepHienTai()
+    {
+        return DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->firstOrFail();
+    }
+
+    private function xuLyThemHangHoa($request)
+    {
+        $rowsData = json_decode($request->rows_data, true);
+
+        foreach ($rowsData as $row) {
+            $this->themLoaiHang($row);
+            $this->themHangHoa($request, $row);
+            $this->xuLyContainer($row['so_container']);
+            $this->xuLySeal($row['so_container'], now());
+        }
+    }
+
+    private function themLoaiHang($row)
+    {
+        if (!LoaiHang::where('ten_loai_hang', $row['loai_hang'])->exists()) {
+            LoaiHang::create([
+                'ten_loai_hang' => $row['loai_hang'],
+                'don_vi_tinh' => $row['don_vi_tinh'],
+            ]);
+        }
+    }
+
+    private function themHangHoa($request, $row)
+    {
+        return HangHoa::create([
+            'ten_hang' => $row['ten_hang'],
+            'loai_hang' => $row['loai_hang'],
+            'xuat_xu' => $row['xuat_xu'],
+            'so_luong_khai_bao' => $row['so_luong'],
+            'don_vi_tinh' => $row['don_vi_tinh'],
+            'don_gia' => $row['don_gia'],
+            'tri_gia' => $row['tri_gia'],
+            'so_to_khai_nhap' => $request->so_to_khai_nhap,
+            'so_container_khai_bao' => $row['so_container'],
+        ]);
+    }
+    private function xuLyContainer($so_container)
+    {
+        if (!Container::find($so_container)) {
+            Container::insert([
+                'so_container' => $so_container,
+            ]);
+        }
+    }
+
+    private function themTienTrinh($so_to_khai_nhap, $ten_cong_viec, $ma_cong_chuc)
+    {
+        TienTrinh::insert([
+            'so_to_khai_nhap' => $so_to_khai_nhap,
+            'ten_cong_viec' => $ten_cong_viec,
+            'ngay_thuc_hien' => now(),
+            'ma_cong_chuc' => $ma_cong_chuc
+        ]);
+    }
+    private function getXuatXu()
+    {
+        $countries = [
+            "China",
+            "Taiwan",
+            "MaCao",
+            "HongKong",
+            "Afghanistan",
+            "Albania",
+            "Algeria",
+            "Andorra",
+            "Angola",
+            "Antigua and Barbuda",
+            "Argentina",
+            "Armenia",
+            "Australia",
+            "Austria",
+            "Azerbaijan",
+            "Bahamas",
+            "Bahrain",
+            "Bangladesh",
+            "Barbados",
+            "Belarus",
+            "Belgium",
+            "Belize",
+            "Benin",
+            "Bhutan",
+            "Bolivia",
+            "Bosnia and Herzegovina",
+            "Botswana",
+            "Brazil",
+            "Brunei",
+            "Bulgaria",
+            "Burkina Faso",
+            "Burundi",
+            "Cabo Verde",
+            "Cambodia",
+            "Cameroon",
+            "Canada",
+            "Central African Republic",
+            "Chad",
+            "Chile",
+            "Colombia",
+            "Comoros",
+            "Congo (Congo-Brazzaville)",
+            "Congo (Congo-Kinshasa)",
+            "Costa Rica",
+            "Croatia",
+            "Cuba",
+            "Cyprus",
+            "Czechia (Czech Republic)",
+            "Denmark",
+            "Djibouti",
+            "Dominica",
+            "Dominican Republic",
+            "Ecuador",
+            "Egypt",
+            "El Salvador",
+            "Equatorial Guinea",
+            "Eritrea",
+            "Estonia",
+            "Eswatini (fmr. \"Swaziland\")",
+            "Ethiopia",
+            "Fiji",
+            "Finland",
+            "France",
+            "Gabon",
+            "Gambia",
+            "Georgia",
+            "Germany",
+            "Ghana",
+            "Greece",
+            "Grenada",
+            "Guatemala",
+            "Guinea",
+            "Guinea-Bissau",
+            "Guyana",
+            "Haiti",
+            "Honduras",
+            "Hungary",
+            "Iceland",
+            "India",
+            "Indonesia",
+            "Iran",
+            "Iraq",
+            "Ireland",
+            "Israel",
+            "Italy",
+            "Ivory Coast",
+            "Jamaica",
+            "Japan",
+            "Jordan",
+            "Kazakhstan",
+            "Kenya",
+            "Kiribati",
+            "Kosovo",
+            "Kuwait",
+            "Kyrgyzstan",
+            "Laos",
+            "Latvia",
+            "Lebanon",
+            "Lesotho",
+            "Liberia",
+            "Libya",
+            "Liechtenstein",
+            "Lithuania",
+            "Luxembourg",
+            "Madagascar",
+            "Malawi",
+            "Malaysia",
+            "Maldives",
+            "Mali",
+            "Malta",
+            "Marshall Islands",
+            "Mauritania",
+            "Mauritius",
+            "Mexico",
+            "Micronesia",
+            "Moldova",
+            "Monaco",
+            "Mongolia",
+            "Montenegro",
+            "Morocco",
+            "Mozambique",
+            "Myanmar (formerly Burma)",
+            "Namibia",
+            "Nauru",
+            "Nepal",
+            "Netherlands",
+            "New Zealand",
+            "Nicaragua",
+            "Niger",
+            "Nigeria",
+            "North Korea",
+            "North Macedonia",
+            "Norway",
+            "Oman",
+            "Pakistan",
+            "Palau",
+            "Palestine",
+            "Panama",
+            "Papua New Guinea",
+            "Paraguay",
+            "Peru",
+            "Philippines",
+            "Poland",
+            "Portugal",
+            "Qatar",
+            "Romania",
+            "Russia",
+            "Rwanda",
+            "Saint Kitts and Nevis",
+            "Saint Lucia",
+            "Saint Vincent and the Grenadines",
+            "Samoa",
+            "San Marino",
+            "Sao Tome and Principe",
+            "Saudi Arabia",
+            "Senegal",
+            "Serbia",
+            "Seychelles",
+            "Sierra Leone",
+            "Singapore",
+            "Slovakia",
+            "Slovenia",
+            "Solomon Islands",
+            "Somalia",
+            "South Africa",
+            "South Korea",
+            "South Sudan",
+            "Spain",
+            "Sri Lanka",
+            "Sudan",
+            "Suriname",
+            "Sweden",
+            "Switzerland",
+            "Syria",
+            "Tajikistan",
+            "Tanzania",
+            "Thailand",
+            "Timor-Leste (East Timor)",
+            "Togo",
+            "Tonga",
+            "Trinidad and Tobago",
+            "Tunisia",
+            "Turkey",
+            "Turkmenistan",
+            "Tuvalu",
+            "Uganda",
+            "Ukraine",
+            "United Arab Emirates",
+            "UAE",
+            "United Kingdom",
+            "United States of America",
+            "Uruguay",
+            "Uzbekistan",
+            "Vanuatu",
+            "Vatican City",
+            "Venezuela",
+            "Vietnam",
+            "Yemen",
+            "Zambia",
+            "Zimbabwe"
+        ];
+        return $countries;
+    }
+
+
+
+    public function getDonViTinh()
+    {
+        $units = [
+            "Kiện",
+            "Hộp",
+            "Bao",
+            "PP",
+            "Pallet",
+            "Kiện/Hộp/Bao",
+            "Thùng",
+            "Đôi",
+            "Tá",
+            "Chục",
+            "Cuộn",
+            "Sợi",
+            "Tờ",
+            "Quyển",
+            "Viên",
+            "Vỉ",
+            "Cặp",
+            "Thẻ",
+            "Lon",
+            "Chai",
+            "Ống",
+            "Tuýp",
+            "Bịch",
+            "Miếng",
+            "Tấm",
+            "Cây",
+            "Khối"
+        ];
+        return $units;
     }
     public function exportToKhaiNhap($so_to_khai_nhap)
     {

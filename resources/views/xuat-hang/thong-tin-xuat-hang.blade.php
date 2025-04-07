@@ -170,8 +170,6 @@
                 <div class="col-6">
                     <div class="card p-3">
                         <div class="text-center">
-
-
                             @if (trim($xuatHang->trang_thai) == '1')
                                 <h2 class="text-primary">Đang chờ duyệt </h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/pending.png') }}">
@@ -187,7 +185,7 @@
                                                 href="{{ route('xuat-hang.sua-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
                                                 <button class="btn btn-warning px-4">
                                                     <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
-                                                    Yêu cầu sửa phiếu
+                                                    Sửa phiếu
                                                 </button>
                                             </a>
                                         </div>
@@ -197,7 +195,7 @@
                                                     class="btn btn-danger px-4">
                                                     <img class="side-bar-icon"
                                                         src="{{ asset('images/icons/cancel.png') }}">
-                                                    Yêu cầu hủy phiếu
+                                                    Hủy phiếu
                                                 </button>
                                             </a>
                                         </div>
@@ -235,11 +233,12 @@
                                     {{ $xuatHang->congChuc->ten_cong_chuc ?? '' }}</h2>
                                 <h2 class="text-success">Ngày duyệt:
                                     {{ \Carbon\Carbon::parse($xuatHang->ngay_xuat_canh)->format('d-m-Y') }}</h2>
+
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $xuatHang->ma_doanh_nghiep)
                                     <center>
-                                        <div class="row">
+                                        <div class="row mt-5">
                                             <div class="col-6">
                                                 <a
                                                     href="{{ route('xuat-hang.sua-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
@@ -263,6 +262,21 @@
                                         </div>
                                     </center>
                                 @endif
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
+                                    <div class="row mt-5">
+                                        <center>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#thayDoiCongChucModal"
+                                                        class="btn btn-warning ">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Thay đổi công chức</button>
+                                                </a>
+                                            </div>
+                                        </center>
+                                    </div>
+                                @endif
                             @elseif(trim($xuatHang->trang_thai) == '11')
                                 <h2 class="text-success">Đã chọn phương tiện xuất cảnh</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
@@ -270,6 +284,21 @@
                                     {{ $xuatHang->congChuc->ten_cong_chuc ?? '' }}</h2>
                                 <h2 class="text-success">Ngày duyệt:
                                     {{ \Carbon\Carbon::parse($xuatHang->ngay_xuat_canh)->format('d-m-Y') }}</h2>
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
+                                    <div class="row mt-5">
+                                        <center>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#thayDoiCongChucModal"
+                                                        class="btn btn-warning ">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Thay đổi công chức</button>
+                                                </a>
+                                            </div>
+                                        </center>
+                                    </div>
+                                @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $xuatHang->ma_doanh_nghiep)
@@ -305,6 +334,21 @@
                                     {{ $xuatHang->congChuc->ten_cong_chuc ?? '' }}</h2>
                                 <h2 class="text-success">Ngày duyệt:
                                     {{ \Carbon\Carbon::parse($xuatHang->ngay_xuat_canh)->format('d-m-Y') }}</h2>
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
+                                    <div class="row mt-5">
+                                        <center>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#thayDoiCongChucModal"
+                                                        class="btn btn-warning ">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Thay đổi công chức</button>
+                                                </a>
+                                            </div>
+                                        </center>
+                                    </div>
+                                @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $xuatHang->ma_doanh_nghiep)
@@ -482,31 +526,44 @@
             </div>
         </div>
     </div>
-    {{-- Xác nhận Hủy --}}
-    {{-- <div class="modal fade" id="xacNhanHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+    <div class="modal fade" id="thayDoiCongChucModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy phiếu xuất</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Xác nhận duyệt</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('xuat-hang.huy-to-khai') }}" method="POST">
-                    @csrf
+                <form action="{{ route('xuat-hang.thay-doi-cong-chuc-xuat') }}" method="POST">
                     <div class="modal-body">
-                        <p class="text-danger">Xác nhận hủy phiếu xuất này?</p>
-                        <label for="ghi_chu">Ghi chú:</label>
-                        <textarea class="form-control" rows="3" placeholder="Nhập ghi chú" name="ghi_chu" maxlength="200"></textarea>
-
+                        <p class="fw-bold">Thay đổi công chức phụ trách</p>
+                        <div class="form-group">
+                            <label class="label-text mb-1" for="">Cán bộ công chức phụ trách</label>
+                            <select class="form-control" id="cong-chuc-dropdown-search-2" name="ma_cong_chuc" required>
+                                <option></option>
+                                @foreach ($congChucs as $congChuc)
+                                    <option value="{{ $congChuc->ma_cong_chuc }}">
+                                        {{ $congChuc->ten_cong_chuc }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <input type="hidden" name="so_to_khai_xuat" value="{{ $xuatHang->so_to_khai_xuat }}">
-                        <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                        @csrf
+                        @method('POST')
+                        <input type="hidden" value="{{ $xuatHang->so_to_khai_xuat }}" name="so_to_khai_xuat">
+                        <button type="submit" class="btn btn-success">
+                            Xác nhận
+                        </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div> --}}
+    </div>
+
     {{-- Yêu cầu Hủy --}}
     <div class="modal fade" id="yeuCauHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -563,30 +620,6 @@
             </div>
         </div>
     </div>
-    {{-- Duyệt Hủy --}}
-    {{-- <div class="modal fade" id="xacNhanDuyetHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy tờ khai</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ route('xuat-hang.duyet-yeu-cau-huy') }}" method="POST">
-                    @csrf
-                    <div class="modal-body text-danger">
-                        <p class="text-danger">Xác nhận duyệt yêu cầu xin hủy của phiếu xuất này?</p>
-                        <input type="hidden" name="so_to_khai_xuat" value="{{ $xuatHang->so_to_khai_xuat }}">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div> --}}
-
 
     <script>
         $(document).ready(function() {

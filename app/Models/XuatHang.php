@@ -10,16 +10,15 @@ class XuatHang extends Model
     protected $table = 'xuat_hang';
     protected $primaryKey = 'so_to_khai_xuat'; // Assuming 'ma_hai_quan' is the primary key
     protected $fillable = [
+        'so_to_khai_xuat',
         'ma_loai_hinh',
         'ma_doanh_nghiep',
-        'lan_xuat_canh',
         'ngay_dang_ky',
         'ngay_xuat_canh',
         'ten_doan_tau',
         'trang_thai',
         'ghi_chu',
         'ma_cong_chuc',
-        'so_seal_cuoi_ngay',
         'phuong_tien_vt_nhap',
         'ten_phuong_tien_vt',
         'tong_so_luong',

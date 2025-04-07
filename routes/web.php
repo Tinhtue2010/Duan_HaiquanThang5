@@ -43,37 +43,28 @@ Route::post('/dang-xuat', [TaiKhoanController::class, 'dangXuat'])->name('dang-x
 
 Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->group(function () {
     Route::name('nhap-hang.')->group(function () {
-        // Trang index
         Route::get('/quan-ly-nhap-hang', [NhapHangController::class, 'danhSachToKhai'])->name('quan-ly-nhap-hang');
         Route::get('/to-khai-da-nhap-hang', [NhapHangController::class, 'toKhaiDaNhapHang'])->name('to-khai-da-nhap-hang');
         Route::get('/to-khai-nhap-da-huy', [NhapHangController::class, 'toKhaiDaHuy'])->name('to-khai-da-huy');
-        // Thêm tờ khai vào DB
         Route::post('/submit-to-khai-nhap', [NhapHangController::class, 'themToKhaiNhapSubmit'])->name('submit-to-khai-nhap');
-        // Nhập tờ khai
         Route::get('/nhap-to-khai-nhap', [NhapHangController::class, 'themToKhaiNhap'])->name('nhap-to-khai-nhap');
-        // Xem chi tiết tờ khai
         Route::get('/thong-tin-nhap-hang/{so_to_khai_nhap}', [NhapHangController::class, 'thongTinToKhai'])->name('show');
         Route::get('/thong-tin-nhap-hang-huy/{id_huy}', [NhapHangController::class, 'thongTinToKhaiHuy'])->name('show-huy');
-        // Vị trí hàng hiện tại
         Route::get('/vi-tri-hien-tai/{so_to_khai_nhap}', [NhapHangController::class, 'viTriHangHienTai'])->name('vi-tri-hang-hien-tai');
         Route::get('/phieu-xuat-cua-to-khai/{so_to_khai_nhap}', [NhapHangController::class, 'phieuXuatCuaToKhai'])->name('phieu-xuat-cua-to-khai');
-
         Route::post('/duyet-to-khai-nhap', [NhapHangController::class, 'duyetToKhaiNhap'])->name('duyet-to-khai-nhap');
-        //Sửa tờ khai
+
+        Route::get('/sua-to-khai-nhap-cong-chuc/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhapCongChuc'])->name('sua-to-khai-nhap-cong-chuc');
         Route::get('/sua-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhap'])->name('sua-to-khai-nhap');
         Route::post('/submit-sua-to-khai-nhap', [NhapHangController::class, 'suaToKhaiNhapSubmit'])->name('submit-sua-to-khai-nhap');
-
         Route::post('/huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'huyToKhai'])->name('huy-to-khai-nhap');
 
-        // Export tờ khai
         Route::get('/export-tokhai/{so_to_khai_nhap}', [NhapHangController::class, 'exportToKhaiNhap'])->name('export-to-khai');
-
         Route::post('/upload-file-nhap', [NhapHangController::class, 'uploadFileNhapAjax'])->name('upload-file-nhap');
 
         Route::get('/xem-sua-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'xemSuaToKhai'])->name('xem-sua-to-khai-nhap');
         Route::post('/duyet-sua-to-khai-nhap', [NhapHangController::class, 'duyetSuaYeuCau'])->name('duyet-sua-to-khai-nhap');
         Route::post('/huy-sua-to-khai-nhap', [NhapHangController::class, 'huySuaYeuCau'])->name('huy-sua-to-khai-nhap');
-        // Route::post('/huy-huy-to-khai-nhap', [YeuCauTauContController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-tau-cont');
 
         Route::get('/getNhapHangDaDuyets', [NhapHangController::class, 'getNhapHangDaDuyets'])->name('getNhapHangDaDuyets');
     });
@@ -106,19 +97,23 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/thu-hoi-yeu-cau-huy', [XuatHangController::class, 'thuHoiYeuCauHuy'])->name(name: 'thu-hoi-yeu-cau-huy');
         Route::post('/duyet-yeu-cau-huy', [XuatHangController::class, 'duyetYeuCauHuy'])->name(name: 'duyet-yeu-cau-huy');
 
+
         Route::post('/to-khai-xuat-submit/{ma_loai_hinh}/submit', [XuatHangController::class, 'themToKhaiSubmit'])->name('to-khai-xuat-submit');
         Route::get('/thong-tin-xuat-hang/{so_to_khai_xuat}', [XuatHangController::class, 'thongTinXuatHang'])->name('thong-tin-xuat-hang');
 
         Route::get('/export-to-khai-xuat', [XuatHangController::class, 'exportToKhaiXuat'])->name('export-to-khai-xuat');
         Route::get('/kiem-tra-qua-han', [XuatHangController::class, 'kiemTraQuaHan'])->name('kiem-tra-qua-han');
+        Route::post('/upload-file-xuat', [XuatHangController::class, 'uploadFileXuatAjax'])->name('upload-file-xuat');
+        Route::post('/thay-doi-cong-chuc-xuat', [XuatHangController::class, 'thayDoiCongChucXuat'])->name('thay-doi-cong-chuc-xuat');
+
 
         Route::get('/getPhieuXuatChoDuyetCuaPTVT', [XuatHangController::class, 'getPhieuXuatChoDuyetCuaPTVT'])->name('getPhieuXuatChoDuyetCuaPTVT');
         Route::get('/getPhieuXuatDaXuatHangCuaPTVT', [XuatHangController::class, 'getPhieuXuatDaXuatHangCuaPTVT'])->name('getPhieuXuatDaXuatHangCuaPTVT');
 
-
         Route::get('/getXuatHangChoDuyets', [XuatHangController::class, 'getXuatHangChoDuyets'])->name('getXuatHangChoDuyets');
         Route::get('/getXuatHangDaDuyets', [XuatHangController::class, 'getXuatHangDaDuyets'])->name('getXuatHangDaDuyets');
     });
+
     Route::name('xuat-canh.')->group(function () {
         Route::get('/quan-ly-xuat-canh', [XuatCanhController::class, 'danhSachToKhai'])->name('quan-ly-xuat-canh');
 
@@ -133,6 +128,10 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/yeu-cau-huy-to-khai-xc', [XuatCanhController::class, 'yeuCauHuyXuatCanh'])->name(name: 'yeu-cau-huy-to-khai-xc');
         Route::post('/thu-hoi-yeu-cau-huy-xc', [XuatCanhController::class, 'thuHoiYeuCauHuyXuatCanh'])->name(name: 'thu-hoi-yeu-cau-huy-xc');
         Route::post('/duyet-thuc-xuat-xc', [XuatCanhController::class, 'duyetThucXuat'])->name('duyet-thuc-xuat-xc');
+        Route::post('/thay-doi-cong-chuc-xuat-canh', [XuatCanhController::class, 'thayDoiCongChucXuatCanh'])->name('thay-doi-cong-chuc-xuat-canh');
+        Route::get('/xem-yeu-cau-sua-xuat-canh/{ma_xuat_canh}', [XuatCanhController::class, 'xemYeuCauSuaXuatCanh'])->name('xem-yeu-cau-sua-xuat-canh');
+        Route::post('/huy-yeu-cau-sua-xuat-canh/{ma_yeu_cau}', [XuatCanhController::class, 'huyYeuCauSuaXuatCanh'])->name('huy-yeu-cau-sua-xuat-canh');
+        Route::post('/duyet-yeu-cau-sua-xuat-canh/{ma_yeu_cau}', [XuatCanhController::class, 'duyetSuaXuatCanh'])->name('duyet-yeu-cau-sua-xuat-canh');
 
 
         Route::get('/getPhieuXuats', [XuatCanhController::class, 'getPhieuXuats'])->name('getPhieuXuats');
@@ -160,6 +159,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/them-container', [QuanLyKhoController::class, 'themContainer'])->name('them-container');
         Route::get('/to-khai-trong-container/{so_container}', [QuanLyKhoController::class, 'danhSachToKhaiTrongContainer'])->name('to-khai-trong-container');
         Route::get('/thong-tin-hang', [QuanLyKhoController::class, 'thongTinHang'])->name('thong-tin-hang');
+        Route::get('/getTraCuuContainer', [QuanLyKhoController::class, 'getTraCuuContainer'])->name('getTraCuuContainer');
 
         Route::get('/danh-sach-yeu-cau-tau-cont', [YeuCauTauContController::class, 'danhSachYeuCauTauCont'])->name('danh-sach-yeu-cau-tau-cont');
         Route::get('/them-yeu-cau-tau-cont', [YeuCauTauContController::class, 'themYeuCauTauCont'])->name('them-yeu-cau-tau-cont');
@@ -175,7 +175,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/duyet-sua-yeu-cau-tau-cont', [YeuCauTauContController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-tau-cont');
         Route::post('/huy-sua-yeu-cau-tau-cont', [YeuCauTauContController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-tau-cont');
         Route::post('/huy-huy-yeu-cau-tau-cont', [YeuCauTauContController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-tau-cont');
-        Route::post('/duyet-hoan-thanh-tau-cont', [YeuCauTauContController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-tau-cont');
+        Route::post('/thay-doi-cong-chuc-tau-cont', [YeuCauTauContController::class, 'thayDoiCongChucTauCont'])->name('thay-doi-cong-chuc-tau-cont');
+        Route::get('/getYeuCauTauCont', [YeuCauTauContController::class, 'getYeuCauTauCont'])->name('getYeuCauTauCont');
 
 
         Route::get('/danh-sach-yeu-cau-container', [YeuCauContainerController::class, 'danhSachYeuCauContainer'])->name('danh-sach-yeu-cau-container');
@@ -186,13 +187,13 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/huy-yeu-cau-container', [YeuCauContainerController::class, 'huyYeuCauContainer'])->name(name: 'huy-yeu-cau-container');
         Route::get('/sua-yeu-cau-container/{ma_yeu_cau}', [YeuCauContainerController::class, 'suaYeuCauContainer'])->name('sua-yeu-cau-container');
         Route::post('/sua-yeu-cau-container-submit', [YeuCauContainerController::class, 'suaYeuCauContainerSubmit'])->name(name: 'sua-yeu-cau-container-submit');
-        Route::post('/sua-seal-container', [YeuCauContainerController::class, 'suaSealContainer'])->name(name: 'sua-seal-container');
         Route::get('/download-yeu-cau-container/{ma_yeu_cau}', [YeuCauContainerController::class, 'downloadFile'])->name('download-yeu-cau-container');
         Route::get('/xem-sua-yeu-cau-container/{ma_yeu_cau}', [YeuCauContainerController::class, 'xemSuaYeuCau'])->name('xem-sua-yeu-cau-container');
         Route::post('/duyet-sua-yeu-cau-container', [YeuCauContainerController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-container');
         Route::post('/huy-sua-yeu-cau-container', [YeuCauContainerController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-container');
         Route::post('/huy-huy-yeu-cau-container', [YeuCauContainerController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-container');
-        Route::post('/duyet-hoan-thanh-container', [YeuCauContainerController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-container');
+        Route::post('/thay-doi-cong-chuc-container', [YeuCauContainerController::class, 'thayDoiCongChucContainer'])->name('thay-doi-cong-chuc-container');
+        Route::get('/getYeuCauContainer', [YeuCauContainerController::class, 'getYeuCauContainer'])->name('getYeuCauContainer');
 
 
         Route::get('/danh-sach-yeu-cau-chuyen-tau', [YeuCauChuyenTauController::class, 'danhSachYeuCauChuyenTau'])->name('danh-sach-yeu-cau-chuyen-tau');
@@ -208,7 +209,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/duyet-sua-yeu-cau-chuyen-tau', [YeuCauChuyenTauController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-chuyen-tau');
         Route::post('/huy-sua-yeu-cau-chuyen-tau', [YeuCauChuyenTauController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-chuyen-tau');
         Route::post('/huy-huy-yeu-cau-chuyen-tau', [YeuCauChuyenTauController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-chuyen-tau');
-        Route::post('/duyet-hoan-thanh-chuyen-tau', [YeuCauChuyenTauController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-chuyen-tau');
+        Route::post('/thay-doi-cong-chuc-chuyen-tau', [YeuCauChuyenTauController::class, 'thayDoiCongChucChuyenTau'])->name('thay-doi-cong-chuc-chuyen-tau');
+        Route::get('/getYeuCauChuyenTau', [YeuCauChuyenTauController::class, 'getYeuCauChuyenTau'])->name('getYeuCauChuyenTau');
 
 
         Route::get('/danh-sach-yeu-cau-kiem-tra', [YeuCauKiemTraController::class, 'danhSachYeuCauKiemTra'])->name('danh-sach-yeu-cau-kiem-tra');
@@ -225,7 +227,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/duyet-sua-yeu-cau-kiem-tra', [YeuCauKiemTraController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-kiem-tra');
         Route::post('/huy-sua-yeu-cau-kiem-tra', [YeuCauKiemTraController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-kiem-tra');
         Route::post('/huy-huy-yeu-cau-kiem-tra', [YeuCauKiemTraController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-kiem-tra');
-        Route::post('/duyet-hoan-thanh-kiem-tra', [YeuCauKiemTraController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-kiem-tra');
+        Route::post('/thay-doi-cong-chuc-kiem-tra', [YeuCauKiemTraController::class, 'thayDoiCongChucKiemTra'])->name('thay-doi-cong-chuc-kiem-tra');
+        Route::get('/getYeuCauKiemTra', [YeuCauKiemTraController::class, 'getYeuCauKiemTra'])->name('getYeuCauKiemTra');
 
         
 
@@ -240,6 +243,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/sua-seal-niem-phong', [YeuCauNiemPhongController::class, 'suaSealNiemPhong'])->name(name: 'sua-seal-niem-phong');
         Route::post('/huy-huy-yeu-cau-niem-phong', [YeuCauNiemPhongController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-niem-phong');
         Route::get('/get-so-container', [YeuCauNiemPhongController::class, 'getSoContainer'])->name('get-so-container');
+        Route::get('/in-yeu-cau-niem-phong', [YeuCauNiemPhongController::class, 'inYeuCauNiemPhong'])->name('in-yeu-cau-niem-phong');
+        Route::get('/getYeuCauNiemPhong', [YeuCauNiemPhongController::class, 'getYeuCauNiemPhong'])->name('getYeuCauNiemPhong');
 
 
 
@@ -257,6 +262,9 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/huy-sua-yeu-cau-tieu-huy', [YeuCauTieuHuyController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-tieu-huy');
         Route::post('/huy-huy-yeu-cau-tieu-huy', [YeuCauTieuHuyController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-tieu-huy');
         Route::post('/duyet-hoan-thanh-tieu-huy', [YeuCauTieuHuyController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-tieu-huy');
+        Route::post('/thay-doi-cong-chuc-tieu-huy', [YeuCauTieuHuyController::class, 'thayDoiCongChucTieuHuy'])->name('thay-doi-cong-chuc-tieu-huy');
+        Route::get('/getYeuCauTieuHuy', [YeuCauTieuHuyController::class, 'getYeuCauTieuHuy'])->name('getYeuCauTieuHuy');
+
 
         Route::get('/danh-sach-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'danhSachYeuCauHangVeKho'])->name('danh-sach-yeu-cau-hang-ve-kho');
         Route::get('/them-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'themYeuCauHangVeKho'])->name('them-yeu-cau-hang-ve-kho');
@@ -271,7 +279,9 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/duyet-sua-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-hang-ve-kho');
         Route::post('/huy-sua-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-hang-ve-kho');
         Route::post('/huy-huy-yeu-cau-hang-ve-kho', [YeuCauHangVeKhoController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-hang-ve-kho');
-        Route::post('/duyet-hoan-thanh-hang-ve-kho', [YeuCauHangVeKhoController::class, 'duyetHoanThanh'])->name('duyet-hoan-thanh-hang-ve-kho');
+        Route::post('/thay-doi-cong-chuc-hang-ve-kho', [YeuCauHangVeKhoController::class, 'thayDoiCongChucHangVeKho'])->name('thay-doi-cong-chuc-hang-ve-kho');
+        Route::get('/getYeuCauHangVeKho', [YeuCauHangVeKhoController::class, 'getYeuCauHangVeKho'])->name('getYeuCauHangVeKho');
+
 
         Route::get('/in-phieu-chuyen-tau-cont/{ma_yeu_cau}', [WordReportController::class, 'inPhieuChuyenTauCont'])->name('in-phieu-chuyen-tau-cont');
         Route::get('/in-phieu-chuyen-container/{ma_yeu_cau}', [WordReportController::class, 'inPhieuChuyenContainer'])->name('in-phieu-chuyen-container');
@@ -337,6 +347,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         //DoanhNghiep
         Route::get('/theo-doi-tru-lui-tung-lan', [BaoCaoController::class, 'theoDoiTruLuiTungLan'])->name('theo-doi-tru-lui-tung-lan');
         Route::get('/theo-doi-tru-lui-theo-ngay', [BaoCaoController::class, 'theoDoiTruLuiTheoNgay'])->name('theo-doi-tru-lui-theo-ngay');
+        Route::get('/theo-doi-tru-lui-theo-ngay-zip', [BaoCaoController::class, 'theoDoiTruLuiTheoNgayZip'])->name('theo-doi-tru-lui-theo-ngay-zip');
         Route::get('/theo-doi-tru-lui-tat-ca', [BaoCaoController::class, 'theoDoiTruLuiTatCa'])->name('theo-doi-tru-lui-tat-ca');
         Route::get('/theo-doi-tru-lui-cuoi-ngay', [BaoCaoController::class, 'theoDoiTruLuiCuoiNgay'])->name('theo-doi-tru-lui-cuoi-ngay');
         Route::get('/bao-cao-hang-theo-doanh-nghiep', [BaoCaoController::class, 'baoCaoTheoDoanhNghiep'])->name('bao-cao-theo-doanh-nghiep');
@@ -345,6 +356,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/hang-ton-doanh-nghiep', [BaoCaoController::class, 'hangTonDoanhNghiep'])->name('hang-ton-doanh-nghiep');
         Route::get('/phieu-xuat-theo-doanh-nghiep', [BaoCaoController::class, 'phieuXuatTheoDoanhNghiep'])->name('phieu-xuat-theo-doanh-nghiep');
         Route::get('/bao-cao-cap-hai', [BaoCaoController::class, 'baoCaoCapHai'])->name('bao-cao-cap-hai');
+        Route::get('/to-khai-xuat-het-doanh-nghiep', [BaoCaoController::class, 'toKhaiXuatHetDoanhNghiep'])->name('to-khai-xuat-het-doanh-nghiep');
+
         //API
         Route::get('/get-hang-hoa/{so_to_khai_nhap}', [BaoCaoController::class, 'getHangHoa']);
         Route::get('/get-lan-tru-lui/{so_to_khai_nhap}', [BaoCaoController::class, 'getLanTruLui']);

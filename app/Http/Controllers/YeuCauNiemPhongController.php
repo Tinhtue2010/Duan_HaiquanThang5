@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\YeuCauNiemPhongExport;
 use App\Models\CongChuc;
 use App\Models\Container;
 use App\Models\DoanhNghiep;
@@ -23,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -56,7 +58,13 @@ class YeuCauNiemPhongController extends Controller
 
     public function themYeuCauNiemPhong()
     {
-        $soContainers = Container::all();
+        $soContainers = Container::leftJoin('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
+            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->join('nhap_hang', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->where('nhap_hang.trang_thai', '2')
+            ->groupBy('container.so_container')
+            ->select('nhap_hang.phuong_tien_vt_nhap', 'container.so_container')
+            ->get();
         if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
             return view('quan-ly-kho.yeu-cau-niem-phong.them-yeu-cau-niem-phong', data: compact('doanhNghiep', 'soContainers'));
@@ -262,21 +270,13 @@ class YeuCauNiemPhongController extends Controller
         $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
 
         XuatHang::where(function ($query) {
-            if (now()->hour < 9) {
-                $query->whereDate('ngay_dang_ky', today())
-                    ->orWhereDate('ngay_dang_ky', today()->subDay());
-            } else {
-                $query->whereDate('ngay_dang_ky', today());
-            }
+            $query->whereDate('ngay_dang_ky', today())
+                ->orWhereDate('ngay_dang_ky', today()->subDay());
         })
             ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->where('xuat_hang_cont.so_seal_cuoi_ngay', null)
             ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
             ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $so_seal]);
-
-        // XuatHang::join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-        //     ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
-        //     ->whereNull('xuat_hang_cont.so_seal_cuoi_ngay')
-        //     ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $so_seal]);
     }
 
     public function capNhatSealTruLui($so_container, $so_seal)
@@ -429,7 +429,7 @@ class YeuCauNiemPhongController extends Controller
             $sealMoi->so_seal_moi = $request->so_seal;
             $sealMoi->save();
 
-            $so_seal_moi = $request->so_seal_moi;
+            $so_seal_moi = $request->so_seal;
 
             //Tim Seal đã dùng và chuyển thành seal hỏng
             $so_seal = NiemPhong::where('so_container', $request->so_container)->first()->so_seal;
@@ -523,6 +523,13 @@ class YeuCauNiemPhongController extends Controller
             ]);
         }
     }
+
+    public function inYeuCauNiemPhong(Request $request)
+    {
+        $fileName = 'Yêu cầu niêm phong số ' . $request->ma_yeu_cau . '.xlsx';
+        return Excel::download(new YeuCauNiemPhongExport($request->ma_yeu_cau), $fileName);
+    }
+
     public function getSoContainer(Request $request)
     {
         $ma_doanh_nghiep = Auth::user()->doanhNghiep->ma_doanh_nghiep;
@@ -583,7 +590,73 @@ class YeuCauNiemPhongController extends Controller
             ->merge($kiemTra)
             ->unique();
 
-        return response()->json(['containers' => $containers]);
-    }
+        $soContainers = Container::leftJoin('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
+            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->join('nhap_hang', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->whereIn('nhap_hang.trang_thai', [1, 2])
+            ->whereIn('container.so_container', $containers)
+            ->groupBy('container.so_container')
+            ->selectRaw('MIN(nhap_hang.phuong_tien_vt_nhap) as phuong_tien_vt_nhap, container.so_container')
+            ->orderBy('phuong_tien_vt_nhap')
+            ->orderBy('container.so_container')
+            ->get()
+            ->toArray();
 
+
+        return response()->json(['containers' => $soContainers]);
+    }
+    public function getYeuCauNiemPhong(Request $request)
+    {
+        if ($request->ajax()) {
+            if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+                $data = YeuCauNiemPhong::join('doanh_nghiep', 'yeu_cau_niem_phong.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->select(
+                        'doanh_nghiep.*',
+                        'yeu_cau_niem_phong.*',
+                    )
+                    ->distinct()  // Ensure unique rows
+                    ->orderBy('ma_yeu_cau', 'desc')
+                    ->get();
+            } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+                $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
+                $data = YeuCauNiemPhong::join('doanh_nghiep', 'yeu_cau_niem_phong.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->where('yeu_cau_niem_phong.ma_doanh_nghiep', $maDoanhNghiep)
+                    ->select(
+                        'doanh_nghiep.*',
+                        'yeu_cau_niem_phong.*',
+                    )
+                    ->distinct()  // Ensure unique rows
+                    ->orderBy('ma_yeu_cau', 'desc')
+                    ->get();
+            }
+
+            return DataTables::of($data)
+                ->addIndexColumn() // Adds auto-incrementing index
+                ->editColumn('ngay_yeu_cau', function ($yeuCau) {
+                    return Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y');
+                })
+                ->addColumn('ten_doanh_nghiep', function ($yeuCau) {
+                    return $yeuCau->ten_doanh_nghiep ?? 'N/A';
+                })
+                ->addColumn('action', function ($yeuCau) {
+                    return '<a href="' . route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', $yeuCau->ma_yeu_cau) . '" class="btn btn-primary btn-sm">Xem</a>';
+                })
+                ->editColumn('trang_thai', function ($yeuCau) {
+                    $status = trim($yeuCau->trang_thai);
+
+                    $statusLabels = [
+                        '1' => ['text' => 'Đang chờ duyệt', 'class' => 'text-primary'],
+                        '2' => ['text' => 'Đã duyệt', 'class' => 'text-success'],
+                        '3' => ['text' => 'Doanh nghiệp đề nghị sửa yêu cầu', 'class' => 'text-warning'],
+                        '4' => ['text' => 'Doanh nghiệp đề nghị hủy yêu cầu', 'class' => 'text-danger'],
+                        '0' => ['text' => 'Đã hủy', 'class' => 'text-danger'],
+                    ];
+                    return isset($statusLabels[$status])
+                        ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
+                        : '<span class="text-muted">Trạng thái không xác định</span>';
+                })
+                ->rawColumns(['trang_thai', 'action']) // Allows HTML in status & action columns
+                ->make(true);
+        }
+    }
 }

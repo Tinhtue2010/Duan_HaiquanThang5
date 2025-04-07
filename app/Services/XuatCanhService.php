@@ -37,10 +37,12 @@ use App\Models\PTVTXuatCanhCuaPhieu;
 use App\Models\PTVTXuatCanhCuaPhieuSua;
 use App\Models\PTVTXuatCanhCuaPhieuTruocSua;
 use App\Models\XuatCanh;
+use App\Models\XuatCanhChiTietSua;
+use App\Models\XuatCanhSua;
 
 class XuatCanhService
 {
-    public function xuLyDuyetPhieuXuat($xuatHang, $request)
+    public function xuLyDuyetPhieuXuat($xuatHang)
     {
         if ($xuatHang->trang_thai == "11") {
             $xuatHang->trang_thai = '12';
@@ -79,6 +81,7 @@ class XuatCanhService
     public function getXuatHangDaDuyet($so_ptvt_xuat_canh)
     {
         return XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+            ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
@@ -94,45 +97,110 @@ class XuatCanhService
             ->select(
                 'xuat_hang.*',
                 'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
                 DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as tong_so_luong_xuat')
             )
             ->groupBy(
                 'xuat_hang.so_to_khai_xuat',
                 'xuat_hang.ma_loai_hinh',
-                'xuat_hang.lan_xuat_canh',
                 'xuat_hang.ngay_dang_ky',
                 'xuat_hang.ngay_xuat_canh',
                 'xuat_hang.ten_doan_tau',
                 'xuat_hang.trang_thai',
                 'xuat_hang.ghi_chu',
                 'xuat_hang.ma_cong_chuc',
-                'xuat_hang.so_seal_cuoi_ngay',
                 'xuat_hang.ma_doanh_nghiep',
                 'xuat_hang.phuong_tien_vt_nhap',
                 'xuat_hang.ten_phuong_tien_vt',
                 'xuat_hang.tong_so_luong',
                 'xuat_hang.created_at',
                 'xuat_hang.updated_at',
-                'doanh_nghiep.ten_doanh_nghiep'
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+
             ) // Nhóm theo khóa chính của bảng xuat_hang
             ->get();
     }
-    // public function getXuatHangDaChonPTXC($so_ptvt_xuat_canh, $ma_doanh_nghiep)
-    // {
-    //     return XuatHang::join('nhap_hang', 'nhap_hang.so_to_khai_nhap', 'xuat_hang.so_to_khai_nhap')
-    //         ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
-    //         ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
-    //         ->where('xuat_hang.trang_thai', '11')
-    //         ->get();
-    // }
-    // public function getXuatHangDaXuatHang($so_ptvt_xuat_canh, $ma_doanh_nghiep)
-    // {
-    //     return XuatHang::join('nhap_hang', 'nhap_hang.so_to_khai_nhap', 'xuat_hang.so_to_khai_nhap')
-    //         ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
-    //         ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
-    //         ->where('xuat_hang.trang_thai', '12')
-    //         ->get();
-    // }
+    public function getXuatHangDaDuyetSua($so_ptvt_xuat_canh, $ma_xuat_canh)
+    {
+        $chiTiets = XuatCanh::join('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.ma_xuat_canh', 'xuat_canh.ma_xuat_canh')
+            ->where('xuat_canh.ma_xuat_canh', $ma_xuat_canh)
+            ->pluck('so_to_khai_xuat')->unique()->values();
+        $xuatHang1 = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+            ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
+            ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+            ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('xuat_hang.ngay_dang_ky', today())
+                        ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
+                } else {
+                    $query->whereDate('xuat_hang.ngay_dang_ky', today());
+                }
+            })
+            ->where('xuat_hang.trang_thai', '2') // Now correctly applied to both date conditions
+            ->select(
+                'xuat_hang.*',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+                DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as tong_so_luong_xuat')
+            )
+            ->groupBy(
+                'xuat_hang.so_to_khai_xuat',
+                'xuat_hang.ma_loai_hinh',
+                'xuat_hang.ngay_dang_ky',
+                'xuat_hang.ngay_xuat_canh',
+                'xuat_hang.ten_doan_tau',
+                'xuat_hang.trang_thai',
+                'xuat_hang.ghi_chu',
+                'xuat_hang.ma_cong_chuc',
+                'xuat_hang.ma_doanh_nghiep',
+                'xuat_hang.phuong_tien_vt_nhap',
+                'xuat_hang.ten_phuong_tien_vt',
+                'xuat_hang.tong_so_luong',
+                'xuat_hang.created_at',
+                'xuat_hang.updated_at',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+
+            );
+
+        $xuatHang2 = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+            ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
+            ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+            ->whereIn('xuat_hang.so_to_khai_xuat', $chiTiets)
+            ->select(
+                'xuat_hang.*',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+                DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as tong_so_luong_xuat')
+            )
+            ->groupBy(
+                'xuat_hang.so_to_khai_xuat',
+                'xuat_hang.ma_loai_hinh',
+                'xuat_hang.ngay_dang_ky',
+                'xuat_hang.ngay_xuat_canh',
+                'xuat_hang.ten_doan_tau',
+                'xuat_hang.trang_thai',
+                'xuat_hang.ghi_chu',
+                'xuat_hang.ma_cong_chuc',
+                'xuat_hang.ma_doanh_nghiep',
+                'xuat_hang.phuong_tien_vt_nhap',
+                'xuat_hang.ten_phuong_tien_vt',
+                'xuat_hang.tong_so_luong',
+                'xuat_hang.created_at',
+                'xuat_hang.updated_at',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+            );
+
+        $mergedResults = $xuatHang1->union($xuatHang2)
+            ->get();
+
+        return $mergedResults;
+    }
+
     public function themXuatCanh($request)
     {
         $doanh_nghiep = $this->getDoanhNghiepHienTai();
@@ -145,15 +213,74 @@ class XuatCanhService
             'trang_thai' => "1",
         ]);
     }
-    public function themChiTietXuatCanh($xuatCanh, $xuatHang)
+    public function themXuatCanhSua($request, $xuatCanh)
+    {
+        $doanh_nghiep = $this->getDoanhNghiepHienTai();
+        return XuatCanhSua::create([
+            'ma_doanh_nghiep' => $doanh_nghiep->ma_doanh_nghiep,
+            'so_ptvt_xuat_canh' => $xuatCanh->so_ptvt_xuat_canh,
+            'ma_doanh_nghiep_chon' => $request->ma_doanh_nghiep_chon,
+            'ten_thuyen_truong' => $request->ten_thuyen_truong,
+            'ngay_dang_ky' => now(),
+            'trang_thai' => "1",
+            'ma_xuat_canh' => $request->ma_xuat_canh,
+        ]);
+    }
+    public function themChiTietXuatCanh($ma_xuat_canh, $so_to_khai_xuat)
     {
         XuatCanhChiTiet::insert([
-            'ma_xuat_canh' => $xuatCanh->ma_xuat_canh,
+            'ma_xuat_canh' => $ma_xuat_canh,
+            'so_to_khai_xuat' => $so_to_khai_xuat,
+        ]);
+    }
+    public function themChiTietXuatCanhSua($xuatCanhSua, $xuatHang)
+    {
+        XuatCanhChiTietSua::insert([
+            'ma_xuat_canh' => $xuatCanhSua->ma_xuat_canh,
             'so_to_khai_xuat' => $xuatHang->so_to_khai_xuat,
+            'ma_yeu_cau' => $xuatCanhSua->ma_yeu_cau,
         ]);
     }
 
+    public function suaXuatCanh($ma_yeu_cau, $trang_thai)
+    {
+        $xuatCanhSua = XuatCanhSua::find($ma_yeu_cau);
+        if ($trang_thai == 1) {
+            XuatCanh::find($xuatCanhSua->ma_xuat_canh)->update([
+                'ma_doanh_nghiep_chon' => $xuatCanhSua->ma_doanh_nghiep_chon,
+                'ten_thuyen_truong' => $xuatCanhSua->ten_thuyen_truong,
+            ]);
+        } else {
+            XuatCanh::find($xuatCanhSua->ma_xuat_canh)->update([
+                'trang_thai' => '2',
+                'ma_doanh_nghiep_chon' => $xuatCanhSua->ma_doanh_nghiep_chon,
+                'ten_thuyen_truong' => $xuatCanhSua->ten_thuyen_truong,
+            ]);
+        }
+        $xuatCanhSua->delete();
 
+        $xuatCanh = XuatCanh::find($xuatCanhSua->ma_xuat_canh);
+        $this->quayNguocXuatCanh($xuatCanhSua->ma_xuat_canh);
+        XuatCanhChiTiet::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)->delete();
+
+        $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
+            ->get();
+        foreach ($xuatCanhChiTietSuas as $xuatCanhChiTietSua) {
+            $this->themChiTietXuatCanh($xuatCanh->ma_xuat_canh, $xuatCanhChiTietSua->so_to_khai_xuat);
+            $xuatHang = XuatHang::find($xuatCanhChiTietSua->so_to_khai_xuat);
+
+            if ($trang_thai == 1) {
+                $xuatHang->trang_thai = "11";
+            } else {
+                $xuatHang->trang_thai = "12";
+            }
+            $xuatHang->save();
+
+        }
+
+        $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
+            ->delete();
+    }
 
 
     public function getCongChucHienTai()
@@ -189,11 +316,19 @@ class XuatCanhService
                 ->pluck('so_to_khai_nhap')->unique()->values();
 
             if ($xuatCanh->trang_thai == "1") {
-                foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
-                    $this->themTienTrinh($so_to_khai_nhap, "Cán bộ công chức đã hủy tờ khai xuất cảnh số " . $ma_xuat_canh, $congChuc->ma_cong_chuc);
+                if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+                    foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+                        $this->themTienTrinh($so_to_khai_nhap, "Doanh nghiệp đã hủy tờ khai xuất cảnh số " . $ma_xuat_canh, '');
+                    }
+                    $xuatCanh->trang_thai = '0';
+                    $xuatCanh->ghi_chu = "Doanh nghiệp đã hủy xuất cảnh: " . $ghi_chu;
+                } else {
+                    foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+                        $this->themTienTrinh($so_to_khai_nhap, "Cán bộ công chức đã hủy tờ khai xuất cảnh số " . $ma_xuat_canh, $congChuc->ma_cong_chuc);
+                    }
+                    $xuatCanh->trang_thai = '0';
+                    $xuatCanh->ghi_chu = "Công chức đã hủy xuất cảnh: " . $ghi_chu;
                 }
-                $xuatCanh->trang_thai = '0';
-                $xuatCanh->ghi_chu = "Công chức đã hủy xuất cảnh: " . $ghi_chu;
             } elseif ($xuatCanh->trang_thai == '4') {
                 foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
                     $this->themTienTrinh($so_to_khai_nhap, "Cán bộ công chức đã duyệt yêu cầu xin hủy tờ khai xuất cảnh số " . $ma_xuat_canh, $congChuc->ma_cong_chuc);
@@ -207,25 +342,31 @@ class XuatCanhService
                 $xuatCanh->trang_thai = '6';
                 $xuatCanh->ghi_chu = "Công chức duyệt yêu cầu hủy xuất cảnh: " . $ghi_chu;
             }
-
-            $xuatHangs = XuatHang::join('xuat_canh_chi_tiet', 'xuat_hang.so_to_khai_xuat', 'xuat_canh_chi_tiet.so_to_khai_xuat')
-                ->where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
-                ->select('xuat_hang.*')
-                ->get();
-            foreach ($xuatHangs as $xuatHang) {
-                if ($xuatHang->trang_thai == '9' || $xuatHang->trang_thai == '10') {
-                    $xuatHang->trang_thai = '8';
-                } elseif ($xuatHang->trang_thai == '5' || $xuatHang->trang_thai == '6') {
-                    $xuatHang->trang_thai = '4';
-                } else {
-                    $xuatHang->trang_thai = '2';
-                }
-                $xuatHang->save();
-            }
+            $this->quayNguocXuatCanh($xuatCanh->ma_xuat_canh);
 
             $xuatCanh->save();
         }
     }
+
+    public function quayNguocXuatCanh($ma_xuat_canh)
+    {
+        $xuatHangs = XuatHang::join('xuat_canh_chi_tiet', 'xuat_hang.so_to_khai_xuat', 'xuat_canh_chi_tiet.so_to_khai_xuat')
+            ->where('ma_xuat_canh', $ma_xuat_canh)
+            ->select('xuat_hang.*')
+            ->get();
+        foreach ($xuatHangs as $xuatHang) {
+            if ($xuatHang->trang_thai == '9' || $xuatHang->trang_thai == '10') {
+                $xuatHang->trang_thai = '8';
+            } elseif ($xuatHang->trang_thai == '5' || $xuatHang->trang_thai == '6') {
+                $xuatHang->trang_thai = '4';
+            } else {
+                $xuatHang->trang_thai = '2';
+            }
+            $xuatHang->save();
+        }
+    }
+
+
     public function getDoanhNghiepHienTai()
     {
         return DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();

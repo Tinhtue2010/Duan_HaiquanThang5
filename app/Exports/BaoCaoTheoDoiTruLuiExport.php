@@ -43,8 +43,6 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
 
     public function array(): array
     {
-
-
         if ($this->cong_viec == 1) {
             $xuatHang = XuatHang::find($this->ma_yeu_cau);
             $nhapHang = NhapHang::find($xuatHang->so_to_khai_nhap);
@@ -58,6 +56,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                 ->first();
             $nhapHang = NhapHang::find($this->so_to_khai_nhap);
         }
+
         $theoDoiChiTiet = TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoi->ma_theo_doi)->get();
 
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $theoDoi->ngay_them);
@@ -114,8 +113,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
             $this->createRichTextBoldItalic('Số lượng hàng hóa xuất khẩu ', '(Kiện)'),
             $this->createRichTextBoldItalic('Số Lượng hàng hóa chưa xuất khẩu ', '(Kiện)'),
             'Số seal hải quan niêm phong',
-            $this->createRichTextBoldItalic('Số hiệu PTVT ', '(tàu Việt Nam nếu có thay đổi)'),
-            $this->createRichTextBoldItalic('Số hiệu Container', '(nếu có thay đổi)'),
+            'Số hiệu PTVT ',
+            'Số hiệu Container',
             'Ghi chú'
         ];
         $result[] = [
@@ -136,7 +135,6 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
         $stt = 1;
         foreach ($theoDoiChiTiet as $item) {
             if ($item->so_luong_chua_xuat != 0) {
-                $containers = explode(';', $nhapHang->container_ban_dau);
                 $result[] = [
                     $stt++,
                     '',
@@ -148,7 +146,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
                     $item->so_seal ?? '',
                     '',
-                    in_array($item->so_container, $containers) ? '' : $item->so_container,
+                    $item->so_container,
                     '',
                 ];
                 $sum += $item->so_luong_chua_xuat;
@@ -324,7 +322,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                 $sheet->setCellValue('C' . $secondTableStart + 2, $this->theoDoi->so_ptvt_nuoc_ngoai);
 
                 $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 4);
-                $sheet->setCellValue('J' . $secondTableStart + 2, $this->theoDoi->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $this->theoDoi->phuong_tien_vt_nhap);
+                $sheet->setCellValue('J' . $secondTableStart + 2, $this->theoDoi->phuong_tien_vt_nhap);
 
 
                 $sheet->getStyle('A' . $secondTableStart . ':L' . $lastStart - 3)->applyFromArray([
@@ -334,7 +332,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     ]
                 ]);
 
-                $sheet->getStyle('A' . ($lastStart - 3) . ':L' . ($lastStart - 3))->applyFromArray([
+                $sheet->getStyle('A' . ($lastStart) . ':L' . ($lastStart+1))->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,

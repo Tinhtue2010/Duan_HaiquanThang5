@@ -104,6 +104,8 @@ class InPhieuKiemTraHang
             $lines = array_filter(array_map('trim', $lines));
 
             foreach ($lines as $line) {
+                $line = htmlspecialchars($line, ENT_XML1, 'UTF-8'); // Escape special characters
+
                 $cell->addText(
                     $line,
                     [],

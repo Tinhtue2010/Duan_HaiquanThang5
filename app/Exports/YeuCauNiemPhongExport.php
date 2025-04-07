@@ -2,74 +2,67 @@
 
 namespace App\Exports;
 
-use App\Models\Container;
-use App\Models\NhapHang;
-use App\Models\HangHoa;
+use App\Models\YeuCauNiemPhong;
+use App\Models\YeuCauNiemPhongChiTiet;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
-class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
+class YeuCauNiemPhongExport implements FromArray, WithEvents
 {
+    protected $ma_yeu_cau;
 
-    protected $phuong_tien_vt_nhap;
-    public function __construct($phuong_tien_vt_nhap)
+    public function __construct($ma_yeu_cau)
     {
-        $this->phuong_tien_vt_nhap = $phuong_tien_vt_nhap;
+        $this->ma_yeu_cau = $ma_yeu_cau;
     }
     public function array(): array
     {
-        $currentDate = Carbon::now()->format('d');  // Day of the month
-        $currentMonth = Carbon::now()->format('m'); // Month number
-        $currentYear = Carbon::now()->format('Y');  // Year
-
+        $yeuCau = YeuCauNiemPhong::find($this->ma_yeu_cau);
+        $chiTiets = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $this->ma_yeu_cau)->get();
+        $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('d-m-Y');
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['BÁO CÁO SỐ LƯỢNG CONTAINER LƯU TRÊN TÀU', '', '', '', '', ''],
-            ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
+            ['YÊU CẦU NIÊM PHONG', '', '', '', '', '', ''],
+            ["Số {$yeuCau->ma_yeu_cau}, ngày: {$date}", '', '', '', '', ''],
+            ["Công chức phụ trách: " . $yeuCau->congChuc->ten_cong_chuc, '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['', '', '', '', '', ''],
-            ['STT', 'Tên tàu', 'Số container', 'Số lượng hàng'],
-
+            ['STT', 'Số container', 'Số seal niêm phong cũ', 'Số seal niêm phong mới'],
         ];
-
-        $soContainers = Container::leftJoin('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->join('nhap_hang', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->where('nhap_hang.phuong_tien_vt_nhap', $this->phuong_tien_vt_nhap)
-            ->groupBy('container.so_container')
-            ->select('container.so_container', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
-            ->get();
-
         $stt = 1;
-        foreach ($soContainers as $container) {
-            if($container->total_so_luong == 0) {
-                continue;
-            }
+        foreach ($chiTiets as $chiTiet) {
             $result[] = [
                 $stt++,
-                $this->phuong_tien_vt_nhap,
-                $container->so_container,
-                $container->total_so_luong,
+                $chiTiet->so_container,
+                $chiTiet->so_seal_cu,
+                $chiTiet->so_seal_moi
             ];
         }
 
+
+        $result[] = [
+            '',
+            '',
+            '',
+            '',
+        ];
+
         return $result;
     }
-
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
+
+                // Set print settings first
                 $sheet->getPageSetup()
                     ->setPaperSize(PageSetup::PAPERSIZE_A4)
                     ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
@@ -78,6 +71,7 @@ class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
                     ->setHorizontalCentered(true)
                     ->setPrintArea('A1:D' . $sheet->getHighestRow());
 
+                // Set margins (in inches)
                 $sheet->getPageMargins()
                     ->setTop(0.5)
                     ->setRight(0.5)
@@ -86,25 +80,27 @@ class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
                     ->setHeader(0.3)
                     ->setFooter(0.3);
 
-                // Set font for entire sheet
-                $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
 
-                $sheet->getColumnDimension('A')->setWidth(width: 7); //STT
-                $sheet->getColumnDimension('B')->setWidth(width: 15);
-                $sheet->getColumnDimension('C')->setWidth(width: 20);
-                $sheet->getColumnDimension('D')->setWidth(width: 20);
+                $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
+                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(14);
+
+                $sheet->getColumnDimension('A')->setWidth(width: 7);
+                $sheet->getColumnDimension('B')->setWidth(width: 25);
+                $sheet->getColumnDimension('C')->setWidth(width: 25);
+                $sheet->getColumnDimension('D')->setWidth(width: 25);
 
                 $lastRow = $sheet->getHighestRow();
                 $highestColumn = $sheet->getHighestColumn();
                 $sheet->getStyle('A1:' . $highestColumn . $lastRow)->getAlignment()->setWrapText(true);
 
-                // Merge cells for headers
-                $sheet->mergeCells('A1:D1');
-                $sheet->mergeCells('A2:D2');
+                $sheet->mergeCells('A1:C1');
+                $sheet->mergeCells('A2:C2');
+
                 $sheet->mergeCells('A4:D4');
                 $sheet->mergeCells('A5:D5');
+                $sheet->mergeCells('A6:D6');
 
-                // Bold and center align for headers
+                // Your existing styles
                 $sheet->getStyle('A1:D6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -112,7 +108,11 @@ class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
                     ]
                 ]);
                 $sheet->getStyle('A2:D6')->applyFromArray([
-                    'font' => ['bold' => true]
+                    'font' => ['bold' => true],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ]
                 ]);
                 $sheet->getStyle('A9:D' . $lastRow)->applyFromArray([
                     'alignment' => [
@@ -120,11 +120,10 @@ class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                // Italic for date row
                 $sheet->getStyle('A5:D5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
-                // Bold and center align for table headers
+
                 $sheet->getStyle('A8:D8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
@@ -138,15 +137,12 @@ class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
                     ],
                 ]);
 
-                // Add borders to the table content
-                $lastRow = $sheet->getHighestRow();
                 $sheet->getStyle('A8:D' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
                         ],
                     ],
-
                 ]);
             },
         ];

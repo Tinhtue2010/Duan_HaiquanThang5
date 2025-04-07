@@ -82,21 +82,79 @@
     </div>
     <script>
         $(document).ready(function() {
-            $('#dataTable').DataTable({
+            var table = $('#dataTable').DataTable({
+                processing: true,
+                serverSide: true,
+                stateSave: true,
+                ajax: "{{ route('quan-ly-kho.getYeuCauTauCont') }}",
+
                 language: {
                     searchPlaceholder: "Tìm kiếm",
                     search: "",
-                    "sInfo": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "sInfoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "sInfoFiltered": "Lọc từ _MAX_ mục",
-                    "sLengthMenu": "Hiện _MENU_ mục",
-                    "sEmptyTable": "Không có dữ liệu",
+                    sInfo: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    sInfoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+                    sInfoFiltered: "Lọc từ _MAX_ mục",
+                    sLengthMenu: "Hiện _MENU_ mục",
+                    sEmptyTable: "Không có dữ liệu",
                 },
-                stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
+                buttons: [{
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    }
+                ],
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex'
+                    },
+                    {
+                        data: 'ma_yeu_cau',
+                        name: 'ma_yeu_cau'
+                    },
+                    {
+                        data: 'so_to_khai_nhap_list',
+                        name: 'so_to_khai_nhap_list'
+                    },
+                    {
+                        data: 'ten_doanh_nghiep',
+                        name: 'ten_doanh_nghiep'
+                    },
+                    {
+                        data: 'ngay_yeu_cau',
+                        name: 'ngay_yeu_cau'
+                    },
+                    {
+                        data: 'trang_thai',
+                        name: 'trang_thai',
+                        orderable: false
+                    }
+
+                ],
                 columnDefs: [{
-                    orderable: false, targets: -1,
-                }],
+                        orderable: false,
+                        width: "350px",
+                        targets: 2
+                    },
+                    {
+                        orderable: false,
+                        targets: -1
+                    }
+                ],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).addClass('clickable-row').attr('onclick',
+                        `window.location='{{ url('/thong-tin-yeu-cau-tau-cont') }}/${data.ma_yeu_cau}'`
+                    );
+                },
                 initComplete: function() {
                     $('.dataTables_filter input[type="search"]').css({
                         width: '350px',
@@ -115,10 +173,10 @@
 
                     select.append(
                         '<option class="text-warning" value="DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU</option>'
-                        );
+                    );
                     select.append(
                         '<option class="text-danger" value="DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU</option>'
-                        );
+                    );
                     select.append('<option class="text-danger" value="ĐÃ HỦY">ĐÃ HỦY</option>');
 
                     $(column.header()).empty().append(select);
@@ -130,19 +188,14 @@
                     });
 
                     var savedFilter = localStorage.getItem('tauCont');
-                    if (savedFilter) {
-                        select.val(savedFilter);
-                        column.search(savedFilter ? savedFilter : '', false, true).draw();
-                    } else {
-                        select.val("");
+                    if (!savedFilter) {
+                        savedFilter = '';
+                        localStorage.setItem('tauCont', savedFilter);
                     }
-                },
-            });
 
-            $('.dataTables_filter input[type="search"]').css({
-                width: '350px',
-                display: 'inline-block',
-                height: '40px',
+                    select.val(savedFilter);
+                    column.search(savedFilter, false, true).draw();
+                },
             });
         });
     </script>

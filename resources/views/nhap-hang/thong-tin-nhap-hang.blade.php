@@ -30,7 +30,7 @@
                     </div>
                 @endif
                 <div class="col-4">
-                    @if (trim($nhapHang->trang_thai) == '1' )
+                    @if (trim($nhapHang->trang_thai) == '1')
                         <a class="return-link" href="/quan-ly-nhap-hang">
                             <p>
                                 < Quay lại quản lý nhập hàng </p>
@@ -62,9 +62,9 @@
                         <button class="btn btn-primary float-end me-1">Phiếu xuất</button>
                     </a>
                     <a
-                    href="{{ route('export.theo-doi-hang-hoa-tong', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
-                    <button class="btn btn-success float-end me-1">Theo dõi hàng hóa</button>
-                </a>
+                        href="{{ route('export.theo-doi-hang-hoa-tong', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                        <button class="btn btn-success float-end me-1">Theo dõi hàng hóa</button>
+                    </a>
                 </div>
             </div>
 
@@ -204,7 +204,7 @@
                                     {{ \Carbon\Carbon::parse($nhapHang->ngay_thong_quan)->format('d-m-Y') }}</h2>
                                 <h2 class="">Đã {{ $daysPassedFromNhapHang }} ngày kể từ ngày thông quan
                                 </h2>
-                                @if ($nhapHang->loai_hinh = 'G21')
+                                @if ($nhapHang->loai_hinh == 'G21')
                                     @if ($daysLeft >= 0)
                                         <h2>Còn {{ $daysLeft }} ngày nữa sẽ quá hạn</h2>
                                     @else
@@ -214,6 +214,22 @@
                                 @if ($nhapHang->so_ngay_gia_han)
                                     <h2 class="">Tờ khai được duyệt gia hạn {{ $nhapHang->so_ngay_gia_han }} ngày
                                     </h2>
+                                @endif
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
+                                    <div class="row">
+                                        <center>
+                                            <div class="col-6">
+                                                <a
+                                                    href="{{ route('nhap-hang.sua-to-khai-nhap-cong-chuc', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                                    <button class="btn btn-warning px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Sửa nhập đơn
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        </center>
+                                    </div>
                                 @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==

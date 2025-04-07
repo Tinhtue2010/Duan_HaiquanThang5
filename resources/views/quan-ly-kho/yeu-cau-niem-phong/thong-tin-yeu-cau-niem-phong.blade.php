@@ -25,6 +25,11 @@
                     </a>
                 </div>
                 <div class="col-6">
+                    @if (trim($yeuCau->trang_thai) != '0')
+                        <a href="{{ route('quan-ly-kho.in-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                            <button class="btn btn-success float-end"> In yêu cầu</button>
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -80,7 +85,8 @@
                                             <a href="#">
                                                 <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
                                                     class="btn btn-danger px-4">
-                                                    <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
                                                     Hủy yêu cầu
                                                 </button>
                                             </a>
@@ -114,7 +120,8 @@
                             @elseif(trim($yeuCau->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>
                                 <img class="status-icon mb-3" src="{{ asset('images/icons/success.png') }}">
-                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}</h2>
+                                <h2 class="text-primary">Cán bộ công chức phụ trách: {{ $yeuCau->ten_cong_chuc ?? '' }}
+                                </h2>
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $yeuCau->ma_doanh_nghiep)
@@ -395,6 +402,7 @@
             </div>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var suaSealModal = document.getElementById('suaSealModal')

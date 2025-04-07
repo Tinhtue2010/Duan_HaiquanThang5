@@ -15,6 +15,7 @@ use App\Models\XuatHang;
 use App\Models\HangHoa;
 use App\Models\XuatHangCont;
 use App\Models\XuatHangSua;
+use App\Models\YeuCauChuyenContainer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,7 @@ use App\Models\PTVTXuatCanhCuaPhieuSua;
 use App\Models\PTVTXuatCanhCuaPhieuTruocSua;
 use App\Models\TheoDoiHangHoa;
 use App\Models\TheoDoiTruLuiChiTiet;
+use App\Models\YeuCauTauCont;
 
 class XuatHangService
 {
@@ -636,12 +638,12 @@ class XuatHangService
             $allZero = !HangTrongCont::whereHas('hangHoa', function ($query) use ($so_to_khai_nhap) {
                 $query->where('so_to_khai_nhap', $so_to_khai_nhap);
             })->where('so_luong', '!=', 0)->exists();
-            
+
             if (!$allZero) {
                 NhapHang::find($so_to_khai_nhap)
-                ->update([
-                    'trang_thai' => '2',
-                ]);
+                    ->update([
+                        'trang_thai' => '2',
+                    ]);
             }
             // $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt yêu cầu sửa phiếu xuất số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
         }
@@ -676,6 +678,17 @@ class XuatHangService
             $hang_trong_cont = HangTrongCont::find($chiTietSuaXuatHang->ma_hang_cont);
             $hang_trong_cont->so_luong -= $chiTietSuaXuatHang->so_luong_xuat;
             $hang_trong_cont->save();
+            YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
+                ->join('yeu_cau_tau_cont_hang_hoa', 'yeu_cau_tau_cont_hang_hoa.ma_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_chi_tiet')
+                ->where('yeu_cau_tau_cont.trang_thai', '1')
+                ->where('yeu_cau_tau_cont_hang_hoa.ma_hang_cont', $hang_trong_cont->ma_hang_cont)
+                ->update(['yeu_cau_tau_cont_hang_hoa.so_luong' => $hang_trong_cont->so_luong]);
+
+            YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_container_chi_tiet.ma_yeu_cau', 'yeu_cau_chuyen_container.ma_yeu_cau')
+                ->join('yeu_cau_container_hang_hoa', 'yeu_cau_container_hang_hoa.ma_chi_tiet', 'yeu_cau_container_chi_tiet.ma_chi_tiet')
+                ->where('yeu_cau_chuyen_container.trang_thai', '1')
+                ->where('yeu_cau_container_hang_hoa.ma_hang_cont', $hang_trong_cont->ma_hang_cont)
+                ->update(['yeu_cau_container_hang_hoa.so_luong' => $hang_trong_cont->so_luong]);
         }
     }
 
@@ -747,7 +760,7 @@ class XuatHangService
     public function themLaiXuatHangCont($xuatHang, $chiTietSuaXuatHangs)
     {
         $xuatHangConts = $chiTietSuaXuatHangs->map(function ($chiTietSuaXuatHang) use ($xuatHang) {
-            $phuong_tien_vt_nhap = NhapHang::find( $chiTietSuaXuatHang->so_to_khai_nhap)->phuong_tien_vt_nhap;
+            $phuong_tien_vt_nhap = NhapHang::find($chiTietSuaXuatHang->so_to_khai_nhap)->phuong_tien_vt_nhap;
             return [
                 'so_to_khai_xuat' => $xuatHang->so_to_khai_xuat,
                 'so_to_khai_nhap' => $chiTietSuaXuatHang->so_to_khai_nhap,
@@ -792,6 +805,18 @@ class XuatHangService
 
         $xuatHangCont->so_luong_ton = $hangTrongCont->so_luong;
         $xuatHangCont->save();
+
+        YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
+            ->join('yeu_cau_tau_cont_hang_hoa', 'yeu_cau_tau_cont_hang_hoa.ma_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_chi_tiet')
+            ->where('yeu_cau_tau_cont.trang_thai', '1')
+            ->where('yeu_cau_tau_cont_hang_hoa.ma_hang_cont', $hangHoaXuat->ma_hang_cont)
+            ->update(['yeu_cau_tau_cont_hang_hoa.so_luong' => $hangTrongCont->so_luong]);
+
+        YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_container_chi_tiet.ma_yeu_cau', 'yeu_cau_chuyen_container.ma_yeu_cau')
+            ->join('yeu_cau_container_hang_hoa', 'yeu_cau_container_hang_hoa.ma_chi_tiet', 'yeu_cau_container_chi_tiet.ma_chi_tiet')
+            ->where('yeu_cau_chuyen_container.trang_thai', '1')
+            ->where('yeu_cau_container_hang_hoa.ma_hang_cont', $hangHoaXuat->ma_hang_cont)
+            ->update(['yeu_cau_container_hang_hoa.so_luong' => $hangTrongCont->so_luong]);
     }
 
     public function capNhatPhieuXuatHang($xuatHang, $maCongChuc)

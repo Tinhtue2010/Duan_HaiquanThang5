@@ -41,7 +41,36 @@
                             </div>
                         </div>
                         <div class="card p-3 me-3 col-5">
-
+                            <h4>Báo cáo số lượng tờ khai xuất hết</h4>
+                            <div class="form-group">
+                                <form action="{{ route('export.to-khai-xuat-het-doanh-nghiep') }}" method="GET">
+                                    <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
+                                    <select class="form-control" id="doanh-nghiep-dropdown-search" name="ma_doanh_nghiep"
+                                        required>
+                                        <option value="">Chọn doanh nghiệp</option>
+                                        @foreach ($doanhNghieps as $doanhNghiep)
+                                            <option value="{{ $doanhNghiep->ma_doanh_nghiep }}">
+                                                {{ $doanhNghiep->ten_doanh_nghiep }}
+                                                ({{ $doanhNghiep->ma_doanh_nghiep }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
+                                            <input type="text" id="datepicker8" class="form-control"
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
+                                            <input type="text" id="datepicker9" class="form-control"
+                                                placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                        </div>
+                                    </div>
+                                    <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
+                                            cáo</button></center>
+                                </form>
+                            </div>
                         </div>
                     </div>
                     <div class="row justify-content-center">
@@ -67,10 +96,33 @@
                             </div>
                         </div>
                         <div class="card p-3 me-3 col-5">
+                            <h4 class="text-decoration-underline">Tất cả theo dõi trừ lùi theo ngày của doanh nghiệp</h4>
+                            <div class="form-group">
+                                <form id="form2" action="{{ route('export.theo-doi-tru-lui-theo-ngay-zip') }}"
+                                    method="GET">
+                                    <label class="label-text mb-2" for="ma_to_khai">Số tờ khai nhập</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="so_to_khai_nhap"
+                                            placeholder="Nhập số tờ khai" required>
+                                    </div>
+                                    <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
+                                    <input type="text" id="datepicker2" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="tu_ngay" readonly>
+
+                                    <center><button type="submit" class="btn btn-primary mt-2">Tải xuống tập zip</button>
+                                    </center>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="card p-3 me-3 col-5">
                             <h4>Báo cáo đăng ký xuất khẩu hàng hóa</h4>
                             <div class="form-group">
                                 <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa') }}" method="GET">
-                                    <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
+                                    <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công
+                                        ty</label>
                                     <select class="form-control" id="doanh-nghiep-dropdown-search" name="ma_doanh_nghiep"
                                         required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -87,6 +139,13 @@
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                             cáo</button></center>
                                 </form>
+                            </div>
+                        </div>
+                        <div class="card p-3 me-3 col-5">
+                            <h4></h4>
+                            <div class="form-group">
+
+
                             </div>
                         </div>
                     </div>
@@ -381,6 +440,12 @@
                         alert('Không tìm thấy tờ khai nhập');
                     }
                 });
+            });
+        </script>
+        <script>
+            // Listen for input changes and copy value to second form
+            document.getElementById('idNhap').addEventListener('input', function() {
+                document.getElementById('idNhapCopy').value = this.value;
             });
         </script>
     @stop

@@ -18,7 +18,7 @@
                 <p>
                     < Quay lại quản lý nhập hàng</p>
             </a>
-            <h2 class="text-center text-dark">{{ $doanhNghiep->ten_doanh_nghiep }}</h2>
+            <h2 class="text-center text-dark">{{ $nhapHang->doanhNghiep->ten_doanh_nghiep }}</h2>
             <h2 class="text-center text-dark">TỜ KHAI NHẬP KHẨU HÀNG HÓA</h2>
             <!-- Input fields for each column -->
             <div class="row">
@@ -124,109 +124,12 @@
                 </div>
             </div>
             <h3 class="text-center text-dark">Thông tin hàng hóa</h3>
-
-            <div class="row">
-                <div class="col-8">
-                    <div class="card p-3 mt-3">
-                        <div class="row">
-                            <div class="col-12">
-                                <label class="label-text" for="ten_hang">Tên hàng</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <input type="text" class="form-control mt-2 reset-input" id="ten_hang" maxlength="255"
-                                    name="ten_hang" placeholder="Nhập tên hàng hóa" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="form-group">
-                                    <label class="label-text mb-2" for="loai_hang">Loại hàng</label>
-                                    <span class="text-danger missing-input-text"></span>
-                                    <select class="form-control" id="loai-hang-dropdown-search" name="loai_hang">
-                                        @foreach ($loaiHangs as $loaiHang)
-                                            <option></option>
-                                            <option value="{{ $loaiHang->ten_loai_hang }}">
-                                                {{ $loaiHang->ten_loai_hang }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <label class="label-text mb-2" for="xuat_xu">Xuất xứ</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <select class="form-control" id="xuat-xu-dropdown-search" name="xuat_xu">
-                                    <option value="">Nhập xuất xứ của sản phẩm</option>
-                                    @foreach ($xuatXus as $xuatXu)
-                                        <option value="{{ $xuatXu }}">
-                                            {{ $xuatXu }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-4">
-                                <label class="label-text" for="">Số container</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <input type="text" class="form-control mt-2" id="so_container" maxlength="50"
-                                    name="so_container" placeholder="Nhập số container" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="card p-3 mt-3">
-                        <div class="row">
-                            <div class="col-6">
-                                <label class="label-text" for="so_luong_khai_bao">Số lượng</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <input type="number" class="form-control mt-2 reset-input" id="so_luong_khai_bao"
-                                    name="so_luong_khai_bao" placeholder="Nhập số lượng sản phẩm" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="label-text mb-2" for="don_vi_tinh">Đơn vị tính</label> <span
-                                    class="text-danger missing-input-text "></span>
-
-                                <select name="don_vi_tinh" class="form-control mt-2 reset-input"
-                                    id="don-vi-tinh-dropdown-search">
-                                    <option value="">Chọn đơn vị tính</option>
-                                    @foreach ($donViTinhs as $donViTinh)
-                                        <option value="{{ $donViTinh }}">
-                                            {{ $donViTinh }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <label class="label-text" for="don_gia">Đơn giá (USD)</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <input type="number" class="form-control mt-2 reset-input" id="don_gia"
-                                    placeholder="USD" name="don_gia" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="label-text" for="tri_gia">Trị giá (USD)</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <input type="number" class="form-control mt-2 reset-input" id="tri_gia"
-                                    placeholder="USD" name="tri_gia" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-5">
-                <center>
-                    <button type="button" class="btn btn-primary mt-1" id="addRowButton">Thêm dòng
-                        mới</button>
-                </center>
-            </div>
-
-
-
-            <!-- Your existing table -->
-            <table class="table table-bordered" id="displayTableNhapHang">
-                <thead style="vertical-align: middle; text-align: center;">
+            <table class="table table-bordered" id="displayTableNhapHang"
+                style="vertical-align: middle; text-align: center;">
+                <thead>
                     <tr>
                         <th>STT</th>
+                        <th hidden>Mã hàng</th>
                         <th>Tên hàng</th>
                         <th>Loại hàng</th>
                         <th>Xuất xứ</th>
@@ -234,14 +137,84 @@
                         <th>Đơn vị tính</th>
                         <th>Đơn giá (USD)</th>
                         <th>Trị giá (USD)</th>
-                        <th>Số container</th>
-                        <th>Thao tác</th>
+                        <th>Số container ban đầu</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @foreach ($hangHoaRows as $hangHoaRow)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td hidden>
+                                <center>
+                                    <input type="text" class="form-control" name="ma_hang"
+                                        value="{{ $hangHoaRow->ma_hang }}" style="width: 70px;" />
+                                </center>
+                            </td>
+                            <td style="width: 300px;">
+                                <textarea class="form-control" maxlength="255" name="ten_hang" rows="3">{{ $hangHoaRow->ten_hang }}</textarea>
+                            </td>
+                            <td>
+                                <select class="form-control select2-dropdown" name="loai_hang" style="width: 100px;">
+                                    <option></option>
+                                    @foreach ($loaiHangs as $loaiHang)
+                                        <option value="{{ $loaiHang->ten_loai_hang }}"
+                                            {{ $loaiHang->ten_loai_hang == $hangHoaRow->loai_hang ? 'selected' : '' }}>
+                                            {{ $loaiHang->ten_loai_hang }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-control select2-dropdown" name="xuat_xu">
+                                    <option></option>
+                                    @foreach ($xuatXus as $xuatXu)
+                                        <option value="{{ $xuatXu }}"
+                                            {{ $xuatXu == $hangHoaRow->xuat_xu ? 'selected' : '' }}>
+                                            {{ $xuatXu }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <center>
+                                    <input type="text" class="form-control number" name="so_luong_khai_bao"
+                                        value="{{ $hangHoaRow->so_luong_khai_bao }}" style="width: 70px;" />
+                                </center>
+                            </td>
+                            <td>
+                                <select class="form-control select2-dropdown" name="don_vi_tinh">
+                                    <option></option>
+                                    @foreach ($donViTinhs as $donViTinh)
+                                        <option value="{{ $donViTinh }}"
+                                            {{ $donViTinh == $hangHoaRow->don_vi_tinh ? 'selected' : '' }}>
+                                            {{ $donViTinh }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <center>
+                                    <input type="text" class="form-control number" name="don_gia"
+                                        value="{{ number_format($hangHoaRow->don_gia, 2) }}" style="width: 100px;" />
+                                </center>
+                            </td>
+                            <td>
+                                <center>
+                                    <input type="text" class="form-control number" name="tri_gia"
+                                        value="{{ number_format($hangHoaRow->tri_gia, 2) }}" style="width: 100px;" />
+                                </center>
+                            </td>
+                            <td>
+                                <center>
+                                    <input type="text" class="form-control" name="so_container_khai_bao"
+                                        value="{{ $hangHoaRow->so_container_khai_bao }}" style="width: 150px;" />
+                                </center>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
-            </table>
 
+            </table>
             <center>
                 <button type="button" id="xacNhanBtn" class="btn btn-success mb-5">Sửa tờ khai</button>
             </center>
@@ -280,9 +253,6 @@
         </div>
     </div>
     <script>
-        const hangHoaRows = @json($hangHoaRows);
-    </script>
-    <script>
         // Update hidden fields when dropdowns change
         document.getElementById('hai-quan-dropdown-search').addEventListener('change', function() {
             document.getElementById('ma_hai_quan').value = this.value;
@@ -296,148 +266,7 @@
             }
         });
         document.addEventListener("DOMContentLoaded", function() {
-            // Fetch data from @json($hangHoaRows)
-            const hangHoaRows = @json($hangHoaRows);
             let rowsData = [];
-
-            // Populate the rowsData array
-            rowsData = hangHoaRows.map(row => ({
-                ten_hang: row.ten_hang,
-                loai_hang: row.loai_hang,
-                xuat_xu: row.xuat_xu,
-                so_luong_khai_bao: row.so_luong_khai_bao,
-                don_vi_tinh: row.don_vi_tinh,
-                don_gia: row.don_gia,
-                tri_gia: row.tri_gia,
-                so_container: row.so_container_khai_bao
-            }));
-            displayRows();
-
-            function displayRows() {
-                const tableBody = $("#displayTableNhapHang tbody");
-                tableBody.empty();
-                rowsData.forEach((row, index) => {
-                    const newRow = `
-                        <tr data-index="${index}">
-                            <td>${index + 1}</td>
-                            <td>${row.ten_hang}</td>
-                            <td>${row.loai_hang}</td>
-                            <td>${row.xuat_xu}</td>
-                            <td>${row.so_luong_khai_bao}</td>
-                            <td>${row.don_vi_tinh}</td>
-                            <td>${row.don_gia}</td>
-                            <td>${row.tri_gia}</td>
-                            <td>${row.so_container}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm editRowButton">Sửa</button>
-                                <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.append(newRow);
-                });
-            }
-
-            $("#addRowButton").click(function() {
-                const ten_hang = $("#ten_hang").val();
-                const loai_hang = $("#loai-hang-dropdown-search").val();
-                const xuat_xu = $("#xuat-xu-dropdown-search").val();
-                const so_luong_khai_bao = $("#so_luong_khai_bao").val();
-                const don_vi_tinh = $("#don-vi-tinh-dropdown-search").val();
-                const don_gia = $("#don_gia").val();
-                const tri_gia = $("#tri_gia").val();
-                const so_container = $("#so_container").val();
-
-                let isValid = true;
-
-                const fields = [{
-                        id: "#ten_hang",
-                        value: ten_hang
-                    },
-                    {
-                        id: "#loai_hang",
-                        value: loai_hang
-                    },
-                    {
-                        id: "#xuat_xu",
-                        value: xuat_xu
-                    },
-                    {
-                        id: "#so_luong_khai_bao",
-                        value: so_luong_khai_bao
-                    },
-                    {
-                        id: "#don_vi_tinh",
-                        value: don_vi_tinh
-                    },
-                    {
-                        id: "#don_gia",
-                        value: don_gia
-                    },
-                    {
-                        id: "#tri_gia",
-                        value: tri_gia
-                    },
-                    {
-                        id: "#so_container",
-                        value: so_container
-                    },
-                ];
-
-                fields.forEach(field => {
-                    const warningText = $(field.id).siblings(".missing-input-text");
-                    if (!field.value) {
-                        warningText.text("*Thiếu thông tin").show();
-                        isValid = false;
-                    } else {
-                        warningText.hide();
-                    }
-                });
-
-                if (isValid) {
-                    rowsData.push({
-                        ten_hang,
-                        loai_hang,
-                        xuat_xu,
-                        so_luong_khai_bao,
-                        don_vi_tinh,
-                        don_gia,
-                        tri_gia,
-                        so_container
-                    });
-                    displayRows();
-                    $(".reset-input").val('');
-                    $("#don-vi-tinh-dropdown-search").val('').trigger("change");
-                    $("#xuat-xu-dropdown-search").val('').trigger("change");
-                    $("#loai-hang-dropdown-search").val('').trigger('change');
-                    $(".missing-input-text").hide();
-                }
-            });
-
-            $(document).on("click", ".editRowButton", function() {
-                const rowIndex = $(this).closest("tr").data("index");
-                const rowData = rowsData[rowIndex];
-                $("#ten_hang").val(rowData.ten_hang);
-                $("#loai_hang").val(rowData.loai_hang);
-                $("#so_luong_khai_bao").val(rowData.so_luong_khai_bao);
-                $("#don_vi_tinh").val(rowData.don_vi_tinh);
-                $("#don_gia").val(rowData.don_gia);
-                $("#tri_gia").val(rowData.tri_gia);
-                $("#so_container").val(rowData.so_container);
-
-                $("#don-vi-tinh-dropdown-search").val(rowData.don_vi_tinh).trigger("change");
-                $("#xuat-xu-dropdown-search").val(rowData.xuat_xu).trigger("change");
-                $("#loai-hang-dropdown-search").val(rowData.loai_hang).trigger("change");
-                rowsData.splice(rowIndex, 1);
-                displayRows();
-            });
-
-            $(document).on("click", ".deleteRowButton", function() {
-                const rowIndex = $(this).closest("tr").data("index");
-                rowsData.splice(rowIndex, 1);
-                displayRows();
-            });
-
             // Form submission handler
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
@@ -484,14 +313,17 @@
 
                 // Map the table data to an array of objects
                 const rowsData = Array.from(tableRows).map(row => ({
-                    ten_hang: row.cells[1].textContent,
-                    loai_hang: row.cells[2].textContent,
-                    xuat_xu: row.cells[3].textContent,
-                    so_luong: row.cells[4].textContent,
-                    don_vi_tinh: row.cells[5].textContent,
-                    don_gia: row.cells[6].textContent,
-                    tri_gia: row.cells[7].textContent,
-                    so_container: row.cells[8].textContent,
+                    ma_hang: row.querySelector('input[name="ma_hang"]')?.value || '',
+                    ten_hang: row.querySelector('textarea[name="ten_hang"]')?.value.trim() ||
+                        '',
+                    loai_hang: row.querySelector('select[name="loai_hang"]')?.value || '',
+                    xuat_xu: row.querySelector('select[name="xuat_xu"]')?.value || '',
+                    so_luong: row.querySelector('input[name="so_luong_khai_bao"]')?.value || '',
+                    don_vi_tinh: row.querySelector('select[name="don_vi_tinh"]')?.value || '',
+                    don_gia: row.querySelector('input[name="don_gia"]')?.value || '',
+                    tri_gia: row.querySelector('input[name="tri_gia"]')?.value || '',
+                    so_container: row.querySelector('input[name="so_container_khai_bao"]')
+                        ?.value || '',
                 }));
 
                 // Set values for hidden inputs
@@ -566,5 +398,22 @@
             }
         });
     </script>
-
+    <script>
+        $(document).ready(function() {
+            $('.select2-dropdown').select2({
+                placeholder: "Chọn loại hàng",
+                allowClear: true,
+                width: 'resolve' // makes sure it inherits width from Bootstrap
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input.number').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9.]/g, '');
+                });
+            });
+        });
+    </script>
 @stop

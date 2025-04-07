@@ -52,33 +52,6 @@
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
-                                @foreach ($xuatCanhs as $index => $xuatCanh)
-                                    <tr class="clickable-row"
-                                        onclick="window.location='{{ route('xuat-canh.thong-tin-xuat-canh', $xuatCanh->ma_xuat_canh) }}'">
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $xuatCanh->ma_xuat_canh }}</td>
-                                        <td>{{ $xuatCanh->PTVTXuatCanh->ten_phuong_tien_vt }}</td>
-                                        <td>{{ $xuatCanh->doanhNghiep->ten_doanh_nghiep ?? '' }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d-m-Y') }}</td>
-                                        @if ($xuatCanh->trang_thai == '1')
-                                            <td class="text-primary">Đang chờ duyệt</td>
-                                        @elseif ($xuatCanh->trang_thai == '2')
-                                            <td class="text-success">Đã duyệt</td>
-                                        @elseif ($xuatCanh->trang_thai == '3')
-                                            <td class="text-success">Đã duyệt thực xuất</td>
-                                        @elseif ($xuatCanh->trang_thai == '4')
-                                            <td class="text-warning">Doanh nghiệp xin hủy (Chờ duyệt)</td>
-                                        @elseif ($xuatCanh->trang_thai == '5')
-                                            <td class="text-warning">Doanh nghiệp xin hủy (Đã duyệt)</td>
-                                        @elseif ($xuatCanh->trang_thai == '6')
-                                            <td class="text-danger">Chấp nhận hủy</td>
-                                        @elseif ($xuatCanh->trang_thai == '7')
-                                            <td class="text-danger">Từ chối hủy</td>
-                                        @elseif ($xuatCanh->trang_thai == '0')
-                                            <td class="text-danger">Đã hủy</td>
-                                        @endif
-                                    </tr>
-                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -88,22 +61,78 @@
     </div>
     <script>
         $(document).ready(function() {
-            $('#dataTable').DataTable({
+            var table = $('#dataTable').DataTable({
+                processing: true,
+                serverSide: true,
+                stateSave: true,
+                ajax: "{{ route('xuat-canh.getXuatCanhs') }}",
+
                 language: {
                     searchPlaceholder: "Tìm kiếm",
                     search: "",
-                    "sInfo": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "sInfoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "sInfoFiltered": "Lọc từ _MAX_ mục",
-                    "sLengthMenu": "Hiện _MENU_ mục",
-                    "sEmptyTable": "Không có dữ liệu",
+                    sInfo: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    sInfoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+                    sInfoFiltered: "Lọc từ _MAX_ mục",
+                    sLengthMenu: "Hiện _MENU_ mục",
+                    sEmptyTable: "Không có dữ liệu",
                 },
-                stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
+                buttons: [{
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        },
+                        title: ''
+                    }
+                ],
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex'
+                    },
+                    {
+                        data: 'ma_xuat_canh',
+                        name: 'ma_xuat_canh'
+                    },
+                    {
+                        data: 'ten_phuong_tien_vt',
+                        name: 'ten_phuong_tien_vt'
+                    },
+                    {
+                        data: 'ten_doanh_nghiep',
+                        name: 'ten_doanh_nghiep'
+                    },
+                    {
+                        data: 'ngay_dang_ky',
+                        name: 'ngay_dang_ky'
+                    },
+                    {
+                        data: 'trang_thai',
+                        name: 'trang_thai',
+                        orderable: false
+                    }
+
+                ],
                 columnDefs: [{
-                    orderable: false,
-                    targets: -1
-                }],
+                        width: "150px",
+                        targets: -1
+                    },
+                    {
+                        width: "230px",
+                        targets: 4
+                    }
+                ],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).addClass('clickable-row').attr('onclick',
+                        `window.location='{{ url('/thong-tin-xuat-canh') }}/${data.ma_xuat_canh}'`
+                    );
+                },
                 initComplete: function() {
                     $('.dataTables_filter input[type="search"]').css({
                         width: '350px',
@@ -116,19 +145,22 @@
                     )
 
                     select.append(
-                        '<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>'
+                        '<option class="text-primary" value="1">ĐANG CHỜ DUYỆT</option>'
                     );
-                    select.append('<option class="text-success" value="ĐÃ DUYỆT">ĐÃ DUYỆT</option>');
-                    select.append('<option class="text-success" value="ĐÃ DUYỆT THỰC XUẤT">ĐÃ DUYỆT THỰC XUẤT</option>');
+                    select.append('<option class="text-success" value="2">ĐÃ DUYỆT</option>');
                     select.append(
-                        '<option class="text-warning" value="DOANH NGHIỆP XIN HỦY">DOANH NGHIỆP XIN HỦY</option>'
+                        '<option class="text-success" value="3">ĐÃ DUYỆT THỰC XUẤT</option>'
                     );
-                    select.append('<option class="text-danger" value="ĐÃ HỦY">ĐÃ HỦY</option>');
                     select.append(
-                        '<option class="text-danger" value="CHẤP NHẬN HỦY">CHẤP NHẬN HỦY</option>');
+                        '<option class="text-warning" value="4">DOANH NGHIỆP XIN SỬA</option>'
+                    );
                     select.append(
-                        '<option class="text-danger" value="TỪ CHỐI HỦY">TỪ CHỐI HỦY</option>');
-
+                        '<option class="text-danger" value="5">DOANH NGHIỆP XIN HỦY</option>'
+                    );
+                    select.append('<option class="text-danger" value="0">ĐÃ HỦY</option>');
+                    select.append(
+                        '<option class="text-danger" value="6">CHẤP NHẬN HỦY</option>');
+                        
                     $(column.header()).empty().append(select);
 
                     select.on('change', function() {
@@ -146,27 +178,6 @@
                     }
 
                 },
-                buttons: [{
-                        extend: 'excel',
-                        exportOptions: {
-                            columns: ':not(:last-child)',
-                        },
-                        title: ''
-                    },
-                    {
-                        extend: 'pdf',
-                        exportOptions: {
-                            columns: ':not(:last-child)',
-                        },
-                        title: ''
-                    }
-                ]
-            });
-
-            $('.dataTables_filter input[type="search"]').css({
-                width: '350px',
-                display: 'inline-block',
-                height: '40px',
             });
         });
     </script>

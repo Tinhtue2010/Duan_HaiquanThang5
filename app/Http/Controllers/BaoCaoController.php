@@ -42,6 +42,13 @@ use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use ZipArchive;
+
+
 
 class BaoCaoController extends Controller
 {
@@ -51,7 +58,8 @@ class BaoCaoController extends Controller
         $doanhNghieps = DoanhNghiep::with('chuHang')->get();
         $chuHangs = ChuHang::select('ma_chu_hang', 'ten_chu_hang')->get();
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
-        return view('bao-cao/bao-cao-hang-ton', compact('doanhNghieps', 'chuHangs', 'ptvtXuatCanhs', 'congChucs')); // Pass the data to the view
+        $phuongTienVTNhaps = NhapHang::all()->pluck('phuong_tien_vt_nhap')->unique()->toArray();
+        return view('bao-cao/bao-cao-hang-ton', compact('doanhNghieps', 'chuHangs', 'ptvtXuatCanhs', 'congChucs','phuongTienVTNhaps')); // Pass the data to the view
     }
 
     public function theoDoiTruLui(Request $request)
@@ -77,6 +85,116 @@ class BaoCaoController extends Controller
         };
         return Excel::download(new BaoCaoTheoDoiTruLuiTatCaExport($request->so_to_khai_nhap), $fileName);
     }
+
+    public function theoDoiTruLuiTheoNgayZip(Request $request)
+    {
+        // Retrieve the doanh nghiep record
+        $ma_doanh_nghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->firstOrFail()->ma_doanh_nghiep;
+        $doanhNghiep = DoanhNghiep::join('chu_hang', 'chu_hang.ma_chu_hang', '=', 'doanh_nghiep.ma_chu_hang')
+            ->where('doanh_nghiep.ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->first();
+        $date = $this->formatDateToYMD($request->tu_ngay);
+        // Get theoDoiTruLui records based on your joins and conditions
+        $theoDoiTruLuis = TheoDoiTruLui::join('nhap_hang', 'nhap_hang.so_to_khai_nhap', '=', 'theo_doi_tru_lui.so_to_khai_nhap')
+            ->where('nhap_hang.ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->whereDate('theo_doi_tru_lui.ngay_them', $date)
+            ->when(request('cong_viec') == 1, function ($query) {
+                return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
+                    ->where('xuat_hang.trang_thai', '!=', 0);
+            })
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->cong_viec == 1 ? $item->ngay_them : $item->ma_yeu_cau;
+            })
+            ->map(function ($group) {
+                return $group->first();
+            })
+            ->values();
+        if ($theoDoiTruLuis->isEmpty()) {
+            return redirect()->back()->with('alert-danger', 'Không tìm thấy phiếu trừ lùi cho tờ khai nhập này');
+        }
+        // Create a unique temporary folder for storing Excel files (supports concurrency)
+        $uniqueFolder = Str::uuid()->toString();
+        $storagePath = storage_path("app/public/exports/{$uniqueFolder}");
+        if (!File::exists($storagePath)) {
+            File::makeDirectory($storagePath, 0777, true, true);
+        }
+
+        $files = [];
+        $ngay_name = Carbon::parse($date)->format('d-m-Y');
+
+        // Iterate over each record and create an Excel file
+
+        foreach ($theoDoiTruLuis as $theoDoiTruLui) {
+            try {
+
+                $so_to_khai = $request->so_to_khai_nhap; // ensure consistent key usage
+                if ($theoDoiTruLui->cong_viec == 1) {
+                    $fileName = 'Phiếu theo dõi trừ lùi xuất hàng của tờ khai: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                    $export = new BaoCaoTheoDoiTruLuiTheoNgayExport($theoDoiTruLui->so_to_khai_nhap, $theoDoiTruLui->ngay_them);
+                } else {
+                    if ($theoDoiTruLui->cong_viec == 2) {
+                        $fileName = 'Phiếu theo dõi trừ lùi chuyển tàu container của tờ khai: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                    } elseif ($theoDoiTruLui->cong_viec == 3) {
+                        $fileName = 'Phiếu theo dõi trừ lùi chuyển container của tờ khai: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                    } elseif ($theoDoiTruLui->cong_viec == 4) {
+                        $fileName = 'Phiếu theo dõi trừ lùi chuyển tàu của tờ khai: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                    } elseif ($theoDoiTruLui->cong_viec == 7) {
+                        $fileName = 'Phiếu theo dõi trừ lùi chuyển tàu của tờ khai: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                    }
+                    $export = new BaoCaoTheoDoiTruLuiExport($theoDoiTruLui->cong_viec, $theoDoiTruLui->ma_yeu_cau, $so_to_khai);
+                }
+
+                // Build relative path and store on the "public" disk
+                $relativePath = "exports/{$uniqueFolder}/{$fileName}";
+                Excel::store($export, $relativePath, 'public');
+
+                // Use the Storage facade to check file existence
+                if (!Storage::disk('public')->exists($relativePath)) {
+                    Log::error("File not found after storing: " . Storage::disk('public')->path($relativePath));
+                    continue; // Skip if file is missing
+                }
+
+                $files[] = Storage::disk('public')->path($relativePath);
+            } catch (\Exception $e) {
+                Log::error("Error generating export for {$fileName}: " . $e->getMessage());
+                continue; // Skip this iteration and move to the next file
+            }
+            // Ensure there is at least one file to zip
+            if (empty($files)) {
+                return response()->json(['error' => 'No Excel files were generated.'], 500);
+            }
+
+            // Create a ZIP file that will contain all the generated Excel files
+            $zipFileName = "Theo dõi trừ lùi ngày {$ngay_name}, {$doanhNghiep->ten_doanh_nghiep}, {$doanhNghiep->ten_chu_hang}.zip";
+            $zipFilePath = storage_path("app/public/exports/{$zipFileName}");
+
+            $zip = new ZipArchive;
+            if ($zip->open($zipFilePath, ZipArchive::CREATE) === true) {
+                foreach ($files as $file) {
+                    $zip->addFile($file, basename($file));
+                }
+                $zip->close();
+            } else {
+                Log::error("Cannot open ZIP file at path: {$zipFilePath}");
+                return response()->json(['error' => 'Could not create ZIP file'], 500);
+            }
+
+            // Double-check that the ZIP file exists before attempting to download
+            if (!file_exists($zipFilePath)) {
+                Log::error("ZIP file does not exist after creation: {$zipFilePath}");
+                return response()->json(['error' => 'ZIP file not found.'], 500);
+            }
+
+            // Clean up: Remove the temporary folder and Excel files
+            File::deleteDirectory($storagePath);
+
+            // Return the ZIP file as a download. It will be deleted after sending.
+            return response()->download($zipFilePath)->deleteFileAfterSend(true);
+        }
+    }
+
+
     public function theoDoiTruLuiTheoNgay(Request $request)
     {
         if ($request->xuat_hang) {
@@ -237,12 +355,6 @@ class BaoCaoController extends Controller
     public function tauLuuTaiCang(Request $request)
     {
         $date = $this->formatDateNow();
-        $nhapHang = NhapHang::where('phuong_tien_vt_nhap', $request->phuong_tien_vt_nhap)
-            ->exists();
-        if (!$nhapHang) {
-            session()->flash('alert-danger', 'Không tìm thấy tàu này');
-            return redirect()->back();
-        }
         $fileName = 'Báo cáo số lượng hàng tàu ' . $request->phuong_tien_vt_nhap . ' tại cảng ngày ' . $date . '.xlsx';
         return Excel::download(new BaoCaoTauLuuTaiCang($request->phuong_tien_vt_nhap), $fileName);
     }

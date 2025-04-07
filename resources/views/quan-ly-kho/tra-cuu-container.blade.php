@@ -37,15 +37,6 @@
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
-                                @foreach ($containers as $index => $container)
-                                    <tr class="clickable-row"
-                                        @if (!empty($container->so_container)) onclick="window.location='{{ route('quan-ly-kho.to-khai-trong-container', $container->so_container) }}'" @endif>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $container->so_container }}</td>
-                                        <td>{{ $container->so_seal }}</td>
-                                        <td>{{ number_format($container->total_so_luong) }}</td>
-                                    </tr>
-                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -204,40 +195,61 @@
     </script>
     <script>
         $(document).ready(function() {
-            $('#dataTable').DataTable({
+            var table = $('#dataTable').DataTable({
+                processing: true,
+                serverSide: true,
+                stateSave: true,
+                ajax: "{{ route('quan-ly-kho.getTraCuuContainer') }}",
+
                 language: {
                     searchPlaceholder: "Tìm kiếm",
                     search: "",
-                    "sInfo": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "sInfoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "sInfoFiltered": "Lọc từ _MAX_ mục",
-                    "sLengthMenu": "Hiện _MENU_ mục",
-                    "sEmptyTable": "Không có dữ liệu",
+                    sInfo: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    sInfoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+                    sInfoFiltered: "Lọc từ _MAX_ mục",
+                    sLengthMenu: "Hiện _MENU_ mục",
+                    sEmptyTable: "Không có dữ liệu",
                 },
-                stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
                 buttons: [{
                         extend: 'excel',
                         exportOptions: {
-                            columns: ':not(:last-child)',
+                            columns: ':not(:last-child)'
                         },
                         title: ''
                     },
                     {
                         extend: 'pdf',
                         exportOptions: {
-                            columns: ':not(:last-child)',
+                            columns: ':not(:last-child)'
                         },
                         title: ''
                     }
-                ]
-            });
-
-            $('.dataTables_filter input[type="search"]').css({
-                width: '350px',
-                display: 'inline-block',
-                height: '40px',
+                ],
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex'
+                    },
+                    {
+                        data: 'so_container',
+                        name: 'so_container'
+                    },
+                    {
+                        data: 'so_seal',
+                        name: 'so_seal'
+                    },
+                    {
+                        data: 'total_so_luong',
+                        name: 'total_so_luong'
+                    },
+                ],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).addClass('clickable-row').attr('onclick',
+                        `window.location='{{ url('/to-khai-trong-container') }}/${data.so_container}'`
+                    );
+                },
             });
         });
     </script>
+
 @stop

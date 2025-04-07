@@ -41,7 +41,8 @@
                                         @foreach ($soContainers as $soContainer)
                                             <option value=""></option>
                                             <option value="{{ $soContainer->so_container }}">
-                                                {{ $soContainer->so_container }}
+                                                {{ $soContainer->so_container }} 
+                                                {{-- @if(!empty($soContainer->phuong_tien_vt_nhap)) ({{ $soContainer->phuong_tien_vt_nhap }}) @endif --}}
                                             </option>
                                         @endforeach
                                     </select>
@@ -180,7 +181,6 @@
                 url: "{{ route('quan-ly-kho.get-so-container') }}", // Adjust with your route
                 type: "GET",
                 success: function(response) {
-                    console.log(response);
                     let tbody = $("#displayTableYeuCau tbody");
                     tbody.empty();
                     if (response.containers && response.containers.length > 0) {
@@ -188,7 +188,7 @@
                             tbody.append(`
                                 <tr>
 =                                    <td>${index + 1}</td>
-                                     <td>${item}</td>
+                                     <td>${item.so_container}</td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                                     </td>

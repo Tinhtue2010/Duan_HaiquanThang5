@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\HangHoa;
 use App\Models\NhapHang;
 use App\Models\SecondDB\NhapHangSecond;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -49,25 +50,25 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
                 ->distinct()
                 ->get();
         }
-        $phanHai = NhapHang::select(
-            'hang_hoa.ten_hang',
-            'hang_hoa.so_to_khai_nhap',
-            'hang_hoa.so_luong_khai_bao',
-            'xuat_hang.ngay_xuat_canh',
-            'xuat_hang_cont.so_luong_xuat',
-            'xuat_hang_cont.so_luong_ton',
-            'xuat_hang_cont.so_container',
-            'hang_trong_cont.so_luong',
-            'nhap_hang.ngay_dang_ky as ngay_dang_ky_nhap',
-            'nhap_hang.ngay_thong_quan as ngay_den_nhap',
-        )
-            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+
+        $hangHoas = HangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)->get();
+        $hangHoaArr = [];
+        foreach ($hangHoas as $hangHoa) {
+            $hangHoaArr[$hangHoa->ma_hang] = $hangHoa->so_luong_khai_bao;
+        }
+
+        $soToKhaiXuats = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
-            ->whereNotIn('xuat_hang.trang_thai',['0','1'])
-            ->get();
+            ->where('xuat_hang.trang_thai', '!=', '0')
+            ->orderBy('xuat_hang.so_to_khai_xuat', 'asc')
+            ->pluck('xuat_hang.so_to_khai_xuat')
+            ->unique()
+            ->values();
+
+
 
 
 
@@ -105,18 +106,46 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
             ];
         }
 
+
         $result[] = ['II-PHẦN XUẤT KHẨU', '', '', '', '', ''];
         $result[] = ['STT', 'TÊN HÀNG', 'NGÀY XUẤT', 'SL XUẤT', 'SL TỒN', 'SỐ CONTAINER'];
         $stt = 1;
-        foreach ($phanHai as $item) {
-            $result[] = [
-                $stt++,
-                $item->ten_hang,
-                Carbon::createFromFormat('Y-m-d', $item->ngay_xuat_canh)->format('d-m-Y'),
-                $item->so_luong_xuat,
-                $item->so_luong_ton == 0 ? '0' : $item->so_luong_ton,
-                $item->so_container,
-            ];
+
+        foreach ($soToKhaiXuats as $soToKhaiXuat) {
+            $lanXuats = NhapHang::where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
+                ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
+                ->join('xuat_hang', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                ->where('xuat_hang.so_to_khai_xuat', $soToKhaiXuat)
+                ->select(
+                    'xuat_hang.ngay_dang_ky',
+                    'xuat_hang_cont.phuong_tien_vt_nhap',
+                    'xuat_hang_cont.*',
+                    'hang_hoa.*',
+                    'hang_trong_cont.ma_hang',
+                    'hang_trong_cont.so_luong',
+                    'hang_trong_cont.is_da_chuyen_cont',
+                )
+                ->get();
+
+            foreach ($lanXuats as $item) {
+                if (isset($seen[$item->ma_xuat_hang_cont])) {
+                    continue;
+                }
+                $seen[$item->ma_xuat_hang_cont] = true;
+                if (isset($hangHoaArr[$item->ma_hang])) {
+                    $hangHoaArr[$item->ma_hang] -= $item->so_luong_xuat;
+                }
+                $result[] = [
+                    $stt++,
+                    $item->ten_hang,
+                    Carbon::createFromFormat('Y-m-d', $item->ngay_dang_ky)->format('d-m-Y'),
+                    $item->so_luong_xuat,
+                    $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
+                    $item->so_container,
+                ];
+            }
         }
 
         $result[] = [
@@ -224,8 +253,6 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
                     }
                 }
 
-
-
                 if ($secondTableStart) {
                     // Bold and center align for "II-PHẦN XUẤT KHẨU" headers
                     $sheet->mergeCells('A' . $secondTableStart . ':F' . ($secondTableStart));
@@ -233,7 +260,7 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
                     $sheet->getStyle('A' . $secondTableStart . ':F' . ($secondTableStart))->applyFromArray([
                         'font' => ['bold' => true]
                     ]);
-                    $sheet->getStyle('A' . $secondTableStart + 1 . ':F' . ($secondTableStart + 1))->applyFromArray([
+                    $sheet->getStyle('A' . ($secondTableStart + 1) . ':F' . ($secondTableStart + 1))->applyFromArray([
                         'font' => ['bold' => true],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -248,11 +275,15 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
                 }
 
                 // Add borders and alignment to all content
-                $sheet->getStyle('A13:C' . $secondTableStart)->applyFromArray([
+                $sheet->getStyle('A13:C' . ($secondTableStart-1))->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
                         ],
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
                     ],
                 ]);
                 $sheet->getStyle('A' . ($secondTableStart + 1) . ':F' . $lastRow)->applyFromArray([
@@ -261,8 +292,27 @@ class BaoCaoHangTonTheoToKhaiExport implements FromArray, WithEvents
                             'borderStyle' => Border::BORDER_THIN,
                         ],
                     ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
 
+
+                $sheet->getStyle('B' . ($secondTableStart + 2) . ':B' . $lastRow)->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_LEFT,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+                $sheet->getStyle('B14:B' . ($secondTableStart - 1 ))->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_LEFT,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
+
+                
                 $chuKyStart = null;
                 for ($i = 1; $i <= $lastRow; $i++) {
                     if ($sheet->getCell('A' . $i)->getValue() === 'CÔNG CHỨC HẢI QUAN') {

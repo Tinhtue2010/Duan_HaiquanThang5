@@ -16,15 +16,17 @@ use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
-class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
+class BaoCaoToKhaiXuatHetDoanhNghiep implements FromArray, WithEvents
 {
     protected $tu_ngay;
     protected $den_ngay;
+    protected $ma_doanh_nghiep;
 
-    public function __construct($tu_ngay, $den_ngay)
+    public function __construct($tu_ngay, $den_ngay, $ma_doanh_nghiep)
     {
         $this->tu_ngay = $tu_ngay;
         $this->den_ngay = $den_ngay;
+        $this->ma_doanh_nghiep = $ma_doanh_nghiep;
     }
     public function array(): array
     {
@@ -49,6 +51,7 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
             ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
             ->join('hai_quan', 'hai_quan.ma_hai_quan', 'nhap_hang.ma_hai_quan')
+            ->where('xuat_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
             ->whereIn('nhap_hang.trang_thai', ['7', '4'])
             ->whereBetween('nhap_hang.ngay_xuat_het', [$this->tu_ngay, $this->den_ngay])
             ->where('xuat_hang.trang_thai', '!=', '0')
@@ -111,18 +114,6 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
                 $xuatHang->congChucBanGiao->ten_cong_chuc ?? '',
             ];
         }
-
-
-
-        $result[] = [
-            [''],
-            [''],
-            ['CÔNG CHỨC HẢI QUAN'],
-            [''],
-            [''],
-            [''],
-            [Auth::user()->CongChuc->ten_cong_chuc],
-        ];
         return $result;
     }
 
@@ -228,28 +219,6 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
                     ],
 
                 ]);
-
-
-                $chuKyStart = null;
-                for ($i = 1; $i <= $lastRow; $i++) {
-                    if ($sheet->getCell('A' . $i)->getValue() === 'CÔNG CHỨC HẢI QUAN') {
-                        $chuKyStart = $i;
-                        break;
-                    }
-                }
-
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':Q' . $lastRow)->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_NONE,
-                        ],
-                    ],
-                ]);
-
-                $sheet->mergeCells('A' . $chuKyStart . ':Q' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':Q' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':Q' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':Q' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

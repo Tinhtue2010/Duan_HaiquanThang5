@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BaoCao;
 use App\Models\CongChuc;
 use App\Models\PhanQuyenBaoCao;
 use App\Models\TaiKhoan;
@@ -39,14 +40,15 @@ class CongChucController extends Controller
             'ma_tai_khoan' => $ma_tai_khoan,
         ]);
 
-        for ($i = 1; $i <= 20; $i++) {
+        $baoCaos = BaoCao::all();
+        foreach($baoCaos as $baoCao) {
             $check = PhanQuyenBaoCao::where('ma_cong_chuc', $congChuc->ma_cong_chuc)
-                ->where('ma_bao_cao', $i)
+                ->where('ma_bao_cao', $baoCao->ma_bao_cao)
                 ->exists();
             if (!$check) {
                 PhanQuyenBaoCao::insert([
                     'ma_cong_chuc' => $congChuc->ma_cong_chuc,
-                    'ma_bao_cao' => $i,
+                    'ma_bao_cao' => $baoCao->ma_bao_cao,
                 ]);
             }
         }

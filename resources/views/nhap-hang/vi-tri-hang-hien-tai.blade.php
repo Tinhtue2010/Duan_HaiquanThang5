@@ -61,7 +61,7 @@
                                 $displayIndex = 1; // Separate counter for displayed rows
                             @endphp
                             @foreach ($hangTrongConts as $hang)
-                                @if ($hang->is_da_chuyen_cont == 0 || $hang->so_luong != 0)
+                                @if ($hang->is_da_chuyen_cont == 0)
                                     @php
                                         $totalSoLuong += $hang->so_luong;
                                     @endphp

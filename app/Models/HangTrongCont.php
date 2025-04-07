@@ -16,6 +16,7 @@ class HangTrongCont extends Model
         'so_luong',
         'is_da_chuyen_cont',
     ];
+
     public function hangHoa()
     {
         return $this->belongsTo(HangHoa::class, 'ma_hang', 'ma_hang');

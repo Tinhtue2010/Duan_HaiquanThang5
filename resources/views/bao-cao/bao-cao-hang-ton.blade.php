@@ -467,12 +467,19 @@
                         <div class="card p-3 ms-3 col-5">
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 20)->first()?->phan_quyen == 1)
-                                <h4>Báo cáo tàu lưu tại cảng</h4>
+                                <h4>Báo cáo số lượng container lưu trên tàu</h4>
                                 <div class="form-group">
                                     <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET">
-                                        <label class="label-text mb-2" for="ma_to_khai">Tên tàu</label>
-                                        <input type="text" class="form-control" id="phuong_tien_vt_nhap"
-                                        name="phuong_tien_vt_nhap" placeholder="Nhập tên tàu" required>
+                                        <label class="label-text mb-1 mt-2" for="">Tên tàu</label>
+                                        <select class="form-control" id="tau-dropdown-search"
+                                            name="phuong_tien_vt_nhap">
+                                            <option></option>
+                                            @foreach ($phuongTienVTNhaps as $phuongTienVTNhap)
+                                                <option value="{{ $phuongTienVTNhap }}">
+                                                    {{ $phuongTienVTNhap }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                                 cáo</button>
                                         </center>

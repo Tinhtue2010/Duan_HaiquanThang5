@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\HangTrongCont;
 use App\Models\NhapHang;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -39,18 +40,14 @@ class BaoCaoTonDoanhNghiepExport implements FromArray, WithEvents
             ->where('nhap_hang.trang_thai', '2')
             ->select(
                 'nhap_hang.so_to_khai_nhap',
-                DB::raw("(SELECT SUM(hh.so_luong_khai_bao) 
-                      FROM hang_hoa hh 
-                      WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"),
                 DB::raw("MIN(hang_hoa.ma_hang) as ma_hang"),
-                DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"), 
-                DB::raw("MIN(hang_trong_cont.so_container) as so_container"), 
-                DB::raw("(SELECT SUM(htc.so_luong) 
-                    FROM hang_hoa hh 
-                    JOIN hang_trong_cont htc ON hh.ma_hang = htc.ma_hang 
-                    WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong"),
+                DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"),
+                'hang_trong_cont.so_container',
+                DB::raw("(SELECT SUM(hh.so_luong_khai_bao) 
+                FROM hang_hoa hh 
+                WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"),
             )
-            ->groupBy('nhap_hang.so_to_khai_nhap')
+            ->groupBy('nhap_hang.so_to_khai_nhap', 'hang_trong_cont.so_container')
             ->get();
 
         $result = [
@@ -63,23 +60,53 @@ class BaoCaoTonDoanhNghiepExport implements FromArray, WithEvents
             ['Mã doanh nghiệp: ' . $this->ma_doanh_nghiep, '', '', '', '', ''],
             ['Tên doanh nghiệp: ' . $this->ten_doanh_nghiep, '', '', '', ''],
             ['', '', '', '', '', 'Đơn vị tính: Thùng/Kiện'],
-            ['STT', 'SỐ TỜ KHAI', 'TÊN HÀNG', 'SL THEO KHAI BÁO', 'SL ĐÃ XUẤT', 'SỐ LƯỢNG TỒN','SỐ CONTAINER'],
+            ['STT', 'SỐ TỜ KHAI', 'TÊN HÀNG', 'SL THEO KHAI BÁO', 'SL ĐÃ XUẤT', 'SỐ LƯỢNG TỒN', 'SỐ CONTAINER'],
         ];
 
         $stt = 1;
         foreach ($data as $item) {
-            if ($item->total_so_luong != 0) {
-                $result[] = [
-                    $stt++,
-                    $item->so_to_khai_nhap,
-                    $item->ten_hang,
-                    $item->total_so_luong_khai_bao,
-                    ($item->total_so_luong_khai_bao - $item->total_so_luong) == 0 ? '0' : ($item->total_so_luong_khai_bao - $item->total_so_luong),
-                    $item->total_so_luong,
-                    $item->so_container,
-                ];
-                $totalHangTon += $item->total_so_luong;
-                $totalKhaiBao += $item->total_so_luong_khai_bao;
+            $hangTrongConts = HangTrongCont::join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->where('hang_hoa.so_to_khai_nhap', $item->so_to_khai_nhap)
+                ->where('hang_trong_cont.so_container', $item->so_container)
+                ->select(
+                    DB::raw("SUM(hang_trong_cont.so_luong) as total_so_luong"),
+                    DB::raw("SUM(hang_hoa.so_luong_khai_bao) as total_so_luong_khai_bao"),
+                    'hang_hoa.ten_hang',
+                    'hang_trong_cont.so_container',
+                    'hang_trong_cont.is_da_chuyen_cont',
+                )
+                ->get();
+            $processedSoToKhaiNhap = [];
+            foreach ($hangTrongConts as $hangTrongCont) {
+                if ($hangTrongCont->is_da_chuyen_cont == 0) {
+                    if ($hangTrongCont->total_so_luong != 0) {
+                        if (!in_array($item->so_to_khai_nhap, $processedSoToKhaiNhap)) {
+                            $result[] = [
+                                $stt++,
+                                $item->so_to_khai_nhap,
+                                $item->ten_hang,
+                                $item->total_so_luong_khai_bao,
+                                ($item->total_so_luong_khai_bao - $hangTrongCont->total_so_luong) == 0 ? '0' : ($item->total_so_luong_khai_bao - $hangTrongCont->total_so_luong),
+                                $hangTrongCont->total_so_luong,
+                                $item->so_container,
+                            ];
+                        } else {
+                            $result[] = [
+                                $stt++,
+                                $item->so_to_khai_nhap,
+                                '',
+                                0,
+                                0,
+                                $hangTrongCont->total_so_luong,
+                                $item->so_container,
+                            ];
+                        }
+
+                        $processedSoToKhaiNhap[] = $hangTrongCont->so_to_khai_nhap;
+                        $totalHangTon += $hangTrongCont->total_so_luong;
+                        $totalKhaiBao += $item->total_so_luong_khai_bao;
+                    }
+                }
             }
         }
         $result[] = [
