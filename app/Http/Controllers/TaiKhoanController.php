@@ -45,6 +45,8 @@ class TaiKhoanController extends Controller
                 return redirect()->route('quan-ly-khac.danh-sach-chi-niem-phong');
             } elseif ($user->loai_tai_khoan == "Admin") {
                 return redirect()->route('quan-ly-khac.danh-sach-hai-quan');
+            } elseif ($user->loai_tai_khoan == "Lãnh đạo") {
+                return redirect()->route('quan-ly-khac.danh-sach-yeu-cau-sua');
             }
         }
         session()->flash('alert-danger', 'Tên đăng nhập hoặc tài khoản không đúng');

@@ -155,8 +155,9 @@
                                 (<span>{{ Auth::user()->CongChuc->ma_cong_chuc }}</span>)
                             @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp')
                                 <div id="doanh-nghiep-text">
-                                    {{ Auth::user()->doanhNghiep->ten_doanh_nghiep }} ({{ Auth::user()->doanhNghiep->chuHang->ten_chu_hang ?? '' }})
-                                    
+                                    {{ Auth::user()->doanhNghiep->ten_doanh_nghiep }}
+                                    ({{ Auth::user()->doanhNghiep->chuHang->ten_chu_hang ?? '' }})
+
                                 </div>
                             @endif
                         </li>
@@ -180,9 +181,7 @@
             <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
                 <div class="sb-sidenav-menu">
                     <div class="nav">
-                        @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
-                                Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
+                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý nhập hàng</div>
                             <a class="nav-link" href="/quan-ly-nhap-hang">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -200,9 +199,7 @@
                                 Tờ khai đã hủy
                             </a>
                         @endif
-                        @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
-                                Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
+                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý xuất hàng</div>
                             <a class="nav-link" href="/quan-ly-xuat-hang">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -220,9 +217,7 @@
                                 Phiếu đã hủy
                             </a>
                         @endif
-                        @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
-                                Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
+                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý PTVT</div>
                             <a class="nav-link" href="/quan-ly-xuat-canh">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -235,9 +230,7 @@
                                 Danh sách phương tiện vận tải xuất cảnh
                             </a>
                         @endif
-                        @if (
-                            (Auth::user()->loai_tai_khoan === 'Cán bộ công chức') ||
-                                Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
+                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý yêu cầu</div>
                             <a class="nav-link" href="/danh-sach-yeu-cau-niem-phong">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -280,7 +273,7 @@
                                 Yêu cầu gia hạn tờ khai
                             </a>
                         @endif
-                        @if (Auth::user()->loai_tai_khoan === 'Doanh nghiệp' )
+                        @if (Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý tồn kho</div>
                             <a class="nav-link" href="/bao-cao-hang-theo-doanh-nghiep">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -356,6 +349,11 @@
                                         src="{{ asset('images/icons/storage.png') }}"></div>
                                 Danh sách thủ kho
                             </a>
+                            <a class="nav-link" href="/quan-ly-thiet-bi-dang-nhap">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/login.png') }}"></div>
+                                Quản lý đăng nhập
+                            </a>
                             <div class="sb-sidenav-menu-heading">Quản lý khác</div>
                             <a class="nav-link" href="/quan-ly-loai-hang">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -366,6 +364,14 @@
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/document.png') }}"></div>
                                 Danh sách loại hình
+                            </a>
+                        @elseif (Auth::user()->loai_tai_khoan === 'Lãnh đạo')
+                            <div class="sb-sidenav-menu-heading">Quản lý thông tin</div>
+
+                            <a class="nav-link" href="/quan-ly-yeu-cau-sua">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/document.png') }}"></div>
+                                Danh sách yêu cầu sửa
                             </a>
                         @endif
                         <div class="sb-sidenav-menu-heading">Tài khoản</div>

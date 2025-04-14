@@ -287,17 +287,20 @@ class XuatCanhController extends Controller
             DB::beginTransaction();
 
             $xuatCanh = XuatCanh::find($request->ma_xuat_canh);
-            if ($xuatCanh->trang_thai == '2') {
-                $xuatCanh->trang_thai = '4';
-                $xuatCanh->save();
+            if ($xuatCanh->trang_thai == '4') {
+                XuatCanhChiTietSua::where('ma_yeu_cau', $request->ma_xuat_canh)->orderBy('ma_yeu_cau', 'desc')->delete();
             }
+
             $xuatCanhSua = $this->xuatCanhService->themXuatCanhSua($request, $xuatCanh);
             $rowsData = json_decode($request->rows_data, true);
+
             foreach ($rowsData as $row) {
                 $xuatHang = XuatHang::find($row['so_to_khai_xuat']);
                 $this->xuatCanhService->themChiTietXuatCanhSua($xuatCanhSua, $xuatHang);
             }
 
+            $xuatCanh->trang_thai = '4';
+            $xuatCanh->save();
             $this->themTienTrinh($xuatCanh->ma_xuat_canh, "yêu cầu sửa tờ khai xuất cảnh số " . $xuatCanh->ma_xuat_canh);
 
             DB::commit();

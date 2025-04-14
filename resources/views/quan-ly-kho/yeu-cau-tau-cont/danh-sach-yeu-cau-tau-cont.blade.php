@@ -52,27 +52,7 @@
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
-                                @foreach ($data as $index => $yeuCau)
-                                    <tr class="clickable-row"
-                                        onclick="window.location='{{ route('quan-ly-kho.thong-tin-yeu-cau-tau-cont', $yeuCau->ma_yeu_cau) }}'">
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $yeuCau->ma_yeu_cau }}</td>
-                                        <td>{{ $yeuCau->so_to_khai_nhap_list }}</td>
-                                        <td>{{ $yeuCau->ten_doanh_nghiep }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</td>
-                                        @if ($yeuCau->trang_thai == 1)
-                                            <td class="text-primary">Đang chờ duyệt</td>
-                                        @elseif ($yeuCau->trang_thai == 2)
-                                            <td class="text-success">Đã duyệt</td>
-                                        @elseif ($yeuCau->trang_thai == 3)
-                                            <td class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</td>
-                                        @elseif ($yeuCau->trang_thai == 4)
-                                            <td class="text-danger">Doanh nghiệp đề nghị hủy yêu cầu</td>
-                                        @elseif ($yeuCau->trang_thai == 0)
-                                            <td class="text-danger">Đã hủy</td>
-                                        @endif
-                                    </tr>
-                                @endforeach
+
                             </tbody>
                         </table>
                     </div>

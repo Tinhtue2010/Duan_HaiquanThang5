@@ -140,15 +140,10 @@ class XuatHangController extends Controller
     }
 
 
-    public function lichSuSuaPhieu($so_to_khai_nhap)
+    public function lichSuSuaXuatHang($so_to_khai_xuat)
     {
-        $nhapHang = NhapHang::find($so_to_khai_nhap);
-        if ($nhapHang) {
-            $suaToKhais = XuatHangSua::where('so_to_khai_nhap', $so_to_khai_nhap)
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        }
-        return view('xuat-hang.lich-su-sua-phieu', data: compact('suaToKhais', 'nhapHang'));
+        $xuatHangs = XuatHangSua::where('so_to_khai_xuat', $so_to_khai_xuat)->get();
+        return view('xuat-hang.lich-su-sua-xuat-hang', compact('xuatHangs'));
     }
 
 
@@ -158,22 +153,39 @@ class XuatHangController extends Controller
         $loaiHinhs = LoaiHinh::all();
         $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
         $ptvtXuatCanhs = PTVTXuatCanh::where('trang_thai', 1)->get();
-        $ptvts = PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $so_to_khai_xuat)
-            ->with('PTVTXuatCanh')
-            ->get();
-        $PTVTcount = $ptvts->count();
+
+        if (in_array($xuatHang->trang_thai, ['3', '4', '5', '6'])) {
+            $xuatHang = XuatHangSua::where('so_to_khai_xuat', $so_to_khai_xuat)
+                ->orderByDesc('ma_yeu_cau') // or ->orderBy('id', 'desc')
+                ->first();
+            $xuatHangConts = XuatHangChiTietSua::where('ma_yeu_cau', $xuatHang->ma_yeu_cau)
+                ->join('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_chi_tiet_sua.ma_hang_cont')
+                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->get();
+            $ptvts = PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $xuatHang->ma_yeu_cau)
+                ->with('PTVTXuatCanh')
+                ->get();
+            $PTVTcount = $ptvts->count();
+        } else {
+            $xuatHang = XuatHang::find($so_to_khai_xuat);
+            $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $so_to_khai_xuat)
+                ->join('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
+                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->get();
+            $ptvts = PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $so_to_khai_xuat)
+                ->with('PTVTXuatCanh')
+                ->get();
+            $PTVTcount = $ptvts->count();
+        }
+
         $nhapHangs = NhapHang::where('ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
             ->where('trang_thai', '2')
             ->get();
         $containers = $this->xuatHangService->getThongTinHangHoaHienTai();
-        $xuatHangConts = XuatHangCont::join('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->where('so_to_khai_xuat', $so_to_khai_xuat)
-            ->get();
         $xuatHangContMap = $xuatHangConts->pluck('so_luong_xuat', 'ma_hang_cont');
 
         foreach ($containers as $container) {
-            $container->so_luong_xuat = $xuatHangContMap[$container->ma_hang_cont] ?? 0; // Default to 0 if not found
+            $container->so_luong_xuat = $xuatHangContMap[$container->ma_hang_cont] ?? 0;
         }
         return view('xuat-hang.sua-to-khai-xuat', data: compact('containers', 'loaiHinhs', 'doanhNghiep', 'ptvtXuatCanhs', 'xuatHang', 'ptvts', 'PTVTcount', 'nhapHangs', 'xuatHangConts')); // Pass the data to the view
     }
@@ -186,12 +198,35 @@ class XuatHangController extends Controller
             $rowsData = array_filter($rowsData, function ($row) {
                 return !empty($row['ma_hang_cont']);
             });
-            $rowsData = array_values($rowsData);
 
+            $isExists = XuatHangSua::where('so_to_khai_xuat', $request->so_to_khai_xuat)->exists();
+            if (!$isExists) {
+                $xuatHang = XuatHang::find($request->so_to_khai_xuat);
+                $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $request->so_to_khai_xuat)->get();
+                $xuatHangSua = XuatHangSua::create($xuatHang->toArray());
+                foreach ($xuatHangConts as $xuatHangCont) {
+                    $data = $xuatHangCont->toArray();
+                    $data['ma_yeu_cau'] = $xuatHangSua->ma_yeu_cau;
+                    XuatHangChiTietSua::create($data);
+                }
+                $ptvts = PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $request->so_to_khai_xuat)->get();
+                foreach ($ptvts as $ptvt) {
+                    $data = $ptvt->toArray();
+                    $data['ma_yeu_cau'] = $xuatHangSua->ma_yeu_cau;
+                    PTVTXuatCanhCuaPhieu::create($data);
+                }
+            }
+
+            $rowsData = array_values($rowsData);
             $ptvtRowsData = json_decode($request->ptvt_rows_data, true);
             $xuatHang = XuatHang::find($request->so_to_khai_xuat);
             $suaXuatHang = $this->xuatHangService->themSuaXuatHang($request, $xuatHang);
-            $this->xuatHangService->themSuaPTVTCuaPhieu($suaXuatHang->ma_yeu_cau, $ptvtRowsData);
+
+            if (in_array($xuatHang->trang_thai, ['3', '4', '5', '6'])) {
+                PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $suaXuatHang->ma_yeu_cau)->delete();
+                XuatHangChiTietSua::where('ma_yeu_cau', $suaXuatHang->ma_yeu_cau)->delete();
+            }
+            $this->xuatHangService->themSuaPTVTCuaPhieu($suaXuatHang->ma_yeu_cau, $ptvtRowsData, $xuatHang);
             $this->xuatHangService->themChiTietSuaXuatHang($suaXuatHang, $rowsData);
             $this->xuatHangService->capNhatTrangThaiPhieuXuat($xuatHang);
 
@@ -215,6 +250,8 @@ class XuatHangController extends Controller
         }
     }
 
+
+
     public function thongTinXuatHang($so_to_khai_xuat)
     {
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
@@ -232,6 +269,42 @@ class XuatHangController extends Controller
         $triGiaSum = $hangHoaRows->sum('tri_gia');
 
         return view('xuat-hang.thong-tin-xuat-hang', compact('xuatHang', 'hangHoaRows', 'soLuongSum', 'triGiaSum', 'congChucs', 'ptvts')); // Pass data to the view
+    }
+
+
+
+
+    public function xemSuaXuatHangTheoLan($ma_yeu_cau)
+    {
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $suaXuatHang = XuatHangSua::find($ma_yeu_cau);
+        $xuatHang = XuatHangSua::where('so_to_khai_xuat', $suaXuatHang->so_to_khai_xuat)
+            ->where('ma_yeu_cau', '<', $suaXuatHang->ma_yeu_cau)
+            ->orderByDesc('ma_yeu_cau')
+            ->first();
+        $hangHoaRows = $this->xuatHangService->getChiTietThongTinSauSuaXuatHang($xuatHang->ma_yeu_cau);
+        $ptvts = $this->xuatHangService->getPTVTXuatCanhCuaPhieuSauSua($xuatHang->ma_yeu_cau);
+
+        $suaHangHoaRows = $this->xuatHangService->getChiTietThongTinSauSuaXuatHang($ma_yeu_cau);
+        $suaPTVTs = $this->xuatHangService->getPTVTXuatCanhCuaPhieuSauSua($ma_yeu_cau);
+
+        $soLuongSum = $hangHoaRows->sum('so_luong_xuat');
+        $triGiaSum = $hangHoaRows->sum('tri_gia');
+
+        $suaSoLuongSum = $suaHangHoaRows->sum('so_luong_xuat');
+        $suaTriGiaSum = $suaHangHoaRows->sum('tri_gia');
+        return view('xuat-hang.xem-yeu-cau-sua', compact(
+            'xuatHang',
+            'hangHoaRows',
+            'soLuongSum',
+            'triGiaSum',
+            'suaXuatHang',
+            'suaHangHoaRows',
+            'suaSoLuongSum',
+            'suaTriGiaSum',
+            'ptvts',
+            'suaPTVTs'
+        ));
     }
 
     public function xemYeuCauSua($so_to_khai_xuat, $ma_yeu_cau)
@@ -314,10 +387,9 @@ class XuatHangController extends Controller
 
             $this->themTienTrinh($xuatHang, "duyệt yêu cầu sửa", true);
 
-            XuatHangSua::findOrFail($ma_yeu_cau)->delete();
-            XuatHangChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
-            PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
-            PTVTXuatCanhCuaPhieuTruocSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
+            // XuatHangSua::findOrFail($ma_yeu_cau)->delete();
+            // XuatHangChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
+            // PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
 
             DB::commit();
             return redirect()->route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]);
@@ -346,7 +418,6 @@ class XuatHangController extends Controller
                 $suaXuatHang->delete();
                 XuatHangChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
                 PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
-                PTVTXuatCanhCuaPhieuTruocSua::where('ma_yeu_cau', $ma_yeu_cau)->delete();
                 session()->flash('alert-success', 'Hủy yêu cầu sửa thành công!');
             }
             DB::commit();

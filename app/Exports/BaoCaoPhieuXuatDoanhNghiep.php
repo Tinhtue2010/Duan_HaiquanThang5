@@ -36,6 +36,7 @@ class BaoCaoPhieuXuatDoanhNghiep implements FromArray, WithEvents
             ->leftJoin('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->leftJoin('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('xuat_hang.trang_thai', '!=', '0')
+            ->whereBetween('xuat_hang.ngay_xuat_canh', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'hang_hoa.ten_hang',

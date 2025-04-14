@@ -13,6 +13,7 @@ class XuatHangSua extends Model
 
     protected $fillable = [
         'so_to_khai_xuat',
+        'ma_doanh_nghiep',
         'ngay_tao',
         'ma_loai_hinh',
         'ma_cong_chuc',
@@ -27,6 +28,10 @@ class XuatHangSua extends Model
     public function congChuc()
     {
         return $this->belongsTo(CongChuc::class, 'ma_cong_chuc', 'ma_cong_chuc');
+    }
+    public function doanhNghiep()
+    {
+        return $this->belongsTo(DoanhNghiep::class, 'ma_doanh_nghiep', 'ma_doanh_nghiep');
     }
     public function xuatHang()
     {

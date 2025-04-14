@@ -1,15 +1,24 @@
 @extends('layout.user-layout')
 
-@section('title', 'Lịch sử sửa phiếu của tờ khai')
+@section('title', 'Quản lý xuất hàng')
 
 @section('content')
     <div id="layoutSidenav_content">
         <div class=" px-4">
             <div class="card shadow mb-4">
                 <div class="card-header pt-3">
+                    @if (session('alert-success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="myAlert">
+                            <strong>{{ session('alert-success') }}</strong>
+                        </div>
+                    @elseif(session('alert-danger'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="myAlert">
+                            <strong>{{ session('alert-danger') }}</strong>
+                        </div>
+                    @endif
                     <div class="row">
                         <div class="col-6">
-                            <h4 class="font-weight-bold text-primary">Danh sách lịch sử sửa phiếu xuất của tờ khai: {{ $nhapHang->so_to_khai_nhap }}</h4>
+                            <h4 class="font-weight-bold text-primary">Danh sách phiếu xuất</h4>
                         </div>
                         <div class="col-6">
                         </div>
@@ -23,40 +32,27 @@
                                     STT
                                 </th>
                                 <th>
-                                    Số tờ khai xuất
+                                    Số
                                 </th>
                                 <th>
-                                    Ngày tạo
+                                    Loại hình
                                 </th>
                                 <th>
-                                    Trạng thái phiếu
+                                    Công ty
                                 </th>
                                 <th>
-                                    Trạng thái yêu cầu
+                                    Ngày đăng ký
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
-                                @foreach ($suaToKhais as $index => $suaToKhai)
+                                @foreach ($xuatHangs->skip(1) as $index => $xuatHang)
                                     <tr class="clickable-row"
-                                        onclick="window.location='{{ route('xuat-hang.xem-yeu-cau-sua', [$suaToKhai->so_to_khai_xuat, $suaToKhai->ma_yeu_cau]) }}'">
+                                        onclick="window.location='{{ route('xuat-hang.xem-sua-xuat-hang-theo-lan', $xuatHang->ma_yeu_cau) }}'">
                                         <td>{{ $index + 1 }}</td>
-                                        <td>{{ $suaToKhai->so_to_khai_xuat }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($suaToKhai->ngay_tao)->format('d-m-Y') }}</td>
-                                        @if ($suaToKhai->trang_thai_phieu_xuat == '1')
-                                            <td class="text-primary">{{ $suaToKhai->trang_thai_phieu_xuat }}</td>
-                                        @elseif($suaToKhai->trang_thai_phieu_xuat == '2')
-                                            <td class="text-success">{{ $suaToKhai->trang_thai_phieu_xuat }}</td>
-                                        @else
-                                            <td class="text-success">{{ $suaToKhai->trang_thai_phieu_xuat }}</td>
-                                        @endif                                        
-                                      @if ($suaToKhai->trang_thai == '1')
-                                            <td class="text-primary">{{ $suaToKhai->trang_thai }}</td>
-                                        @elseif($suaToKhai->trang_thai == '2')
-                                            <td class="text-success">{{ $suaToKhai->trang_thai }}</td>
-                                        @else
-                                            <td class="text-success">{{ $suaToKhai->trang_thai }}</td>
-                                        @endif
-
+                                        <td>{{ $xuatHang->so_to_khai_xuat }}</td>
+                                        <td>{{ $xuatHang->ma_loai_hinh }}</td>
+                                        <td>{{ $xuatHang->doanhNghiep->ten_doanh_nghiep ?? '' }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -79,7 +75,18 @@
                     "sEmptyTable": "Không có dữ liệu",
                 },
                 stateSave: true,
+                initComplete: function() {
+                    $('.dataTables_filter input[type="search"]').css({
+                        width: '350px',
+                        display: 'inline-block',
+                        height: '40px'
+                    });
+                },
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
+                columnDefs: [{
+                    orderable: false,
+                    targets: -1
+                }],
                 buttons: [{
                         extend: 'excel',
                         exportOptions: {

@@ -29,33 +29,7 @@ class YeuCauKiemTraController extends Controller
 {
     public function danhSachYeuCauKiemTra()
     {
-        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-            $data = YeuCauKiemTra::join('doanh_nghiep', 'yeu_cau_kiem_tra.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra.ma_yeu_cau', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau')
-                ->select(
-                    'doanh_nghiep.*',
-                    'yeu_cau_kiem_tra.*',
-                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
-
-                )
-                ->groupBy('yeu_cau_kiem_tra.ma_yeu_cau')
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-            $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-            $data = YeuCauKiemTra::join('doanh_nghiep', 'yeu_cau_kiem_tra.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra.ma_yeu_cau', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau')
-                ->where('yeu_cau_kiem_tra.ma_doanh_nghiep', $maDoanhNghiep)
-                ->select(
-                    'doanh_nghiep.*',
-                    'yeu_cau_kiem_tra.*',
-                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
-                )
-                ->groupBy('yeu_cau_kiem_tra.ma_yeu_cau')
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        }
-        return view('quan-ly-kho.yeu-cau-kiem-tra.danh-sach-yeu-cau-kiem-tra', data: compact(var_name: 'data'));
+        return view('quan-ly-kho.yeu-cau-kiem-tra.danh-sach-yeu-cau-kiem-tra');
     }
 
     public function themYeuCauKiemTra()

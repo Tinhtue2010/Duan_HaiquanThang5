@@ -78,8 +78,18 @@
                                 <div class="form-group">
                                     <form action="{{ route('export.tiep-nhan-hang-ngay') }}" method="GET">
                                         <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
-                                        <input type="text" id="datepicker15" class="form-control"
-                                            placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
+                                                <input type="text" id="datepicker15" class="form-control"
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
+                                                <input type="text" id="datepicker16" class="form-control"
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                            </div>
+                                        </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                                 cáo</button>
                                         </center>
@@ -153,8 +163,8 @@
                                             @endforeach
                                         </select>
                                         <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
-                                        <input type="text" id="datepicker2" class="form-control" placeholder="dd/mm/yyyy"
-                                            name="tu_ngay" readonly>
+                                        <input type="text" id="datepicker2" class="form-control"
+                                            placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                                 cáo</button></center>
                                     </form>
@@ -471,8 +481,7 @@
                                 <div class="form-group">
                                     <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET">
                                         <label class="label-text mb-1 mt-2" for="">Tên tàu</label>
-                                        <select class="form-control" id="tau-dropdown-search"
-                                            name="phuong_tien_vt_nhap">
+                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap">
                                             <option></option>
                                             @foreach ($phuongTienVTNhaps as $phuongTienVTNhap)
                                                 <option value="{{ $phuongTienVTNhap }}">

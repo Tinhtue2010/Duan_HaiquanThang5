@@ -18,6 +18,7 @@ use App\Models\NhapHang;
 use App\Models\XuatHang;
 use App\Models\YeuCauChuyenContainer;
 use App\Models\YeuCauKiemTra;
+use App\Models\YeuCauNiemPhongChiTietSua;
 use App\Models\YeuCauTauCont;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -32,28 +33,7 @@ class YeuCauNiemPhongController extends Controller
 {
     public function danhSachYeuCauNiemPhong()
     {
-        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-            $data = YeuCauNiemPhong::join('doanh_nghiep', 'yeu_cau_niem_phong.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->select(
-                    'doanh_nghiep.*',
-                    'yeu_cau_niem_phong.*',
-                )
-                ->distinct()  // Ensure unique rows
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-            $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-            $data = YeuCauNiemPhong::join('doanh_nghiep', 'yeu_cau_niem_phong.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->where('yeu_cau_niem_phong.ma_doanh_nghiep', $maDoanhNghiep)
-                ->select(
-                    'doanh_nghiep.*',
-                    'yeu_cau_niem_phong.*',
-                )
-                ->distinct()  // Ensure unique rows
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        }
-        return view('quan-ly-kho.yeu-cau-niem-phong.danh-sach-yeu-cau-niem-phong', data: compact(var_name: 'data'));
+        return view('quan-ly-kho.yeu-cau-niem-phong.danh-sach-yeu-cau-niem-phong');
     }
 
     public function themYeuCauNiemPhong()
@@ -145,17 +125,31 @@ class YeuCauNiemPhongController extends Controller
     {
         try {
             DB::beginTransaction();
-            YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
-            // Decode the JSON data from the form
+            $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
             $rowsData = json_decode($request->rows_data, true);
-            foreach ($rowsData as $row) {
-                $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
-                YeuCauNiemPhongChiTiet::insert([
-                    'so_container' => $row['so_container'],
-                    'so_seal_cu' => $niemPhong->so_seal ?? '',
-                    'so_seal_moi' => '',
-                    'ma_yeu_cau' => $request->ma_yeu_cau,
-                ]);
+
+            if ($yeuCau->trang_thai == 1) {
+                YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
+                foreach ($rowsData as $row) {
+                    $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
+                    YeuCauNiemPhongChiTiet::insert([
+                        'so_container' => $row['so_container'],
+                        'so_seal_cu' => $niemPhong->so_seal ?? '',
+                        'so_seal_moi' => '',
+                        'ma_yeu_cau' => $request->ma_yeu_cau,
+                    ]);
+                }
+            } else {
+                $yeuCau->trang_thai = '3';
+                foreach ($rowsData as $row) {
+                    $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
+                    YeuCauNiemPhongChiTietSua::insert([
+                        'so_container' => $row['so_container'],
+                        'so_seal_cu' => $niemPhong->so_seal ?? '',
+                        'so_seal_moi' => '',
+                        'ma_yeu_cau' => $request->ma_yeu_cau,
+                    ]);
+                }
             }
 
             DB::commit();
@@ -168,6 +162,18 @@ class YeuCauNiemPhongController extends Controller
             return redirect()->back();
         }
     }
+
+    public function xemSuaYeuCau(Request $request)
+    {
+        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
+        $chiTietYeuCaus = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+        $chiTietSuaYeuCaus = YeuCauNiemPhongChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+        $doanhNghiep = DoanhNghiep::find($yeuCau->ma_doanh_nghiep);
+        return view('quan-ly-kho.yeu-cau-niem-phong.xem-sua-yeu-cau-niem-phong', compact('yeuCau', 'chiTietYeuCaus', 'chiTietSuaYeuCaus', 'doanhNghiep'));
+    }
+
+    
+
     public function duyetYeuCauNiemPhong(Request $request)
     {
         $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
@@ -601,7 +607,6 @@ class YeuCauNiemPhongController extends Controller
             ->orderBy('container.so_container')
             ->get()
             ->toArray();
-
 
         return response()->json(['containers' => $soContainers]);
     }

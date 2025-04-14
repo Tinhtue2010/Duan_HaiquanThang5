@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Providers;
+use Illuminate\Auth\Events\Login;
+use App\Listeners\LogDeviceLogin;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -21,4 +23,9 @@ class AppServiceProvider extends ServiceProvider
     {
         //
     }
+    protected $listen = [
+        Login::class => [
+            LogDeviceLogin::class,
+        ],
+    ];
 }

@@ -97,7 +97,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     $result[] = [
                         $stt++,
                         $time,
-                        $xuatHang->ten_hang,
+                        $xuatHang->ten_hang ?? '',
                         $xuatHang->so_luong_xuat == 0 ? '0' : $xuatHang->so_luong_xuat,
                         $hangHoaArr[$theoDoiHangHoa->ma_hang] == 0 ? '0' : $hangHoaArr[$theoDoiHangHoa->ma_hang],
                         $theoDoiHangHoa->phuong_tien_cho_hang ?? '',
@@ -129,7 +129,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
             $result[] = [
                 $stt++,
                 $time,
-                $hangHoa->ten_hang,
+                $hangHoa->ten_hang ?? '',
                 $theoDoiHangHoa->so_luong_xuat == 0 ? '0' : $theoDoiHangHoa->so_luong_xuat,
                 $theoDoiHangHoa->so_luong_ton == 0 ? '0' : $theoDoiHangHoa->so_luong_ton,
                 $theoDoiHangHoa->phuong_tien_cho_hang ?? '',
@@ -236,7 +236,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     ->sum('hang_hoa.so_luong_khai_bao');
                 $this->applyRichText($sheet, 'A6', 'Tên doanh nghiệp: ', $this->nhapHang->doanhNghiep->ten_doanh_nghiep);
                 $this->applyRichText($sheet, 'A7', 'Số tờ khai: ', $this->nhapHang->so_to_khai_nhap, '; ngày đăng ký: ', date('d-m-Y', strtotime($this->nhapHang->ngay_dang_ky)),  ' tại ', $this->nhapHang->haiQuan->ten_hai_quan);
-                $this->applyRichText($sheet, 'A8', 'Tên hàng hóa: ', $hangHoaLonNhat->ten_hang);
+                $this->applyRichText($sheet, 'A8', 'Tên hàng hóa: ', $hangHoaLonNhat->ten_hang ?? '');
                 $this->applyRichText($sheet, 'A9', 'Số lượng: ', (string)$tongSoLuongs, '; Đơn vị tính: ', $hangHoaLonNhat->don_vi_tinh, '; Xuất xứ: ', $hangHoaLonNhat->xuat_xu);
                 $this->applyRichText($sheet, 'A10', 'Số container: ', $hangHoaLonNhat->so_container, '; Số tàu: ', $this->nhapHang->phuong_tien_vt_nhap, '; Số seal: ', $hangHoaLonNhat->so_seal);
 

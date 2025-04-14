@@ -134,6 +134,7 @@
                                     class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2 reset-input" id="ten_hang" maxlength="255"
                                     name="ten_hang" placeholder="Nhập tên hàng hóa" required>
+                                <input hidden type="text" id="ma_hang"name="ma_hang" value = 0>
                             </div>
                         </div>
                         <div class="row">
@@ -227,6 +228,7 @@
                 <thead style="vertical-align: middle; text-align: center;">
                     <tr>
                         <th>STT</th>
+                        <th hidden>Mã hàng</th>
                         <th>Tên hàng</th>
                         <th>Loại hàng</th>
                         <th>Xuất xứ</th>
@@ -302,6 +304,7 @@
 
             // Populate the rowsData array
             rowsData = hangHoaRows.map(row => ({
+                ma_hang: row.ma_hang,
                 ten_hang: row.ten_hang,
                 loai_hang: row.loai_hang,
                 xuat_xu: row.xuat_xu,
@@ -320,6 +323,7 @@
                     const newRow = `
                         <tr data-index="${index}">
                             <td>${index + 1}</td>
+                            <td hidden>${row.ma_hang}</td>
                             <td>${row.ten_hang}</td>
                             <td>${row.loai_hang}</td>
                             <td>${row.xuat_xu}</td>
@@ -339,6 +343,7 @@
             }
 
             $("#addRowButton").click(function() {
+                const ma_hang = $("#ma_hang").val();
                 const ten_hang = $("#ten_hang").val();
                 const loai_hang = $("#loai-hang-dropdown-search").val();
                 const xuat_xu = $("#xuat-xu-dropdown-search").val();
@@ -396,6 +401,7 @@
 
                 if (isValid) {
                     rowsData.push({
+                        ma_hang,
                         ten_hang,
                         loai_hang,
                         xuat_xu,
@@ -407,6 +413,7 @@
                     });
                     displayRows();
                     $(".reset-input").val('');
+                    $("#ma_hang").val(0);
                     $("#don-vi-tinh-dropdown-search").val('').trigger("change");
                     $("#xuat-xu-dropdown-search").val('').trigger("change");
                     $("#loai-hang-dropdown-search").val('').trigger('change');
@@ -417,6 +424,7 @@
             $(document).on("click", ".editRowButton", function() {
                 const rowIndex = $(this).closest("tr").data("index");
                 const rowData = rowsData[rowIndex];
+                $("#ma_hang").val(rowData.ma_hang);
                 $("#ten_hang").val(rowData.ten_hang);
                 $("#loai_hang").val(rowData.loai_hang);
                 $("#so_luong_khai_bao").val(rowData.so_luong_khai_bao);
@@ -484,14 +492,15 @@
 
                 // Map the table data to an array of objects
                 const rowsData = Array.from(tableRows).map(row => ({
-                    ten_hang: row.cells[1].textContent,
-                    loai_hang: row.cells[2].textContent,
-                    xuat_xu: row.cells[3].textContent,
-                    so_luong: row.cells[4].textContent,
-                    don_vi_tinh: row.cells[5].textContent,
-                    don_gia: row.cells[6].textContent,
-                    tri_gia: row.cells[7].textContent,
-                    so_container: row.cells[8].textContent,
+                    ma_hang: row.cells[1].textContent,
+                    ten_hang: row.cells[2].textContent,
+                    loai_hang: row.cells[3].textContent,
+                    xuat_xu: row.cells[4].textContent,
+                    so_luong: row.cells[5].textContent,
+                    don_vi_tinh: row.cells[6].textContent,
+                    don_gia: row.cells[7].textContent,
+                    tri_gia: row.cells[8].textContent,
+                    so_container: row.cells[9].textContent,
                 }));
 
                 // Set values for hidden inputs

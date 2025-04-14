@@ -12,6 +12,7 @@ use App\Models\HangTrongCont;
 use App\Models\NhapHang;
 use App\Models\NiemPhong;
 use App\Models\Seal;
+use App\Models\SoLuongChuyenTruoc;
 use App\Models\TienTrinh;
 use App\Models\YeuCauTauCont;
 use App\Models\YeuCauSua;
@@ -19,6 +20,7 @@ use App\Models\TheoDoiHangHoa;
 use App\Models\TheoDoiTruLui;
 use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\YCTauContMaHangContMoi;
+use App\Models\YeuCauChuyenContainer;
 use App\Models\YeuCauContainerChiTiet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,41 +93,13 @@ class YeuCauTauContController extends Controller
                         ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
                         : '<span class="text-muted">Trạng thái không xác định</span>';
                 })
-                ->rawColumns(['trang_thai', 'action']) // Allows HTML in status & action columns
+                ->rawColumns(['trang_thai', 'action'])
                 ->make(true);
         }
     }
     public function danhSachYeuCauTauCont()
     {
-        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-            $data = YeuCauTauCont::join('nhap_hang', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
-                ->join('doanh_nghiep', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
-                ->select(
-                    'doanh_nghiep.*',
-                    'yeu_cau_tau_cont.*',
-                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
-                )
-                ->groupBy('yeu_cau_tau_cont.ma_yeu_cau')
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-            $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-            $data = YeuCauTauCont::join('nhap_hang', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
-                ->join('doanh_nghiep', 'yeu_cau_tau_cont.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
-                ->where('yeu_cau_tau_cont.ma_doanh_nghiep', $maDoanhNghiep)
-                ->select(
-                    'doanh_nghiep.*',
-                    'yeu_cau_tau_cont.*',
-                    DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
-
-                )
-                ->groupBy('yeu_cau_tau_cont.ma_yeu_cau')
-                ->orderBy('ma_yeu_cau', 'desc')
-                ->get();
-        }
-        return view('quan-ly-kho.yeu-cau-tau-cont.danh-sach-yeu-cau-tau-cont', data: compact(var_name: 'data'));
+        return view('quan-ly-kho.yeu-cau-tau-cont.danh-sach-yeu-cau-tau-cont');
     }
 
     public function themYeuCauTauCont()
@@ -196,19 +170,27 @@ class YeuCauTauContController extends Controller
                 })
                 ->values();
             foreach ($groupedData as $row) {
+
+
+
                 $so_luong_ton_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->sum('hang_trong_cont.so_luong');
 
+                // $so_luong_ton_cont_moi += $this->getSoLuongDangChuyen($row['so_container_dich']);
+
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->distinct()
-                    ->pluck('nhap_hang.so_to_khai_nhap')
-                    ->implode('</br>');
+                    ->pluck('nhap_hang.so_to_khai_nhap');
+
+                // $so_to_khai_dang_chuyen = $this->getSoToKhaiDangChuyen($row['so_container_dich']);
+                // $so_to_khai_cont_moi = $so_to_khai_cont_moi->merge($so_to_khai_dang_chuyen)->unique()->implode('</br>');
+
                 $so_to_khai_cont_moi .= ($so_to_khai_cont_moi ? '</br>' : '') . $row['so_to_khai_nhap'];
 
                 $chiTietYeuCau = YeuCauTauContChiTiet::create([
@@ -248,6 +230,83 @@ class YeuCauTauContController extends Controller
             return redirect()->back();
         }
     }
+    // public function getYeuCauDangChuyenTauCont($so_container)
+    // {
+    //     $so_to_khai_tau_conts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_tau_cont.trang_thai', 1)
+    //         ->where('yeu_cau_tau_cont_chi_tiet.so_container_dich', $so_container)
+    //         ->get();
+    //     foreach ($so_to_khai_tau_conts as $so_to_khai_tau_cont) {
+    //         SoLuongChuyenTruoc::create([
+    //             'ma_yeu_cau' => $so_to_khai_tau_cont->ma_yeu_cau,
+    //             'ma_chi_tiet' => $so_to_khai_tau_cont->ma_chi_tiet,
+    //             'cong_viec' => '2',
+    //         ]);
+    //     }
+    // }
+    // public function getYeuCauDangChuyenCont($so_container)
+    // {
+    //     $so_to_khai_containers = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_chuyen_container.trang_thai', 1)
+    //         ->where('yeu_cau_container_chi_tiet.so_container_dich', $so_container)
+    //         ->get();
+    //     foreach ($so_to_khai_containers as $so_to_khai_container) {
+    //         SoLuongChuyenTruoc::create([
+    //             'ma_yeu_cau' => $so_to_khai_container->ma_yeu_cau,
+    //             'ma_chi_tiet' => $so_to_khai_container->ma_chi_tiet,
+    //             'cong_viec' => '3',
+    //         ]);
+    //     }
+    // }
+
+
+    // public function getSoToKhaiDangChuyen($so_container)
+    // {
+    //     $so_to_khai_tau_conts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_tau_cont.trang_thai', 1)
+    //         ->where('yeu_cau_tau_cont_chi_tiet.so_container_dich', $so_container)
+    //         ->pluck('yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap');
+    //     $so_to_khai_containers = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_chuyen_container.trang_thai', 1)
+    //         ->where('yeu_cau_container_chi_tiet.so_container_dich', $so_container)
+    //         ->pluck('yeu_cau_container_chi_tiet.so_to_khai_nhap');
+    //     return $so_to_khai_tau_conts->merge($so_to_khai_containers)->unique()->values();
+    // }
+    // public function xoaYeuCauDangChuyen($ma_yeu_cau, $yeuCauChiTiet)
+    // {
+
+    //     $this->getSoLuongDangChuyen();
+    //     $so_container = $yeuCauChiTiet->so_container_dich;
+    //     $yeuCauTauContChiTiets = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_tau_cont.trang_thai', 1)
+    //         ->where('yeu_cau_tau_cont_chi_tiet.so_container_dich', $so_container)
+    //         ->get();
+
+    //     foreach ($yeuCauTauContChiTiets as $yeuCauTauContChiTiet) {
+            
+    //     }
+
+    //     SoLuongChuyenTruoc::where('cong_viec', '2')
+    //         ->where('ma_chi_tiet', $yeuCauChiTiet->ma_chi_tiet)
+    //         ->delete();
+    // }
+
+    // public function getSoLuongDangChuyen($so_container)
+    // {
+    //     $so_luong_dang_chuyen_tau_cont = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_tau_cont.trang_thai', 1)
+    //         ->where('yeu_cau_tau_cont_chi_tiet.so_container_dich', $so_container)
+    //         ->sum('yeu_cau_tau_cont_chi_tiet.so_luong_chuyen');
+
+    //     $so_luong_dang_chuyen_container = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_chuyen_container.trang_thai', 1)
+    //         ->where('yeu_cau_container_chi_tiet.so_container_dich', $so_container)
+    //         ->sum('yeu_cau_container_chi_tiet.so_luong_chuyen');
+
+    //     return $so_luong_dang_chuyen_tau_cont + $so_luong_dang_chuyen_container;
+    // }
+
+
     public function xuLyThemChiTietYeuCau($request, $yeuCauSua, $yeuCau)
     {
         $rowsData = json_decode($request->rows_data, true);
@@ -268,6 +327,8 @@ class YeuCauTauContController extends Controller
             })
             ->values();
         foreach ($groupedData as $row) {
+            // $this->getYeuCauDangChuyenTauCont($row['so_container_dich']);
+            // $this->getYeuCauDangChuyenCont($row['so_container_dich']);
             $so_luong_ton_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
@@ -495,7 +556,6 @@ class YeuCauTauContController extends Controller
 
     public function suaYeuCauTauContSubmit(Request $request)
     {
-
         try {
             DB::beginTransaction();
             $yeuCauTauCont = YeuCauTauCont::find($request->ma_yeu_cau);
@@ -910,7 +970,7 @@ class YeuCauTauContController extends Controller
             DB::beginTransaction();
 
             $yeuCau = YeuCauTauCont::find($request->ma_yeu_cau);
-            if ($yeuCau) {
+            if ($yeuCau->trang_thai != 2) {
                 $soContainerDich = YeuCauTauContChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_container_dich')->toArray();
                 $soContainers = array_unique($soContainerDich);
                 $congChuc = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
@@ -987,6 +1047,10 @@ class YeuCauTauContController extends Controller
                 } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
                     $this->huyYeuCauTauContFunc($request->ma_yeu_cau, $request->ghi_chu, "Doanh nghiệp", '');
                 }
+                // $yeuCauChiTiets = YeuCauTauContChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+                // foreach ($yeuCauChiTiets as $yeuCauChiTiet) {
+                //     $this->xoaYeuCauDangChuyen($request->ma_yeu_cau, $yeuCauChiTiet);
+                // }
             } elseif ($yeuCau->trang_thai == "2") {
                 $this->huyYeuCauDaDuyet($request);
             } else {

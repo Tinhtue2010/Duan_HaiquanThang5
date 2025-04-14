@@ -126,16 +126,29 @@
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $yeuCau->ma_doanh_nghiep)
                                     <center>
-                                        <div class="col-6">
-                                            <a href="#">
-                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
-                                                    class="btn btn-danger px-4">
-                                                    <img class="side-bar-icon"
-                                                        src="{{ asset('images/icons/cancel.png') }}">
-                                                    Yêu cầu hủy
-                                                </button>
-                                            </a>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <a
+                                                    href="{{ route('quan-ly-kho.sua-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                                                    <button class="btn btn-warning px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Sửa yêu cầu
+                                                    </button>
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Yêu cầu hủy
+                                                    </button>
+                                                </a>
+                                            </div>
                                         </div>
+
                                     </center>
                                 @endif
                                 <table class="table table-bordered mt-5" id="">

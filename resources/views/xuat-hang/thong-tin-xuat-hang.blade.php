@@ -76,6 +76,9 @@
                             href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
                             <button class="btn btn-success float-end me-1">In phiếu xuất</button>
                         </a>
+                        <a href="{{ route('xuat-hang.lich-su-sua-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
+                            <button class="btn btn-primary float-end me-1">Các lần sửa đổi</button>
+                        </a>
                         {{-- <a
                             href="{{ route('xuat-hang.lich-su-sua-phieu', ['so_to_khai_nhap' => $xuatHang->so_to_khai_nhap]) }}">
                             <button class="btn btn-primary float-end me-1">Lịch sử sửa phiếu</button>

@@ -41,7 +41,7 @@
                     <h2 class="text-center text-dark"> Phương tiện: {{ $xuatCanh->PTVTXuatCanh->ten_phuong_tien_vt }} -
                         Ngày
                         {{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d-m-Y') }}</h2>
-                    <hr/>
+                    <hr />
                     <h2 class="text-center mt-3">Tờ khai xuất cảnh ban đầu</h2>
                     <h2 class="text-center text-dark">
                         Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep }}
@@ -65,15 +65,25 @@
                         <tbody>
                             @php $totalSoLuong = 0; @endphp
                             @foreach ($chiTiets as $index => $chiTiet)
-                                @php $totalSoLuong += $chiTiet->tong_so_luong_xuat; @endphp
+                                @php
+                                    $totalSoLuong += $chiTiet->tong_so_luong_xuat;
+                                    $matched = $chiTietSuas->firstWhere('so_to_khai_xuat', $chiTiet->so_to_khai_xuat);
+                                    $isRemoved = !$matched;
+                                @endphp
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $chiTiet->xuatHang->so_to_khai_xuat }}</td>
-                                    <td>{{ $chiTiet->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
-                                    <td>{{ $chiTiet->xuatHang->doanhNghiep->chuHang->ten_chu_hang }}</td>
-                                    <td>{{ $chiTiet->xuatHang->ma_loai_hinh }}</td>
-                                    <td>{{ $chiTiet->tong_so_luong_xuat }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($chiTiet->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">{{ $index + 1 }}</td>
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        {{ $chiTiet->xuatHang->so_to_khai_xuat }}</td>
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        {{ $chiTiet->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        {{ $chiTiet->xuatHang->doanhNghiep->chuHang->ten_chu_hang ?? '' }}</td>
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        {{ $chiTiet->xuatHang->ma_loai_hinh }}</td>
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">{{ $chiTiet->tong_so_luong_xuat }}
+                                    </td>
+                                    <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        {{ \Carbon\Carbon::parse($chiTiet->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -89,10 +99,14 @@
                         <div class="custom-line mb-2"></div>
                     </center>
                     <h2 class="text-center">Tờ khai xuất cảnh sau khi sửa</h2>
-                    <h2 class="text-center text-dark">
+                    <h2
+                        class="text-center {{ $xuatCanh->ma_doanh_nghiep_chon !== $xuatCanhSua->ma_doanh_nghiep_chon ? 'text-warning' : 'text-dark' }}">
                         Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep }}
                     </h2>
-                    <h2 class="text-center text-dark"> Thuyền trưởng: {{ $xuatCanh->ten_thuyen_truong }}</h2>
+                    <h2
+                        class="text-center {{ $xuatCanh->ten_thuyen_truong !== $xuatCanhSua->ten_thuyen_truong ? 'text-warning' : 'text-dark' }}">
+                        Thuyền trưởng: {{ $xuatCanhSua->ten_thuyen_truong }}
+                    </h2>
                     <hr />
                     <h3 class="text-center text-dark">Thông tin phiếu xuất</h3>
                     <table class="table table-bordered mt-2 fs-6" id="displayTable"
@@ -111,15 +125,22 @@
                         <tbody>
                             @php $totalSoLuongSua = 0; @endphp
                             @foreach ($chiTietSuas as $index => $chiTietSua)
-                                @php $totalSoLuongSua += $chiTietSua->tong_so_luong_xuat; @endphp
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $chiTietSua->xuatHang->so_to_khai_xuat }}</td>
-                                    <td>{{ $chiTietSua->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
-                                    <td>{{ $chiTietSua->xuatHang->doanhNghiep->chuHang->ten_chu_hang }}</td>
-                                    <td>{{ $chiTietSua->xuatHang->ma_loai_hinh }}</td>
-                                    <td>{{ $chiTietSua->tong_so_luong_xuat }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($chiTietSua->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
+                                @php
+                                    $totalSoLuongSua += $chiTietSua->tong_so_luong_xuat;
+
+                                    // Make sure this comparison matches the actual structure of $chiTiets
+                                    $original = $chiTiets->firstWhere('so_to_khai_xuat', $chiTietSua->so_to_khai_xuat);
+                                    $isNew = !$original;
+                                    $rowClass = $isNew ? 'text-success' : '';
+                                @endphp
+                                <tr >
+                                    <td class="text-success">{{ $index + 1 }}</td>
+                                    <td class="text-success">{{ $chiTietSua->so_to_khai_xuat }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->xuatHang->doanhNghiep->chuHang->ten_chu_hang ?? '' }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->xuatHang->ma_loai_hinh }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->tong_so_luong_xuat }}</td>
+                                    <td class="{{ $rowClass }}">{{ \Carbon\Carbon::parse($chiTietSua->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -129,6 +150,7 @@
                                 <td colspan="2"></td>
                             </tr>
                         </tbody>
+
                     </table>
                 </div>
             </div>
@@ -141,7 +163,16 @@
                                 DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                     $xuatCanh->ma_doanh_nghiep)
                             <div class="row">
-                                <center>
+                                <div class="col-6">
+                                    <a
+                                        href="{{ route('xuat-canh.sua-to-khai-xc', ['ma_xuat_canh' => $xuatCanh->ma_xuat_canh]) }}">
+                                        <button class="btn btn-warning px-4">
+                                            <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                            Tiếp tục sửa
+                                        </button>
+                                    </a>
+                                </div>
+                                <div class="col-6">
                                     <a href="#">
                                         <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
                                             class="btn btn-danger px-4">
@@ -149,7 +180,7 @@
                                             Hủy yêu cầu sửa
                                         </button>
                                     </a>
-                                </center>
+                                </div>
                             </div>
                         @endif
                         @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_canh == 1)

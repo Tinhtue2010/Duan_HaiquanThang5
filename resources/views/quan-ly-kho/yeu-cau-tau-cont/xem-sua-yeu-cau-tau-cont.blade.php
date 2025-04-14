@@ -197,6 +197,7 @@
             </div>
         </div>
     </div>
+    
     {{-- Modal chọn container --}}
     <div class="modal fade" id="thongTinModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">

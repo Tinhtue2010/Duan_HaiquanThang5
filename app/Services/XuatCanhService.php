@@ -81,7 +81,7 @@ class XuatCanhService
     public function getXuatHangDaDuyet($so_ptvt_xuat_canh)
     {
         return XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-            ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
+            ->leftJoin('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
@@ -127,7 +127,7 @@ class XuatCanhService
             ->where('xuat_canh.ma_xuat_canh', $ma_xuat_canh)
             ->pluck('so_to_khai_xuat')->unique()->values();
         $xuatHang1 = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-            ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
+            ->leftJoin('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
@@ -167,7 +167,7 @@ class XuatCanhService
             );
 
         $xuatHang2 = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-            ->join('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
+            ->leftJoin('chu_hang', 'chu_hang.ma_chu_hang', 'doanh_nghiep.ma_chu_hang')
             ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
             ->whereIn('xuat_hang.so_to_khai_xuat', $chiTiets)
             ->select(
@@ -216,15 +216,25 @@ class XuatCanhService
     public function themXuatCanhSua($request, $xuatCanh)
     {
         $doanh_nghiep = $this->getDoanhNghiepHienTai();
-        return XuatCanhSua::create([
-            'ma_doanh_nghiep' => $doanh_nghiep->ma_doanh_nghiep,
-            'so_ptvt_xuat_canh' => $xuatCanh->so_ptvt_xuat_canh,
-            'ma_doanh_nghiep_chon' => $request->ma_doanh_nghiep_chon,
-            'ten_thuyen_truong' => $request->ten_thuyen_truong,
-            'ngay_dang_ky' => now(),
-            'trang_thai' => "1",
-            'ma_xuat_canh' => $request->ma_xuat_canh,
-        ]);
+        if ($xuatCanh->trang_thai == '4') {
+            $xuatCanhSua =  XuatCanhSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)->orderBy('ma_yeu_cau', 'desc')->first();
+            $xuatCanhSua->update([
+                'so_ptvt_xuat_canh' => $xuatCanh->so_ptvt_xuat_canh,
+                'ma_doanh_nghiep_chon' => $request->ma_doanh_nghiep_chon,
+                'ten_thuyen_truong' => $request->ten_thuyen_truong,
+            ]);
+        } else {
+            $xuatCanhSua = XuatCanhSua::create([
+                'ma_doanh_nghiep' => $doanh_nghiep->ma_doanh_nghiep,
+                'so_ptvt_xuat_canh' => $xuatCanh->so_ptvt_xuat_canh,
+                'ma_doanh_nghiep_chon' => $request->ma_doanh_nghiep_chon,
+                'ten_thuyen_truong' => $request->ten_thuyen_truong,
+                'ngay_dang_ky' => now(),
+                'trang_thai' => "1",
+                'ma_xuat_canh' => $request->ma_xuat_canh,
+            ]);
+        }
+        return $xuatCanhSua;
     }
     public function themChiTietXuatCanh($ma_xuat_canh, $so_to_khai_xuat)
     {
@@ -257,7 +267,7 @@ class XuatCanhService
                 'ten_thuyen_truong' => $xuatCanhSua->ten_thuyen_truong,
             ]);
         }
-        $xuatCanhSua->delete();
+        // $xuatCanhSua->delete();
 
         $xuatCanh = XuatCanh::find($xuatCanhSua->ma_xuat_canh);
         $this->quayNguocXuatCanh($xuatCanhSua->ma_xuat_canh);
@@ -277,9 +287,9 @@ class XuatCanhService
             $xuatHang->save();
 
         }
-
-        $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
-            ->delete();
+ 
+        // $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
+        //     ->delete();
     }
 
 

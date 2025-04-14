@@ -206,6 +206,36 @@ class QuanLyKhoController extends Controller
     //         return response()->json(['message' => 'An error occurred'], 500);
     //     }
     // }
+    // public function getSoToKhaiDangChuyen($so_container)
+    // {
+    //     $so_to_khai_tau_conts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_tau_cont.trang_thai', 1)
+    //         ->where('yeu_cau_tau_cont_chi_tiet.so_container_dich', $so_container)
+    //         ->pluck('yeu_cau_tau_cont_chi_tiet.so_to_khai_nhap');
+    //     $so_to_khai_containers = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_chuyen_container.trang_thai', 1)
+    //         ->where('yeu_cau_container_chi_tiet.so_container_dich', $so_container)
+    //         ->pluck('yeu_cau_container_chi_tiet.so_to_khai_nhap');
+    //     return $so_to_khai_tau_conts->merge($so_to_khai_containers)->unique()->values();
+
+    // }
+
+    // public function getSoLuongDangChuyen($so_container)
+    // {
+    //     $so_luong_dang_chuyen_tau_cont = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_tau_cont.trang_thai', 1)
+    //         ->where('yeu_cau_tau_cont_chi_tiet.so_container_dich', $so_container)
+    //         ->sum('yeu_cau_tau_cont_chi_tiet.so_luong_chuyen');
+
+    //     $so_luong_dang_chuyen_container = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
+    //         ->where('yeu_cau_chuyen_container.trang_thai', 1)
+    //         ->where('yeu_cau_container_chi_tiet.so_container_dich', $so_container)
+    //         ->sum('yeu_cau_container_chi_tiet.so_luong_chuyen');
+
+    //     return $so_luong_dang_chuyen_tau_cont + $so_luong_dang_chuyen_container;
+    // }
+
+
     public function getToKhaiTrongCont(Request $request)
     {
         $rowsData = json_decode($request->input('rows_data'), true);
@@ -223,13 +253,19 @@ class QuanLyKhoController extends Controller
                     ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->sum('hang_trong_cont.so_luong');
 
+                // $so_luong_ton_cont_moi += $this->getSoLuongDangChuyen($firstItem['so_container_dich']);
+
+
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->distinct()
-                    ->pluck('nhap_hang.so_to_khai_nhap')
-                    ->implode('</br>');
+                    ->pluck('nhap_hang.so_to_khai_nhap');
+
+                // $so_to_khai_dang_chuyen = $this->getSoToKhaiDangChuyen($firstItem['so_container_dich']);
+                // $so_to_khai_cont_moi = $so_to_khai_cont_moi->merge($so_to_khai_dang_chuyen)->unique()->implode('</br>');
+
                 $so_to_khai_cont_moi .= ($so_to_khai_cont_moi ? '</br>' : '') . $firstItem['so_to_khai_nhap'];
 
                 return [

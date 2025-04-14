@@ -294,10 +294,12 @@ class BaoCaoController extends Controller
     public function tiepNhanHangNgay(Request $request)
     {
         $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
+        $den_ngay_name = $this->formatDateToDMY($request->den_ngay);
         $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
+        $den_ngay = $this->formatDateToYMD($request->den_ngay);
 
-        $fileName = 'Báo cáo tiếp nhận hằng ngày hôm ' . $tu_ngay_name . '.xlsx';
-        return Excel::download(new BaoCaoTiepNhanHangNgayExport($tu_ngay), $fileName);
+        $fileName = 'Báo cáo tiếp nhận hằng ngày từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
+        return Excel::download(new BaoCaoTiepNhanHangNgayExport($tu_ngay,$den_ngay), $fileName);
     }
     public function chiTietXNKTrongNgay(Request $request)
     {

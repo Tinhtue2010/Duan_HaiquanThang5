@@ -66,18 +66,40 @@
                             </thead>
                             <tbody>
                                 @foreach ($hangHoaRows as $index => $hangHoa)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $hangHoa->so_to_khai_nhap }}</td>
-                                        <td>{{ $hangHoa->ten_hang }}</td>
-                                        <td>{{ $hangHoa->xuat_xu }}</td>
-                                        <td>{{ $hangHoa->so_luong_xuat }}</td>
-                                        <td>{{ $hangHoa->don_vi_tinh }}</td>
-                                        <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
-                                        <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
-                                        <td>{{ $hangHoa->so_container }}</td>
+                                    @php
+                                        $matched = $suaHangHoaRows->firstWhere('ma_hang_cont', $hangHoa->ma_hang_cont);
+                                        $isRemoved = !$matched;
+                                    @endphp
+                                    <tr class="">
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">{{ $index + 1 }}</td>
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
+                                        </td>
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ $hangHoa->ten_hang }}
+                                        </td>
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ $hangHoa->xuat_xu }}
+                                        </td>
+                                        <td
+                                            class="{{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning' : '' }} {{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ $hangHoa->so_luong_xuat }}
+                                        </td>
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ $hangHoa->don_vi_tinh }}
+                                        </td>
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ number_format($hangHoa->don_gia, 2) }}
+                                        </td>
+                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ number_format($hangHoa->tri_gia, 2) }}
+                                        </td>
+                                        <td
+                                            class="{{ $matched && $matched->so_container !== $hangHoa->so_container ? 'text-warning' : '' }} {{ $isRemoved ? 'text-danger' : '' }}">
+                                            {{ $hangHoa->so_container }}
+                                        </td>
                                     </tr>
                                 @endforeach
+
                             </tbody>
                             <tfoot>
                                 <tr>
@@ -121,8 +143,9 @@
                         </center>
                         <div class="row mt-4">
                             <h1 class="text-center">Phiếu xuất sau khi sửa</h1>
-                            <h2 class="text-center text-dark">Phiếu
-                                {{ $suaXuatHang->loaiHinh ? $suaXuatHang->loaiHinh->ten_loai_hinh : '' }}
+                            <h2
+                                class="text-center {{ $xuatHang->ma_loai_hinh !== $suaXuatHang->ma_loai_hinh ? 'text-warning' : 'text-dark' }}">
+                                Phiếu {{ $suaXuatHang->loaiHinh ? $suaXuatHang->loaiHinh->ten_loai_hinh : '' }}
                                 ({{ $suaXuatHang->loaiHinh->ma_loai_hinh }})
                             </h2>
                         </div>
@@ -145,16 +168,27 @@
                             </thead>
                             <tbody>
                                 @foreach ($suaHangHoaRows as $index => $hangHoa)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $hangHoa->so_to_khai_nhap }}</td>
-                                        <td>{{ $hangHoa->ten_hang }}</td>
-                                        <td>{{ $hangHoa->xuat_xu }}</td>
-                                        <td>{{ $hangHoa->so_luong_xuat }}</td>
-                                        <td>{{ $hangHoa->don_vi_tinh }}</td>
-                                        <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
-                                        <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
-                                        <td>{{ $hangHoa->so_container }}</td>
+                                    @php
+                                        $isNew = !$hangHoaRows->firstWhere('ma_hang_cont', $hangHoa->ma_hang_cont);
+                                        $matched = $suaHangHoaRows->firstWhere('ma_hang_cont', $hangHoa->ma_hang_cont);
+                                    @endphp
+                                    <tr class="{{ $isNew ? 'text-success' : '' }}">
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $index + 1 }}</td>
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
+                                        </td>
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->ten_hang }}</td>
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->xuat_xu }}</td>
+                                        <td
+                                            class="{{ $isNew ? 'text-success' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning' : '' }}">
+                                            {{ $hangHoa->so_luong_xuat }}</td>
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->don_vi_tinh }}</td>
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">
+                                            {{ number_format($hangHoa->don_gia, 2) }}</td>
+                                        <td class="{{ $isNew ? 'text-success' : '' }}">
+                                            {{ number_format($hangHoa->tri_gia, 2) }}</td>
+                                        <td
+                                            class="{{ $isNew ? 'text-success' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning' : '' }}">
+                                            {{ $hangHoa->so_container }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -183,13 +217,29 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($suaPTVTs as $index => $suaPTVT)
+                                            @php
+                                                $originalPTVT = $ptvts->firstWhere(
+                                                    'so_ptvt_xuat_canh',
+                                                    $suaPTVT->so_ptvt_xuat_canh,
+                                                );
+                                                $isNew = !$originalPTVT;
+                                                $rowClass = $isNew
+                                                    ? 'text-warning'
+                                                    : ($isNew
+                                                        ? 'text-warning'
+                                                        : '');
+                                            @endphp
+
                                             <tr>
-                                                <td>{{ $index + 1 }}</td>
-                                                <td>{{ $suaPTVT->PTVTXuatCanh->ten_phuong_tien_vt ?? 'N/A' }} (Số:
-                                                    {{ $suaPTVT->PTVTXuatCanh->so_ptvt_xuat_canh }})</td>
+                                                <td class="{{ $rowClass }}">{{ $index + 1 }}</td>
+                                                <td class="{{ $rowClass }}">
+                                                    {{ $suaPTVT->PTVTXuatCanh->ten_phuong_tien_vt ?? 'N/A' }}
+                                                    (Số: {{ $suaPTVT->PTVTXuatCanh->so_ptvt_xuat_canh }})
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
+
                                 </table>
                             </div>
                         </center>
@@ -205,7 +255,16 @@
                                     DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                         $xuatHang->ma_doanh_nghiep)
                                 <div class="row">
-                                    <center>
+                                    <div class="col-6">
+                                        <a
+                                            href="{{ route('xuat-hang.sua-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
+                                            <button class="btn btn-warning px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                Tiếp tục sửa
+                                            </button>
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
                                         <a href="#">
                                             <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
                                                 class="btn btn-danger px-4">
@@ -213,7 +272,8 @@
                                                 Hủy yêu cầu sửa
                                             </button>
                                         </a>
-                                    </center>
+                                    </div>
+
                                 </div>
                             @endif
                             @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
@@ -250,7 +310,8 @@
 
     {{-- Xác nhận duyệt --}}
     {{-- Tình trạng: Chờ thông quan --}}
-    <div class="modal fade" id="duyetToKhaiModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="duyetToKhaiModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">

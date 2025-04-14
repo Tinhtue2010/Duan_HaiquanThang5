@@ -108,8 +108,8 @@ class LoaiHinhController extends Controller
         // $this->fixNgayXuatHet();
         // $this->fixCCXuatHet();
         // $this->suaSoContainer();
-        // $this->khoiPhucXuatHang2('6816');
-        $this->kiemTraXuatHetHang('500522731850');
+        $this->khoiPhucXuatHang2('9713');
+        // $this->kiemTraXuatHetHang('500522731850');
         return redirect()->back();
     }
 

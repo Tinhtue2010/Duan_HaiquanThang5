@@ -92,7 +92,7 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $chiTiet->so_to_khai_xuat }}</td>
                                     <td>{{ $chiTiet->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
-                                    <td>{{ $chiTiet->xuatHang->doanhNghiep->chuHang->ten_chu_hang }}</td>
+                                    <td>{{ $chiTiet->xuatHang->doanhNghiep->chuHang->ten_chu_hang ?? '' }}</td>
                                     <td>{{ $chiTiet->xuatHang->ma_loai_hinh }}</td>
                                     <td>{{ $chiTiet->tong_so_luong_xuat }}</td>
                                     <td>{{ \Carbon\Carbon::parse($chiTiet->xuatHang->ngay_dang_ky)->format('d-m-Y') }}

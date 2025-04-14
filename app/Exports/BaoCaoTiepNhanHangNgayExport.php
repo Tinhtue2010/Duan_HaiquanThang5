@@ -18,18 +18,17 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
 {
     protected $tu_ngay;
+    protected $den_ngay;
 
-    public function __construct($tu_ngay)
+    public function __construct($tu_ngay, $den_ngay)
     {
         $this->tu_ngay = $tu_ngay;
+        $this->den_ngay = $den_ngay;
     }
     public function array(): array
     {
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay);
-
-        $day = $tu_ngay->format('d');  // Day of the month
-        $month = $tu_ngay->format('m'); // Month number
-        $year = $tu_ngay->format('Y');  // Year
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay);
 
         $loaiHangs = LoaiHang::all();
         $haiQuans = HaiQuan::all();
@@ -39,7 +38,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', 'Độc lập - Tự do - Hạnh phúc', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO TIẾP NHẬN HẰNG NGÀY', '', '', '', '', ''],
-            ["Ngày $day tháng $month năm $year", '', '', '', '', ''], // Updated line
+            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
             ['STT', 'Tên HQ', 'Tên hàng', 'Số lượng tờ khai', 'Số lượng cont', 'Số lượng', 'Trị giá (USD)'],
         ];
@@ -48,7 +47,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
         $stt = 1;
         $totalSoLuong = 0;
         $thongTinData = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->whereDate('nhap_hang.created_at', $this->tu_ngay)
+            ->whereBetween('nhap_hang.created_at', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.ma_hai_quan',
                 'hang_hoa.loai_hang',

@@ -224,7 +224,7 @@ class XuatHangService
             ]);
         }
     }
-    public function themSuaPTVTCuaPhieu($ma_yeu_cau, array $ptvtRowsData)
+    public function themSuaPTVTCuaPhieu($ma_yeu_cau, array $ptvtRowsData, $xuatHang)
     {
         foreach ($ptvtRowsData as $row) {
             PTVTXuatCanhCuaPhieuSua::insert([
@@ -233,16 +233,7 @@ class XuatHangService
             ]);
         }
     }
-    public function themTruocSuaPTVTCuaPhieu($so_to_khai_xuat, $ma_yeu_cau)
-    {
-        $ptvts = PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $so_to_khai_xuat)->get();
-        foreach ($ptvts as $ptvt) {
-            PTVTXuatCanhCuaPhieuTruocSua::insert([
-                'ma_yeu_cau' => $ma_yeu_cau,
-                'so_ptvt_xuat_canh' => $ptvt->so_ptvt_xuat_canh,
-            ]);
-        }
-    }
+
 
     public function themXuatHangConts($soToKhaiXuat, array $rowsData)
     {
@@ -449,6 +440,8 @@ class XuatHangService
             $newStatus = '5';
         } elseif ($xuatHang->trang_thai == "12") {
             $newStatus = '6';
+        } else {
+            $newStatus = $xuatHang->trang_thai;
         }
         $xuatHang->update(['trang_thai' => $newStatus]);
     }
@@ -722,13 +715,6 @@ class XuatHangService
         ]);
     }
 
-
-    public function chuanBiDuLieuTheoDoi($xuatHang, $hangHoaXuat, $ma_cong_chuc)
-    {
-
-
-        return compact('hang_hoa');
-    }
     public function themLaiPTVTXuatCanhCuaPhieu($xuatHang, $ptvtSuas)
     {
         $ptvts = $ptvtSuas->map(function ($ptvtSua) use ($xuatHang) {
@@ -834,15 +820,30 @@ class XuatHangService
 
     public function themSuaXuatHang(Request $request, $xuatHang)
     {
-        return XuatHangSua::create([
-            'ma_loai_hinh' => $request->ma_loai_hinh,
-            'so_to_khai_xuat' => $request->so_to_khai_xuat,
-            'ma_cong_chuc' => $xuatHang->ma_cong_chuc ?? '',
-            'trang_thai' => '1',
-            'ngay_tao' => now(),
-            'trang_thai_phieu_xuat' => $xuatHang->trang_thai,
-            'ten_doan_tau' => $request->ten_doan_tau,
-        ]);
+        if (in_array($xuatHang->trang_thai, ['3', '4', '5', '6'])) {
+            $xuatHangSua = XuatHangSua::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->orderBy('ma_yeu_cau', 'desc')->first();
+            $xuatHangSua->update([
+                'ma_loai_hinh' => $request->ma_loai_hinh,
+                'ma_doanh_nghiep' => $this->getDoanhNghiepHienTai()->ma_doanh_nghiep,
+                'so_to_khai_xuat' => $request->so_to_khai_xuat,
+                'ma_cong_chuc' => $xuatHang->ma_cong_chuc ?? '',
+                'trang_thai' => '1',
+                'ngay_tao' => now(),
+                'ten_doan_tau' => $request->ten_doan_tau,
+            ]);
+        } else {
+            $xuatHangSua = XuatHangSua::create([
+                'ma_loai_hinh' => $request->ma_loai_hinh,
+                'ma_doanh_nghiep' => $this->getDoanhNghiepHienTai()->ma_doanh_nghiep,
+                'so_to_khai_xuat' => $request->so_to_khai_xuat,
+                'ma_cong_chuc' => $xuatHang->ma_cong_chuc ?? '',
+                'trang_thai' => '1',
+                'ngay_tao' => now(),
+                'trang_thai_phieu_xuat' => $xuatHang->trang_thai,
+                'ten_doan_tau' => $request->ten_doan_tau,
+            ]);
+        }
+        return $xuatHangSua;
     }
     public function xuLyDuyetPhieuXuat($ma_cong_chuc, $so_to_khai_xuat)
     {

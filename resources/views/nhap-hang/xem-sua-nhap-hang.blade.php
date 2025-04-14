@@ -32,17 +32,17 @@
             <div class="card p-3">
                 <div id="divPrint">
 
-                    <h2 class="text-center">{{ $doanhNghiep->ten_doanh_nghiep }} - 
+                    <h2 class="text-center">{{ $doanhNghiep->ten_doanh_nghiep }} -
                         {{ $nhapHang->chuHang ? $nhapHang->chuHang->ten_chu_hang : '' }}
                     </h2>
-                    
+
 
                     <h2 class="text-center">TỜ KHAI NHẬP KHẨU HÀNG HÓA</h2>
                     <h2 class="text-center">Số {{ $nhapHang->so_to_khai_nhap }}</h2>
                     <hr>
                     <h1 class="text-center">Tờ khai ban đầu</h1>
                     <h2 class="text-center text-dark">TỜ KHAI NHẬP KHẨU HÀNG HÓA ({{ $nhapHang->ma_loai_hinh }})</h2>
-                    <h2 class="text-center text-dark">Số: {{ $nhapHang->so_to_khai_nhap }} ngày
+                    <h2 class="text-center text-dark">Ngày
                         {{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }} Đăng ký tại:
                         {{ $nhapHang->haiQuan ? $nhapHang->haiQuan->ten_hai_quan : $nhapHang->ma_hai_quan }}
                     </h2>
@@ -56,6 +56,7 @@
                         <thead class="align-middle">
                             <tr>
                                 <th>STT</th>
+                                <th hidden>Mã hàng</th>
                                 <th>Tên hàng</th>
                                 <th>Loại hàng</th>
                                 <th>Xuất xứ</th>
@@ -68,36 +69,95 @@
                         </thead>
                         <tbody>
                             @foreach ($hangHoaRows as $index => $hangHoa)
+                                @php
+                                    // Find corresponding row in modified table by ma_hang
+                                    $modifiedRow = $hangHoaSuaRows->firstWhere('ma_hang', $hangHoa->ma_hang);
+                                    // If no matching row is found, mark this row as removed.
+                                    $rowClass = $modifiedRow ? '' : 'text-danger';
+                                @endphp
                                 <tr>
-                                    <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
-                                    <td>{{ $hangHoa->ten_hang }}</td>
-                                    <td>{{ $hangHoa->loai_hang }}</td>
-                                    <td>{{ $hangHoa->xuat_xu }}</td>
-                                    <td>{{ number_format($hangHoa->so_luong_khai_bao, 0) }}</td>
-                                    <td>{{ $hangHoa->don_vi_tinh }}</td>
-                                    <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
-                                    <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
-                                    <td>{{ $hangHoa->so_container_khai_bao }}</td>
+                                    <td class="{{ $rowClass }}">{{ $index + 1 }}</td>
+                                    <td class="{{ $rowClass }}" hidden>{{ $hangHoa->ma_hang }}</td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->ten_hang !== $modifiedRow->ten_hang ? 'text-warning' : '' }}">
+                                        {{ $hangHoa->ten_hang }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->loai_hang !== $modifiedRow->loai_hang ? 'text-warning' : '' }}">
+                                        {{ $hangHoa->loai_hang }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->xuat_xu !== $modifiedRow->xuat_xu ? 'text-warning' : '' }}">
+                                        {{ $hangHoa->xuat_xu }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_luong_khai_bao != $modifiedRow->so_luong_khai_bao ? 'text-warning' : '' }}">
+                                        {{ number_format($hangHoa->so_luong_khai_bao, 0) }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->don_vi_tinh !== $modifiedRow->don_vi_tinh ? 'text-warning' : '' }}">
+                                        {{ $hangHoa->don_vi_tinh }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->don_gia != $modifiedRow->don_gia ? 'text-warning' : '' }}">
+                                        {{ number_format($hangHoa->don_gia, 2) }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->tri_gia != $modifiedRow->tri_gia ? 'text-warning' : '' }}">
+                                        {{ number_format($hangHoa->tri_gia, 2) }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_container_khai_bao != $modifiedRow->so_container_khai_bao ? 'text-warning' : '' }}">
+                                        {{ $hangHoa->so_container_khai_bao }}
+                                    </td>
                                 </tr>
                             @endforeach
+
+
                         </tbody>
+
                     </table>
                     <center>
                         <div class="custom-line mb-2"></div>
                     </center>
                     <h1 class="text-center">Tờ khai sau khi sửa</h1>
-                    <h2 class="text-center text-dark">TỜ KHAI NHẬP KHẨU HÀNG HÓA ({{ $nhapHangSua->ma_loai_hinh }})</h2>
-                    <h2 class="text-center text-dark">Số: {{ $nhapHangSua->so_to_khai_nhap }} ngày
-                        {{ \Carbon\Carbon::parse($nhapHangSua->ngay_dang_ky)->format('d-m-Y') }} Đăng ký tại:
-                        {{ $nhapHangSua->haiQuan ? $nhapHangSua->haiQuan->ten_hai_quan : $nhapHangSua->ma_hai_quan }}
+
+                    <h2
+                        class="text-center {{ $nhapHang->ma_loai_hinh !== $nhapHangSua->ma_loai_hinh ? 'text-warning' : 'text-dark' }}">
+                        TỜ KHAI NHẬP KHẨU HÀNG HÓA ({{ $nhapHangSua->ma_loai_hinh }})
                     </h2>
-                    <h2 class="text-center text-dark">Phương tiện vận tải:
-                        {{ $nhapHangSua->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHangSua->trong_luong }} tấn</h2>
+
+                    <div class="d-flex justify-content-center flex-wrap gap-3">
+                        <h2
+                            class="{{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') !== \Carbon\Carbon::parse($nhapHangSua->ngay_dang_ky)->format('d-m-Y') ? 'text-warning' : 'text-dark' }} m-0">
+                            Ngày {{ \Carbon\Carbon::parse($nhapHangSua->ngay_dang_ky)->format('d-m-Y') }}
+                        </h2>
+                        <h2
+                            class="{{ ($nhapHang->haiQuan->ten_hai_quan ?? $nhapHang->ma_hai_quan) !== ($nhapHangSua->haiQuan->ten_hai_quan ?? $nhapHangSua->ma_hai_quan) ? 'text-warning' : 'text-dark' }} m-0">
+                            Đăng ký tại:
+                            {{ $nhapHangSua->haiQuan ? $nhapHangSua->haiQuan->ten_hai_quan : $nhapHangSua->ma_hai_quan }}
+                        </h2>
+                    </div>
+
+                    <div class="d-flex justify-content-center flex-wrap gap-3">
+                        <h2
+                            class="{{ $nhapHang->ptvt_ban_dau !== $nhapHangSua->ptvt_ban_dau ? 'text-warning' : 'text-dark' }} text-center">
+                            Phương tiện vận tải: {{ $nhapHangSua->ptvt_ban_dau }}
+                        </h2>
+                        <h2
+                            class="{{ $nhapHang->trong_luong != $nhapHangSua->trong_luong ? 'text-warning' : 'text-dark' }} text-center">
+                            - Trọng lượng: {{ $nhapHangSua->trong_luong }} tấn
+                        </h2>
+                    </div>
+
+
+
                     <table class="table table-bordered mt-2" id="displayTable"
                         style="vertical-align: middle; text-align: center;">
                         <thead class="align-middle">
                             <tr>
                                 <th>STT</th>
+                                <th hidden>Mã hàng</th>
                                 <th>Tên hàng</th>
                                 <th>Loại hàng</th>
                                 <th>Xuất xứ</th>
@@ -110,16 +170,47 @@
                         </thead>
                         <tbody>
                             @foreach ($hangHoaSuaRows as $index => $hangHoa)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
-                                    <td>{{ $hangHoa->ten_hang }}</td>
-                                    <td>{{ $hangHoa->loai_hang }}</td>
-                                    <td>{{ $hangHoa->xuat_xu }}</td>
-                                    <td>{{ number_format($hangHoa->so_luong_khai_bao, 0) }}</td>
-                                    <td>{{ $hangHoa->don_vi_tinh }}</td>
-                                    <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
-                                    <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
-                                    <td>{{ $hangHoa->so_container_khai_bao }}</td>
+                                @php
+                                    // Locate the corresponding row from the original data
+                                    $originalRow = $hangHoaRows->firstWhere('ma_hang', $hangHoa->ma_hang);
+                                    // If ma_hang equals 0, mark the row as new (green). Otherwise, no row-level color.
+                                    $rowClass = $hangHoa->ma_hang == 0 ? 'text-success' : '';
+                                @endphp
+                                <tr class="{{ $rowClass }}">
+                                    <td class="{{ $rowClass }}">{{ $index + 1 }}</td>
+                                    <td class="{{ $rowClass }}"hidden>{{ $hangHoa->ma_hang }}</td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->ten_hang !== $originalRow->ten_hang ? 'text-warning' : $rowClass }}">
+                                        {{ $hangHoa->ten_hang }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->loai_hang !== $originalRow->loai_hang ? 'text-warning' : $rowClass }}">
+                                        {{ $hangHoa->loai_hang }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->xuat_xu !== $originalRow->xuat_xu ? 'text-warning' : $rowClass }}">
+                                        {{ $hangHoa->xuat_xu }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->so_luong_khai_bao != $originalRow->so_luong_khai_bao ? 'text-warning' : $rowClass }}">
+                                        {{ number_format($hangHoa->so_luong_khai_bao, 0) }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->don_vi_tinh !== $originalRow->don_vi_tinh ? 'text-warning' : $rowClass }}">
+                                        {{ $hangHoa->don_vi_tinh }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->don_gia != $originalRow->don_gia ? 'text-warning' : $rowClass }}">
+                                        {{ number_format($hangHoa->don_gia, 2) }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->tri_gia != $originalRow->tri_gia ? 'text-warning' : $rowClass }}">
+                                        {{ number_format($hangHoa->tri_gia, 2) }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->so_container_khai_bao != $originalRow->so_container_khai_bao ? 'text-warning' : $rowClass }}">
+                                        {{ $hangHoa->so_container_khai_bao }}
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -130,32 +221,18 @@
                 <div class="col-3"></div>
                 <div class="col-6">
                     <div class="text-center">
-                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
-                            <hr />
-                            <div class="row mt-3">
-                                <div class="col-6">
-                                    <a href="#">
-                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
-                                            class="btn btn-success ">
-                                            <img class="side-bar-icon" src="{{ asset('images/icons/approved2.png') }}">
-                                            Duyệt yêu cầu sửa</button>
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="#">
-                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
-                                            class="btn btn-danger px-4">
-                                            <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
-                                            Hủy yêu cầu sửa
-                                        </button>
-                                    </a>
-                                </div>
-                            </div>
-                        @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
-                                DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
-                                    $nhapHang->ma_doanh_nghiep)
-                            <div class="row">
-                                <center>
+                        @if ($is_chi_xem == false)
+                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
+                                <hr />
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <a href="#">
+                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
+                                                class="btn btn-success ">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/approved2.png') }}">
+                                                Duyệt yêu cầu sửa</button>
+                                        </a>
+                                    </div>
                                     <div class="col-6">
                                         <a href="#">
                                             <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
@@ -165,8 +242,31 @@
                                             </button>
                                         </a>
                                     </div>
-                                </center>
-                            </div>
+                                </div>
+                            @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
+                                    DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
+                                        $nhapHang->ma_doanh_nghiep)
+                                <div class="row">
+                                    <div class="col-6">
+                                        <a
+                                            href="{{ route('nhap-hang.sua-to-khai-nhap', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                            <button class="btn btn-warning px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                Tiếp tục sửa
+                                            </button>
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="#">
+                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                                class="btn btn-danger px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
+                                                Hủy yêu cầu sửa
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>

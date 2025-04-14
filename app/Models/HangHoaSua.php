@@ -8,13 +8,15 @@ class HangHoaSua extends Model
 {
     protected $connection = 'mysql';
     protected $table = 'hang_hoa_sua';
-    protected $primaryKey = 'ma_hang'; 
+    protected $primaryKey = 'ma_hang_sua'; 
     protected $casts = [
         'so_to_khai_nhap' => 'string',
     ];
     public $timestamps = false; // Disable automatic timestamps
 
     protected $fillable = [
+        'ma_hang_sua',
+        'ma_hang',
         'so_to_khai_nhap',
         'ten_hang',
         'xuat_xu',
@@ -24,6 +26,7 @@ class HangHoaSua extends Model
         'tri_gia',
         'don_vi_tinh',
         'so_container_khai_bao',
+        'ma_nhap_sua'
     ];
     public function nhapHang()
     {

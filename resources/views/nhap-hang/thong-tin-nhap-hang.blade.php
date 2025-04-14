@@ -65,6 +65,9 @@
                         href="{{ route('export.theo-doi-hang-hoa-tong', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
                         <button class="btn btn-success float-end me-1">Theo dõi hàng hóa</button>
                     </a>
+                    <a href="{{ route('nhap-hang.lich-su-sua-nhap', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                        <button class="btn btn-primary float-end me-1">Các lần sửa đổi</button>
+                    </a>
                 </div>
             </div>
 
