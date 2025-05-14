@@ -359,6 +359,18 @@ $(document).ready(function () {
             dropdownParent: $('#suaSealModal .modal-body'),
         });
     });
+    $('#xoaNhanhModal ').on('shown.bs.modal', function () {
+        $('#cong-chuc-dropdown-search-2').select2('destroy');
+        $('#cong-chuc-dropdown-search-2').select2({
+            placeholder: "Chọn công chức",
+            allowClear: true,
+            language: "vi",
+            minimumInputLength: 0,
+            dropdownAutoWidth: true,
+            width: '100%',
+            dropdownParent: $('#xoaNhanhModal .modal-body'),
+        });
+    });
     $('#duyetToKhaiModal ').on('shown.bs.modal', function () {
         $('#cong-chuc-dropdown-search').select2('destroy');
         $('#cong-chuc-dropdown-search').select2({
@@ -453,6 +465,16 @@ $(document).ready(function () {
         allowClear: true,
     });
     $('#container-dropdown-search').select2({
+        tags: true,
+        placeholder: "Chọn container",
+        allowClear: true,
+    });
+    $('#container-dropdown-search-2').select2({
+        tags: true,
+        placeholder: "Chọn container",
+        allowClear: true,
+    });
+    $('#container-dropdown-search-3').select2({
         tags: true,
         placeholder: "Chọn container",
         allowClear: true,

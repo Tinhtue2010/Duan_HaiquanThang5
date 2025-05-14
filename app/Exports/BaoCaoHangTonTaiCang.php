@@ -31,7 +31,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
             ['BÁO CÁO HÀNG TỒN TẠI CẢNG', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
-            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá (USD)', 'Số lượng tồn', 'Số tàu', 'Số cont hiện tại'],
+            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Loại hàng','Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá (USD)', 'Số lượng tồn', 'Số tàu', 'Số cont hiện tại'],
             [''],
         ];
         $stt = 1;
@@ -55,6 +55,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong"),
                 DB::raw("MIN(hang_hoa.ma_hang) as ma_hang"),
                 DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"),
+                DB::raw("MIN(hang_hoa.loai_hang) as loai_hang"),
                 DB::raw("MIN(hang_hoa.xuat_xu) as xuat_xu"),
                 DB::raw("MIN(hang_hoa.don_vi_tinh) as don_vi_tinh"),
                 DB::raw("MIN(hang_hoa.don_gia) as don_gia"),
@@ -86,6 +87,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     $item->ma_doanh_nghiep,
                     $item->dia_chi,
                     $item->ten_hang,
+                    $item->loai_hang,
                     $item->xuat_xu,
                     $item->total_so_luong_khai_bao,
                     $item->don_vi_tinh,
@@ -101,6 +103,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
         }
 
         $result[] = [
+            '',
             '',
             '',
             '',
@@ -140,7 +143,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:P' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:Q' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -158,24 +161,25 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     $sheet->getColumnDimension($column)->setWidth(width: 10);
                 }
                 $sheet->getColumnDimension('A')->setWidth(width: 7); //STT
-                $sheet->getColumnDimension('B')->setWidth(width: 15); //Số tờ khai
-                $sheet->getColumnDimension('C')->setWidth(width: 12); //Ngày đăng ký
-                $sheet->getColumnDimension('D')->setWidth(width: 15); //Chi cục
-                $sheet->getColumnDimension('E')->setWidth(width: 15); //Tên DN
-                $sheet->getColumnDimension('F')->setWidth(width: 15); //Mã DN
-                $sheet->getColumnDimension('G')->setWidth(width: 25); //Địa chỉ
-                $sheet->getColumnDimension('H')->setWidth(width: 25); //Tên hàng
-                $sheet->getColumnDimension('M')->setWidth(width: 15); //Trị giá
-                $sheet->getColumnDimension('O')->setWidth(width: 15); //Số tàu
-                $sheet->getColumnDimension('P')->setWidth(width: 15); //Số cont
+                $sheet->getColumnDimension('B')->setWidth(width: 15); 
+                $sheet->getColumnDimension('C')->setWidth(width: 12); 
+                $sheet->getColumnDimension('D')->setWidth(width: 15); 
+                $sheet->getColumnDimension('E')->setWidth(width: 15); 
+                $sheet->getColumnDimension('F')->setWidth(width: 15); 
+                $sheet->getColumnDimension('G')->setWidth(width: 25); 
+                $sheet->getColumnDimension('H')->setWidth(width: 25); 
+                $sheet->getColumnDimension('M')->setWidth(width: 15); 
+                $sheet->getColumnDimension('O')->setWidth(width: 15); 
+                $sheet->getColumnDimension('P')->setWidth(width: 15); 
+                $sheet->getColumnDimension('Q')->setWidth(width: 15); 
 
 
                 $sheet->getStyle('B')->getNumberFormat()->setFormatCode('0'); // Apply format
                 $sheet->getStyle('E')->getNumberFormat()->setFormatCode('0'); // Apply format
                 $sheet->getStyle('M')->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle('K')->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle('L')->getNumberFormat()->setFormatCode('#,##0.00');
-                $sheet->getStyle('N')->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle('L')->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle('M')->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle('O')->getNumberFormat()->setFormatCode('#,##0');
 
                 $lastRow = $sheet->getHighestRow();
                 $highestColumn = $sheet->getHighestColumn();
@@ -184,36 +188,36 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                 // Merge cells for headers
                 $sheet->mergeCells('A1:E1'); // CỤC HẢI QUAN
                 $sheet->mergeCells('A2:E2'); // CHI CỤC
-                $sheet->mergeCells('A4:P4'); // BÁO CÁO
-                $sheet->mergeCells('A5:P5'); // Tính đến ngày
+                $sheet->mergeCells('A4:Q4'); // BÁO CÁO
+                $sheet->mergeCells('A5:Q5'); // Tính đến ngày
 
-                foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'] as $column) {
+                foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q'] as $column) {
                     $sheet->mergeCells($column . '7:' . $column . '8');
                 }
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:P6')->applyFromArray([
+                $sheet->getStyle('A1:Q6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:P6')->applyFromArray([
+                $sheet->getStyle('A2:Q6')->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
-                $sheet->getStyle('A9:P' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A9:Q' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:P5')->applyFromArray([
+                $sheet->getStyle('A5:Q5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A7:P8')->applyFromArray([
+                $sheet->getStyle('A7:Q8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -228,7 +232,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A7:P' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A7:Q' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -243,7 +247,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     }
                 }
 
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':P' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':Q' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -251,10 +255,10 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->mergeCells('A' . $chuKyStart . ':P' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':P' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':P' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':P' . ($chuKyStart + 4))->getFont()->setBold(true);
+                $sheet->mergeCells('A' . $chuKyStart . ':Q' . $chuKyStart);
+                $sheet->getStyle('A' . $chuKyStart . ':Q' . $chuKyStart)->getFont()->setBold(true);
+                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':Q' . ($chuKyStart + 4));
+                $sheet->getStyle('A' . ($chuKyStart + 4) . ':Q' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

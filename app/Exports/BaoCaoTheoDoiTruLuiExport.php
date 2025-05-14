@@ -7,7 +7,7 @@ use App\Models\NhapHang;
 use App\Models\TheoDoiTruLui;
 use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\XuatHang;
-use App\Models\YeuCauChuyenContainer;
+use App\Models\NiemPhong;
 use App\Models\YeuCauChuyenTau;
 use App\Models\YeuCauHangVeKho;
 use App\Models\YeuCauTauCont;
@@ -25,20 +25,45 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 
-class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
+class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, WithTitle
 {
+    protected $tenCongViec;
     protected $cong_viec;
     protected $ma_yeu_cau;
     protected $so_to_khai_nhap;
     protected $theoDoi;
     protected $nhapHang;
+    protected $ten_hai_quan;
+
+    public function title(): string
+    {
+        return $this->so_to_khai_nhap . ' - ' . $this->tenCongViec;
+    }
 
     public function __construct($cong_viec, $ma_yeu_cau, $so_to_khai_nhap)
     {
         $this->cong_viec = $cong_viec;
         $this->ma_yeu_cau = $ma_yeu_cau;
         $this->so_to_khai_nhap = $so_to_khai_nhap;
+        $this->tenCongViec = "";
+        if ($cong_viec == 1) {
+            $this->tenCongViec = "Xuất hàng";
+        } else if ($cong_viec == 2) {
+            $this->tenCongViec = "Chuyển tàu cont ";
+        } else if ($cong_viec == 3) {
+            $this->tenCongViec = "Chuyển container";
+        } else if ($cong_viec == 4) {
+            $this->tenCongViec = "Chuyển tàu";
+        } else if ($cong_viec == 5) {
+            $this->tenCongViec = "Hàng về kho ban đầu";
+        } else if ($cong_viec == 6) {
+            $this->tenCongViec = "Tiêu hủy hàng";
+        } else if ($cong_viec == 7) {
+            $this->tenCongViec = "Kiểm tra hàng";
+        }
     }
 
     public function array(): array
@@ -54,8 +79,16 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                 ->where("ma_yeu_cau", $this->ma_yeu_cau)
                 ->where('so_to_khai_nhap', $this->so_to_khai_nhap)
                 ->first();
+
             $nhapHang = NhapHang::find($this->so_to_khai_nhap);
         }
+
+        $theoDoiCuoiCung = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->orderBy('ma_theo_doi', 'desc')
+            ->where('cong_viec', '!=', 4)
+            ->get()
+            ->first();
+        $ngayCuoiCung = $theoDoiCuoiCung->ngay_them ?? '2000-01-01';
 
         $theoDoiChiTiet = TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoi->ma_theo_doi)->get();
 
@@ -85,7 +118,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
             ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
             ->sum('hang_hoa.so_luong_khai_bao');
 
-        $ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
+        $this->ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
 
         $result = [
             [''],
@@ -94,7 +127,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
             [''],
             ['', '', '', '', '', '', '', 'Ngày ' . $day . ' Tháng ' . $month . ' Năm ' . $year],
             ['Tên Doanh Nghiệp: ' . $ten_doanh_nghiep],
-            ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Chi cục hải quan đăng ký: ' . $ten_hai_quan],
+            ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Chi cục hải quan đăng ký: ' . $this->ten_hai_quan],
             ['Tên hàng hóa: ' . $hangHoaLonNhat->ten_hang],
             ['Số lượng: ' . $tongSoLuongs . '; Đơn vị tính: ' . $hangHoaLonNhat->don_vi_tinh . '; Xuất xứ: ' . $hangHoaLonNhat->xuat_xu],
             [],
@@ -113,8 +146,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
             $this->createRichTextBoldItalic('Số lượng hàng hóa xuất khẩu ', '(Kiện)'),
             $this->createRichTextBoldItalic('Số Lượng hàng hóa chưa xuất khẩu ', '(Kiện)'),
             'Số seal hải quan niêm phong',
-            'Số hiệu PTVT ',
-            'Số hiệu Container',
+            $this->createRichTextBoldItalic('Số hiệu PTVT ', '(tàu Việt Nam nếu có thay đổi)'),
+            $this->createRichTextBoldItalic('Số hiệu container ', '(nếu có thay đổi)'),
             'Ghi chú'
         ];
         $result[] = [
@@ -133,22 +166,63 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
         ];
         $sum = 0;
         $stt = 1;
+        $is_xuat_het = false;
+        if ($nhapHang->trang_thai == 4) {
+            if (\Carbon\Carbon::parse($nhapHang->ngay_xuat_het)->isSameDay($tu_ngay)) {
+                $is_xuat_het = true;
+            }
+        }
+
         foreach ($theoDoiChiTiet as $item) {
             if ($item->so_luong_chua_xuat != 0) {
-                $result[] = [
-                    $stt++,
-                    '',
-                    '',
-                    $item->ten_hang,
-                    '',
-                    '',
-                    $item->so_luong_xuat,
-                    $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
-                    $item->so_seal ?? '',
-                    '',
-                    $item->so_container,
-                    '',
-                ];
+                if ($is_xuat_het == true) {
+                    $result[] = [
+                        $stt++,
+                        '',
+                        '',
+                        $item->ten_hang,
+                        '',
+                        '',
+                        $item->so_luong_xuat,
+                        $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                        '',
+                        $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                        $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                        '',
+                    ];
+                } elseif (\Carbon\Carbon::parse($item->ngay_dang_ky)->greaterThanOrEqualTo($ngayCuoiCung)) {
+                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal;
+                    $result[] = [
+                        $stt++,
+                        '',
+                        '',
+                        $item->ten_hang,
+                        '',
+                        '',
+                        $item->so_luong_xuat,
+                        $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                        $item->so_seal ?? $sealCuoiCung,
+                        $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                        $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                        '',
+                    ];
+                } else {
+                    $result[] = [
+                        $stt++,
+                        '',
+                        '',
+                        $item->ten_hang,
+                        '',
+                        '',
+                        $item->so_luong_xuat,
+                        $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                        $item->so_seal ?? '',
+                        $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                        $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                        '',
+                    ];
+                }
+
                 $sum += $item->so_luong_chua_xuat;
             }
         }
@@ -182,21 +256,23 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     ->setLeft(0.5)
                     ->setHeader(0.3)
                     ->setFooter(0.3);
+                $sheet->getDelegate()->getSheetView()->setZoomScale(85);
+
                 // Set font for entire sheet
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
-                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(14);
+                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(20);
 
                 // Auto-width columns
                 $sheet->getColumnDimension('A')->setWidth(width: 5);
-                $sheet->getColumnDimension('B')->setWidth(width: 30);
-                $sheet->getColumnDimension('C')->setWidth(width: 15);
+                $sheet->getColumnDimension('B')->setWidth(width: 18);
+                $sheet->getColumnDimension('C')->setWidth(width: 18);
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
                 $sheet->getColumnDimension('E')->setWidth(width: 15);
-                $sheet->getColumnDimension('F')->setWidth(width: 10);
+                $sheet->getColumnDimension('F')->setWidth(width: 5);
                 $sheet->getColumnDimension('G')->setWidth(width: 10);
                 $sheet->getColumnDimension('H')->setWidth(width: 10);
-                $sheet->getColumnDimension('I')->setWidth(width: 18);
-                $sheet->getColumnDimension('J')->setWidth(width: 15);
+                $sheet->getColumnDimension('I')->setWidth(width: 13);
+                $sheet->getColumnDimension('J')->setWidth(width: 10);
                 $sheet->getColumnDimension('K')->setWidth(width: 15);
                 $sheet->getColumnDimension('L')->setWidth(width: 20);
                 $sheet->getRowDimension(1)->setRowHeight(20);
@@ -212,22 +288,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                 $this->centerCell($sheet, "L2");
 
 
-                $tenCongViec = "";
-                if ($this->cong_viec == 1) {
-                    $tenCongViec = "Xuất hàng";
-                } else if ($this->cong_viec == 2) {
-                    $tenCongViec = "Chuyển container và tàu";
-                } else if ($this->cong_viec == 3) {
-                    $tenCongViec = "Chuyển container";
-                } else if ($this->cong_viec == 4) {
-                    $tenCongViec = "Chuyển tàu";
-                } else if ($this->cong_viec == 5) {
-                    $tenCongViec = "Đưa hàng trở lại kho ban đầu";
-                } else if ($this->cong_viec == 6) {
-                    $tenCongViec = "Tiêu hủy hàng";
-                } else if ($this->cong_viec == 7) {
-                    $tenCongViec = "Kiểm tra hàng";
-                }
+
 
                 $lastRow = $sheet->getHighestRow();
                 $sheet->mergeCells('A3:L4'); //Phiếu
@@ -315,14 +376,16 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     ],
                 ]);
 
+                $tenCongViec = $this->tenCongViec;
 
                 $sheet->mergeCells('B' . $secondTableStart + 2 . ':B' . $lastStart - 4);
                 $sheet->setCellValue('B' . $secondTableStart + 2, $tenCongViec);
                 $sheet->mergeCells('C' . $secondTableStart + 2 . ':C' . $lastStart - 4);
                 $sheet->setCellValue('C' . $secondTableStart + 2, $this->theoDoi->so_ptvt_nuoc_ngoai);
 
+                $tau = $this->theoDoi->theoDoiChiTiet->first()?->phuong_tien_vt_nhap;
                 $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 4);
-                $sheet->setCellValue('J' . $secondTableStart + 2, $this->theoDoi->phuong_tien_vt_nhap);
+                $sheet->setCellValue('J' . $secondTableStart + 2, $tau == $this->nhapHang->ptvt_ban_dau ? '' : $tau);
 
 
                 $sheet->getStyle('A' . $secondTableStart . ':L' . $lastStart - 3)->applyFromArray([
@@ -332,7 +395,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                     ]
                 ]);
 
-                $sheet->getStyle('A' . ($lastStart) . ':L' . ($lastStart+1))->applyFromArray([
+                $sheet->getStyle('A' . ($lastStart) . ':L' . ($lastStart + 1))->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -345,46 +408,55 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
                 $sheet->mergeCells('B' . $lastStart + 1 . ':C' . ($lastStart + 1));
                 $sheet->mergeCells('I' . $lastStart . ':L' . ($lastStart));
                 $sheet->mergeCells('I' . $lastStart + 1 . ':L' . ($lastStart + 1));
+                $sheet->getStyle('A' . ($lastStart - 3) . ':L' . ($lastStart - 3))->getFont()->setBold(true);
 
                 $first = 0;
                 for ($row = $secondTableStart; $row <= $lastStart - 3; $row++) {
                     if ($first == 1) {
-                        $sheet->getStyle('D' . $row)->getAlignment()->setWrapText(true);
-                        $sheet->getRowDimension($row)->setRowHeight(height: 55);
+                        $sheet->getRowDimension($row)->setRowHeight(height: 80);
                     }
                     $first = 1;
                 }
-                $sheet->getRowDimension(12)->setRowHeight(20);
 
+                $sheet->getRowDimension(1)->setRowHeight(30);
+                $sheet->getRowDimension(12)->setRowHeight(30);
                 // Set left alignment for number columns
                 // $sheet->getStyle('A13:A'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+                if (mb_strlen($this->ten_hai_quan, 'UTF-8') > 40) {
+                    $sheet->getRowDimension(7)->setRowHeight(50);
+                    $sheet->getStyle('A7:L7')->applyFromArray([
+                        'alignment' => [
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                        ]
+                    ]);
+                }
             },
         ];
     }
     public function drawings()
     {
-        // Generate Barcode
+        // Generate barcode in memory
         $generator = new BarcodeGeneratorPNG();
-        $barcodeData = $generator->getBarcode($this->so_to_khai_nhap, $generator::TYPE_CODE_128);
+        $barcodeData = $generator->getBarcode($this->nhapHang->so_to_khai_nhap, $generator::TYPE_CODE_128);
 
-        // Save barcode temporarily
-        $barcodePath = storage_path('app/temp-barcode-tru-lui.png');
-        file_put_contents($barcodePath, $barcodeData);
+        // Create image from binary PNG data
+        $image = imagecreatefromstring($barcodeData);
 
-        // Create Barcode Drawing
-        $barcodeDrawing = new Drawing();
-        $barcodeDrawing->setName('Barcode');
-        $barcodeDrawing->setDescription('Barcode');
-        $barcodeDrawing->setPath($barcodePath);
-        $barcodeDrawing->setCoordinates('L1'); // Position barcode at the top right
-        $barcodeDrawing->setOffsetX(0);
-        $barcodeDrawing->setOffsetY(0);
-        $barcodeDrawing->setHeight(20);
-        $barcodeDrawing->setWidth(180);
+        // Create in-memory drawing
+        $drawing = new MemoryDrawing();
+        $drawing->setName('Barcode');
+        $drawing->setDescription('Barcode');
+        $drawing->setImageResource($image);
+        $drawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+        $drawing->setMimeType(MemoryDrawing::MIMETYPE_DEFAULT);
+        $drawing->setCoordinates('L1'); // Adjust as needed
+        $drawing->setOffsetX(0);
+        $drawing->setOffsetY(0);
+        $drawing->setHeight(30);
+        $drawing->setWidth(250);
 
-        $drawings[] = $barcodeDrawing; // Add barcode drawing to array
-
-        return $drawings; // Return both drawings
+        return $drawing;
     }
     function createRichText($text, $bold)
     {
@@ -402,11 +474,11 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings
 
         // Bold text
         $boldText = $richText->createTextRun($text);
-        $boldText->getFont()->setBold(true)->setName('Times New Roman')->setSize(14);
+        $boldText->getFont()->setBold(true)->setName('Times New Roman')->setSize(20);
 
         // Italic text
         $italicText = $richText->createTextRun($italic);
-        $italicText->getFont()->setItalic(true)->setName('Times New Roman')->setSize(14);
+        $italicText->getFont()->setName('Times New Roman')->setSize(20);
 
         return $richText;
     }

@@ -11,11 +11,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            <a class="return-link"
-                href={{ route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}>
-                <p>
-                    < Quay lại thông tin phiếu xuất </p>
-            </a>
+            <div class="row">
+                <div class="col-6">
+                    <a class="return-link"
+                        href={{ route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}>
+                        <p>
+                            < Quay lại thông tin phiếu xuất </p>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a class="float-end" href="#">
+                        <button data-bs-toggle="modal" data-bs-target="#chonFileModal" class="btn btn-success ">
+                            Nhập từ file</button>
+                    </a>
+                </div>
+            </div>
             <h2 class="text-center">{{ $doanhNghiep->ten_doanh_nghiep }}</h2>
             <h2 class="text-center">PHIẾU XUẤT HÀNG</h2>
             <div class="row">
@@ -221,6 +231,38 @@
             </center>
             </form>
 
+        </div>
+    </div>
+    <div class="modal fade" id="chonFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Chọn file để nhập dữ liệu</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fw-bold mb-0 fs-5">Hãy đảm bảo file có đủ các cột sau:</p>
+                    <p class="fw-bold">Số tờ khai, Tên hàng, Số lượng đăng ký xuất</p>
+                    <div class="file-upload">
+                        <input type="file" id="hys_file" class="file-upload-input">
+                        <button type="button" class="file-upload-btn">
+                            <svg class="file-upload-icon" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Chọn File
+                        </button>
+                        <span class="file-name" id="fileName"></span>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" id="uploadHys" class="btn btn-success">Xác nhận</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
         </div>
     </div>
     {{-- Modal xác nhận --}}
@@ -511,6 +553,57 @@
                 $(this).closest("tr").remove(); // Remove the closest row when clicking "Xóa"
                 calculateTotal();
             });
+            $("#uploadHys").on("click", function() {
+                var file = $("#hys_file")[0].files[0];
+                if (!file) {
+                    alert("Xin hãy chọn 1 file!");
+                    return;
+                }
+                var formData = new FormData();
+                formData.append("hys_file", file);
+                formData.append("_token", "{{ csrf_token() }}");
+
+                $.ajax({
+                    url: "{{ route('xuat-hang.upload-file-xuat') }}", // Define the route in Laravel
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        if (!response.data) {
+                            alert(response);
+                        } else {
+                            var tbody = $("#xuatHangCont tbody");
+                            tbody.empty();
+
+                            $.each(response.data, function(index, row) {
+                                var tr = `<tr>
+                                        <td hidden>${row.ma_hang_cont}</td>
+                                        <td>${row.so_to_khai_nhap}</td>
+                                        <td>${row.ten_hang}</td>
+                                        <td>${row.xuat_xu}</td>
+                                        <td>${row.don_vi_tinh}</td>
+                                        <td>${row.don_gia}</td>
+                                        <td>${row.so_container}</td>
+                                        <td>${row.so_luong_ton}</td>
+                                        <td>${row.so_luong_xuat}</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                                        </td>                                    
+                                    </tr>`;
+                                tbody.append(tr);
+                            });
+                            calculateTotal();
+                            alert("Nhập file thành công");
+                            $('#chonFileModal').modal('hide');
+                        }
+
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseText);
+                    }
+                });
+            });
         });
     </script>
     <script>
@@ -524,5 +617,26 @@
                 return;
             }
         }
+    </script>
+    <script>
+        const fileInput = document.getElementById('hys_file');
+        const fileName = document.getElementById('fileName');
+        const fileUpload = document.querySelector('.file-upload');
+        document.getElementById("hys_file").addEventListener("change", function() {
+            let file = this.files[0]; // Get the selected file
+
+            if (file && file.size > 5 * 1024 * 1024) { // 5MB = 5 * 1024 * 1024 bytes
+                alert("File quá lớn! Vui lòng chọn tệp dưới 5MB.");
+                this.value = ""; // Clear the file input
+            } else {
+                if (this.files && this.files[0]) {
+                    fileName.textContent = this.files[0].name;
+                    fileUpload.classList.add('file-selected');
+                } else {
+                    fileName.textContent = '';
+                    fileUpload.classList.remove('file-selected');
+                }
+            }
+        });
     </script>
 @stop

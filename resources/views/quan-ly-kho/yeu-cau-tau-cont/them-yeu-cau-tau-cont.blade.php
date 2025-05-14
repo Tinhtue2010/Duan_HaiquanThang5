@@ -13,9 +13,19 @@
             @endif
             <a class="return-link" href="/danh-sach-yeu-cau-tau-cont">
                 <p>
-                    < Quay lại quản lý yêu cầu chuyển container và tàu</p>
+                    < Quay lại quản lý yêu cầu chuyển container và tàu </p>
             </a>
-            <h2>Thêm yêu cầu chuyển container và tàu</h2>
+            <div class="row">
+                <div class="col-6">
+                    <h2>Thêm yêu cầu chuyển container và tàu</h2>
+                </div>
+                <div class="col-6">
+                    <button data-bs-toggle="modal" data-bs-target="#chonTheoContainerModal"
+                        class="btn btn-success float-end">
+                        Chọn theo container
+                    </button>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
@@ -94,6 +104,85 @@
 
         </div>
     </div>
+
+
+    <div class="modal fade" id="chonTheoContainerModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Chọn theo container</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <label class="label-text mb-2 fw-bold" for="ma_to_khai">Chọn số container:</label>
+                        <select class="form-control" id="container-dropdown-search-2" name="so_container_goc">
+                            <option></option>
+                            @foreach ($soContainers as $soContainer)
+                                <option value=""></option>
+                                <option value="{{ $soContainer->so_container }}"
+                                    data-so-container-moi="{{ $soContainer->so_container }}"
+                                    data-total-so-luong="{{ $soContainer->total_so_luong }}">
+                                    {{ $soContainer->so_container }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <label class="label-text mb-2 fw-bold" for="ma_to_khai">Tàu cũ:</label>
+                        <div>
+                            <input type="text" class="form-control" id="tau-goc" maxlength="50"
+                                placeholder="Nhập tên tàu" required>
+                        </div>
+
+                        <label class="label-text mb-2 fw-bold" for="ma_to_khai">Chọn số container mới:</label>
+                        <select class="form-control" id="container-dropdown-search-3" name="so_container_moi">
+                            <option></option>
+                            @foreach ($soContainers as $soContainer)
+                                <option value=""></option>
+                                <option value="{{ $soContainer->so_container }}"
+                                    data-so-container-moi="{{ $soContainer->so_container }}"
+                                    data-total-so-luong="{{ $soContainer->total_so_luong }}">
+                                    {{ $soContainer->so_container }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <label class="label-text mb-2 fw-bold" for="ma_to_khai">Tàu mới:</label>
+                        <div>
+                            <input type="text" class="form-control" id="tau-dich" maxlength="50"
+                                placeholder="Nhập tên tàu" required>
+                        </div>
+
+                        <table class="table table-bordered mt-3" id="soToKhaiTable"
+                            style="vertical-align: middle; text-align: center;">
+                            <thead style="vertical-align: middle; text-align: center;">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="checkAll" checked>
+                                    </th>
+                                    <th>
+                                        Số tờ khai
+                                    </th>
+                                    <th>
+                                        Số lượng hàng
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" id="xacNhanChonNhanhBtn" type="button">
+                        Xác nhận
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Modal xác nhận --}}
     <div class="modal fade" id="xacNhanModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -150,15 +239,23 @@
                             <div class="row">
                                 <h3 class="text-center mb-2">Thông tin tờ khai nhập</h3>
                                 <p class="fs-5"><strong>Số tờ khai:</strong> <span id="modal-so-to-khai"></span></p>
-                                <p class="fs-5"><strong>Số tàu hiện tại:</strong> <span id="modal-tau-cu"></span></p>
-                                <p class="fs-5 mt-3"><strong>Tên tàu mới: </strong></p>
+                                <lable class="fs-5"><strong>Số tàu hiện tại:</strong></lable>
                                 <div>
-                                    <input type="text" class="form-control reset-input" id="modal-tau-moi"
-                                        maxlength="50" name="tau_moi" placeholder="Nhập tên tàu" required>
+                                    <input type="text" class="form-control " id="modal-tau-goc" maxlength="255"
+                                        name="tau_cu" placeholder="Nhập tên tàu" required>
                                 </div>
 
-                                <p class="fs-5"><strong>Số container mới (Người dùng có thể nhập số container mới trong ô
-                                        "Nhập để tìm kiếm"): </strong></p>
+                                <lable class="fs-5 mt-2"><strong>Tên tàu mới: </strong></lable>
+                                <div>
+                                    <input type="text" class="form-control " id="modal-tau-dich" maxlength="50"
+                                        name="tau_moi" placeholder="Nhập tên tàu" required>
+                                </div>
+
+                                <lable class="fs-5 mt-2">
+                                    <strong>Số container mới (Người dùng có thể nhập số container mới trong ô
+                                        "Nhập để tìm kiếm"):
+                                    </strong>
+                                </lable>
 
 
 
@@ -207,11 +304,11 @@
             const soContainers = @json($soContainers);
             $('#searchButton').on('click', function() {
                 var soToKhaiNhap = $('#so-to-khai-nhap-dropdown-search')
-                    .val(); // Replace with the actual input field for so_to_khai_nhap
+                    .val();
 
                 if (soToKhaiNhap) {
                     $.ajax({
-                        url: '/get-to-khai-items', // The route to your controller method
+                        url: '/get-to-khai-items',
                         method: 'GET',
                         data: {
                             so_to_khai_nhap: soToKhaiNhap
@@ -221,7 +318,7 @@
                             tableBody.empty();
 
                             $('#modal-so-to-khai').text(response.so_to_khai_nhap);
-                            $('#modal-tau-cu').text(response.phuong_tien_vt_nhap);
+                            $('#modal-tau-goc').val(response.phuong_tien_vt_nhap);
                             $('#modal-so-to-khai').text(response.so_to_khai_nhap);
                             let options =
                                 '<option value=""></option>';
@@ -313,6 +410,38 @@
                     alert('Vui lòng nhập số tờ khai.');
                 }
             });
+
+            $('#container-dropdown-search-2').on('change', function() {
+                let selectedValue = $(this).val();
+                $.ajax({
+                    url: '/get-to-khai-trong-cont-2',
+                    method: 'GET',
+                    data: {
+                        so_container: selectedValue
+                    },
+                    success: function(response) {
+                        document.getElementById("tau-goc").value = response.tauCu;
+                        let tableBody = $("#soToKhaiTable tbody");
+                        tableBody.empty();
+                        $.each(response.nhapHangs, function(index, item) {
+                            let row = `
+                                <tr>
+                                    <td><input type="checkbox" class="check-item" checked></td>
+                                    <td>${item.so_to_khai_nhap}</td>
+                                    <td>${item.tong_so_luong}</td>
+                                </tr>
+                            `;
+                            tableBody.append(row);
+                        });
+
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
+
+            });
+
             $(document).on('input', '.so-luong-input', function() {
                 let maxVal = parseInt($(this).attr('data-max'));
                 let currentVal = parseInt($(this).val());
@@ -334,6 +463,16 @@
                 });
             }
             $("#doneButton").on("click", function() {
+                var tauGoc = $('#modal-tau-goc').val();
+                var tauDich = document.getElementById('modal-tau-dich').value;
+                if (!tauGoc || !tauDich) {
+                    alert('Vui lòng chọn và điền đầy đủ thông tin trước khi thêm!');
+                    return;
+                }
+                if (tauGoc === tauDich) {
+                    alert('Tàu hiện tại đang trùng với tàu mới');
+                    return;
+                }
                 $("#displayTableHangHoa tbody tr").each(function() {
                     var $cells = $(this).find("td");
                     var soToKhai = $('#modal-so-to-khai').text();
@@ -367,8 +506,7 @@
                     if (foundMatch) {
                         return false;
                     }
-                    var tauGoc = $('#modal-tau-cu').text();
-                    var tauDich = document.getElementById('modal-tau-moi').value;
+
                     var newRow = `
                         <tr class="text-center">
                             <td class="text-center" hidden>${maHangCont}</td>
@@ -390,6 +528,81 @@
                 updateRowsData();
                 getYeuCauTableData();
                 $('#chonHangTheoToKhaiModal').modal('hide');
+            });
+
+            $("#xacNhanChonNhanhBtn").on("click", function() {
+                const rows = $('#soToKhaiTable tbody tr')
+                    .filter(function() {
+                        return $(this).find('.check-item').is(':checked');
+                    })
+                    .map(function() {
+                        const cells = $(this).find('td');
+                        return {
+                            so_to_khai_nhap: $(cells[1]).text(),
+                        };
+                    })
+                    .get();
+
+                if (rows.length === 0) {
+                    alert('Vui lòng chọn ít nhất một tờ khai.');
+                    return;
+                }
+
+                let so_container_goc = $("#container-dropdown-search-2").val();
+                let so_container_dich = $("#container-dropdown-search-3").val();
+                let tauGoc = $("#tau-goc").val();
+                let tauDich = $("#tau-dich").val();
+                if (!tauGoc || !tauDich) {
+                    alert('Vui lòng chọn và điền đầy đủ thông tin trước khi thêm!');
+                    return;
+                }
+                if (tauGoc === tauDich) {
+                    alert('Tàu hiện tại đang trùng với tàu mới');
+                    return;
+                }
+                $.ajax({
+                    url: `/get-thong-tin-chuyen-chon-nhanh`,
+                    data: {
+                        rows: rows,
+                        so_container_goc: so_container_goc,
+                    },
+                    method: 'GET',
+                    success: function(response) {
+                        let tbody = $("#soToKhaiTable tbody");
+                        tbody.empty();
+                        if (response) {
+                            response.hangHoas.forEach(function(hangHoaGroup) {
+                                hangHoaGroup.forEach(function(item) {
+                                    var newRow = `
+                                        <tr class="text-center">
+                                            <td class="text-center" hidden>${item.ma_hang_cont}</td>
+                                            <td class="text-center">${item.so_to_khai_nhap}</td>
+                                            <td class="text-center">${item.ten_hang}</td>
+                                            <td class="text-center">${item.so_luong}</td>
+                                            <td class="text-center">${so_container_goc}</td>
+                                            <td class="text-center">${so_container_dich}</td>
+                                            <td class="text-center" hidden>${tauGoc}</td>
+                                            <td class="text-center" hidden>${tauDich}</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-danger btn-sm remove-row">Xóa</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    $('#displayTableChiTiet tbody').append(
+                                        newRow);
+                                });
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="6">Không có dữ liệu</td></tr>');
+                        }
+                        updateRowsData();
+                        getYeuCauTableData();
+                    },
+                    error: function() {}
+                });
+                $('#chonTheoContainerModal').modal('hide');
+
+
             });
 
             $('#displayTableChiTiet').on('click', '.remove-row', function() {
@@ -499,6 +712,30 @@
                     dropdownAutoWidth: true,
                     width: '100%',
                     dropdownParent: $('#chonHangTheoToKhaiModal .modal-body'),
+                });
+            });
+            $('#chonTheoContainerModal').on('shown.bs.modal', function() {
+                $('#container-dropdown-search-2').select2('destroy');
+                $('#container-dropdown-search-2').select2({
+                    tags: true,
+                    placeholder: "Chọn container",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonTheoContainerModal .modal-body'),
+                });
+                $('#container-dropdown-search-3').select2('destroy');
+                $('#container-dropdown-search-3').select2({
+                    tags: true,
+                    placeholder: "Chọn container",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonTheoContainerModal .modal-body'),
                 });
             });
         });

@@ -11,16 +11,16 @@
                     <img src="{{ asset('images/img/10.jpg') }}" class="d-block w-100" alt="Banner 1">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('images/25.jpg') }}" class="d-block w-100" alt="Banner 2">
+                    <img src="{{ asset('images/32.jpg') }}" class="d-block w-100" alt="Banner 2">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('images/img/2.jpg') }}" class="d-block w-100" alt="Banner 3">
+                    <img src="{{ asset('images/31.jpg') }}" class="d-block w-100" alt="Banner 3">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('images/img/3.jpg') }}" class="d-block w-100" alt="Banner 4">
+                    <img src="{{ asset('images/33.jpg') }}" class="d-block w-100" alt="Banner 4">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('images/img/4.jpg') }}" class="d-block w-100" alt="Banner 5">
+                    <img src="{{ asset('images/34.jpg') }}" class="d-block w-100" alt="Banner 5">
                 </div>
                 <div class="carousel-item">
                     <img src="{{ asset('images/img/5.jpg') }}" class="d-block w-100" alt="Banner 6">

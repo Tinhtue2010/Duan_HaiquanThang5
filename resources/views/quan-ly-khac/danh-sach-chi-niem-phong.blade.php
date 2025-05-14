@@ -23,6 +23,8 @@
                         <div class="col-3">
                             <button data-bs-toggle="modal" data-bs-target="#themModal"
                                 class="btn btn-success float-end">Thêm seal niêm phong</button>
+                            <a href="{{ route('quan-ly-khac.xoa-nhanh-chi-niem-phong') }}"><button
+                                    class="btn btn-danger float-end mx-1">Xóa nhanh</button></a>
                         </div>
                     </div>
                 </div>

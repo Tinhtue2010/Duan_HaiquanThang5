@@ -23,6 +23,7 @@ class YeuCauChuyenContainer extends Model
     ];
 
 
+
     public function doanhNghiep()
     {
         return $this->belongsTo(DoanhNghiep::class, 'ma_doanh_nghiep', 'ma_doanh_nghiep');
@@ -31,4 +32,9 @@ class YeuCauChuyenContainer extends Model
     {
         return $this->belongsTo(CongChuc::class, 'ma_cong_chuc', 'ma_cong_chuc');
     }
+    public function yeuCauContainerChiTiet()
+    {
+        return $this->hasMany(YeuCauContainerChiTiet::class, 'ma_yeu_cau', 'ma_yeu_cau');
+    }
+
 }

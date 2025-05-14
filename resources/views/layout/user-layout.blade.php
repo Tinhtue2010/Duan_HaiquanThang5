@@ -218,19 +218,35 @@
                             </a>
                         @endif
                         @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
-                            <div class="sb-sidenav-menu-heading">Quản lý PTVT</div>
+                            <div class="sb-sidenav-menu-heading">Quản lý xuất nhập cảnh</div>
+
+                            <a class="nav-link" href="/quan-ly-nhap-canh">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/import.svg') }}"></div>
+                                Tờ khai nhập cảnh
+                            </a>
+
                             <a class="nav-link" href="/quan-ly-xuat-canh">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/ptvtxc.png') }}"></div>
                                 Tờ khai xuất cảnh
                             </a>
+                        @endif
+                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức')
+                            <a class="nav-link" href="/danh-sach-xnc">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/export-import.png') }}"></div>
+                                Theo dõi xuất nhập cảnh
+                            </a>
+                        @endif
+
+
+                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <a class="nav-link" href="/danh-sach-ptvt-xc">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/ptvtxc.png') }}"></div>
-                                Danh sách phương tiện vận tải xuất cảnh
+                                Danh sách phương tiện vận tải
                             </a>
-                        @endif
-                        @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' || Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý yêu cầu</div>
                             <a class="nav-link" href="/danh-sach-yeu-cau-niem-phong">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
@@ -368,10 +384,15 @@
                         @elseif (Auth::user()->loai_tai_khoan === 'Lãnh đạo')
                             <div class="sb-sidenav-menu-heading">Quản lý thông tin</div>
 
-                            <a class="nav-link" href="/quan-ly-yeu-cau-sua">
+                            <a class="nav-link" href="/quan-ly-duyet-nhap-hang">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/document.png') }}"></div>
-                                Danh sách yêu cầu sửa
+                                Danh sách yêu cầu sửa nhập hàng
+                            </a>
+                            <a class="nav-link" href="/quan-ly-duyet-xuat-hang">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/document.png') }}"></div>
+                                Danh sách yêu cầu sửa xuất hàng
                             </a>
                         @endif
                         <div class="sb-sidenav-menu-heading">Tài khoản</div>

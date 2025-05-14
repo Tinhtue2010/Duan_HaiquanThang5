@@ -1,57 +1,84 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto:400,100,300,700");
+
 #navbarNav {
     display: flex;
-    align-items: center; /* Vertically center items */
-    justify-content: center; /* Optionally center horizontally */
+    align-items: center;
+    /* Vertically center items */
+    justify-content: center;
+    /* Optionally center horizontally */
 }
 
 .modal-dialog-2 {
-    max-height: 90vh; /* Limits modal height to 90% of the viewport */
-    overflow-y: auto; /* Enables scrolling for long content */
+    max-height: 90vh;
+    /* Limits modal height to 90% of the viewport */
+    overflow-y: auto;
+    /* Enables scrolling for long content */
 }
+
 .navbar-nav {
     display: flex;
-    align-items: center; /* Vertically center each `nav-item` */
-    margin: 0; /* Remove default spacing */
+    align-items: center;
+    /* Vertically center each `nav-item` */
+    margin: 0;
+    /* Remove default spacing */
 }
+
 table {
     text-transform: uppercase;
-  }
+}
+
 a::after {
     content: none;
 }
+
 html {
     scroll-behavior: smooth;
 }
+
 .wrapper {
     min-height: 55vh;
 }
+
 .custom-line {
-    margin-top: -5px; /* Move the line upwards */
-    height: 3px; /* Make it bold */
-    background-color: #187bcd; /* Set color to black */
-    width: 100%; /* Adjust width as needed */
+    margin-top: -5px;
+    /* Move the line upwards */
+    height: 3px;
+    /* Make it bold */
+    background-color: #187bcd;
+    /* Set color to black */
+    width: 100%;
+    /* Adjust width as needed */
 }
 
 .navbar {
     background-color: linear-gradient(90deg, #0056b3, #28a745);
     height: 100px;
-    z-index: 1030; /* Add higher z-index */
-    position: relative; /* Establish stacking context */
+    z-index: 1030;
+    /* Add higher z-index */
+    position: relative;
+    /* Establish stacking context */
 }
+
 .navbar-collapse {
-    background-color: white; /* Add background color to dropdown menu */
-    z-index: 1030; /* Match navbar z-index */
+    background-color: white;
+    /* Add background color to dropdown menu */
+    z-index: 1030;
+    /* Match navbar z-index */
 }
+
 .carousel,
 .carousel-inner {
     z-index: 1020;
     position: relative;
 }
+
 .logo {
-    height: 66px; /* Hoặc điều chỉnh chiều cao phù hợp với navbar */
-    width: auto; /* Giữ tỉ lệ khung hình của logo */
-    margin-right: 10px; /* Tạo khoảng cách giữa logo và tên trang web */
+    height: 66px;
+    /* Hoặc điều chỉnh chiều cao phù hợp với navbar */
+    width: auto;
+    /* Giữ tỉ lệ khung hình của logo */
+    margin-right: 10px;
+    /* Tạo khoảng cách giữa logo và tên trang web */
 }
 
 .navbar .navbar-brand {
@@ -65,7 +92,8 @@ html {
 }
 
 .navbar .nav-link:hover {
-    color: #ffd700; /* Màu vàng nhạt khi hover */
+    color: #ffd700;
+    /* Màu vàng nhạt khi hover */
 }
 
 .navbar-toggler {
@@ -77,13 +105,16 @@ html {
 }
 
 .carousel-inner img {
-    max-height: 500px; /* Đặt chiều cao tối đa cho hình ảnh */
-    object-fit: cover; /* Hình ảnh sẽ tự động cắt để vừa khung */
+    max-height: 500px;
+    /* Đặt chiều cao tối đa cho hình ảnh */
+    object-fit: cover;
+    /* Hình ảnh sẽ tự động cắt để vừa khung */
 }
 
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
-    background-color: rgba(0, 0, 0, 0.5); /* Màu nền cho nút điều khiển */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Màu nền cho nút điều khiển */
     padding: 10px;
     border-radius: 50%;
 }
@@ -129,9 +160,11 @@ p {
 
 .card .clickable-card {
     border: none;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    /* Đổ bóng nhẹ */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .card .clickable-card p {
     color: black;
     /* Remove fixed height that was causing overflow */
@@ -139,12 +172,15 @@ p {
     /* Add these properties for better text handling */
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 4; /* Show 4 lines of text */
+    -webkit-line-clamp: 4;
+    /* Show 4 lines of text */
     -webkit-box-orient: vertical;
     margin-bottom: 1rem;
 }
+
 .card .clickable-card:hover {
-    transform: translateY(-5px); /* Tăng hiệu ứng nổi khi hover */
+    transform: translateY(-5px);
+    /* Tăng hiệu ứng nổi khi hover */
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -159,7 +195,8 @@ p {
 }
 
 .card .clickable-card .btn:hover {
-    background-color: #0056b3; /* Màu đậm hơn khi hover */
+    background-color: #0056b3;
+    /* Màu đậm hơn khi hover */
 }
 
 .card .clickable-card {
@@ -170,27 +207,32 @@ p {
     color: black;
     height: 110px;
 }
+
 .card .justified-text {
     text-align: justify;
 }
 
 .return-link {
-    color: #555555; /* or a color between light and dark, like a medium gray */
+    color: #555555;
+    /* or a color between light and dark, like a medium gray */
     text-decoration: none;
     font-weight: 500;
 }
 
 .return-link:hover {
-    color: #333333; /* Darken slightly on hover */
+    color: #333333;
+    /* Darken slightly on hover */
     font-weight: 500;
 }
 
 form .label-text {
     font-size: 18px;
 }
+
 form .modal-body .label-text {
     font-size: 16px;
 }
+
 form .form-control {
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -218,25 +260,30 @@ form button[type="submit"]:hover {
     height: 650px;
     width: 1000px;
 }
+
 .letter-img {
     height: 500px;
     width: 560px;
 }
+
 .post-content {
     font-size: 22px;
     text-align: justify;
     font-family: "Times New Roman", Times, serif;
-    margin-bottom: 0.5rem; /* Reduce space between <p> tags */
+    margin-bottom: 0.5rem;
+    /* Reduce space between <p> tags */
 }
 
 .no-text-decoration {
     text-decoration: none;
 }
+
 .side-bar-icon {
     width: 2.2em;
     height: 2.2em;
     object-fit: cover;
 }
+
 .status-icon {
     width: 7em;
     height: 7em;
@@ -249,14 +296,21 @@ form button[type="submit"]:hover {
 }
 
 .image-div {
-    width: 100%; /* Full width of the parent column */
-    height: 900px; /* Set a fixed height or adjust as needed */
-    background-size: cover; /* Ensures the image covers the entire div */
-    background-position: center; /* Centers the image */
-    background-repeat: no-repeat; /* Prevents tiling of the image */
+    width: 100%;
+    /* Full width of the parent column */
+    height: 900px;
+    /* Set a fixed height or adjust as needed */
+    background-size: cover;
+    /* Ensures the image covers the entire div */
+    background-position: center;
+    /* Centers the image */
+    background-repeat: no-repeat;
+    /* Prevents tiling of the image */
 }
+
 .select2-modal {
-    z-index: 9999 !important; /* Set a high z-index to ensure the dropdown is on top */
+    z-index: 9999 !important;
+    /* Set a high z-index to ensure the dropdown is on top */
 }
 
 footer {
@@ -285,7 +339,8 @@ footer a {
 }
 
 footer a:hover {
-    color: #ffd700; /* Màu vàng sáng hơn */
+    color: #ffd700;
+    /* Màu vàng sáng hơn */
     text-decoration: underline;
 }
 
@@ -302,16 +357,19 @@ footer .text-center {
 .why-choose-section {
     padding: 7rem 0;
 }
+
 .why-choose-section .img-wrap {
     position: relative;
 }
+
 .why-choose-section .img-wrap img {
     border-radius: 20px;
 }
 
 .missing-input-text {
     font-size: 0.9em;
-    display: none; /* Hide by default */
+    display: none;
+    /* Hide by default */
 }
 
 /* Container styles */
@@ -340,9 +398,7 @@ footer .text-center {
     padding: 0.375rem 0.75rem !important;
 }
 
-.select2-container--default
-    .select2-selection--single
-    .select2-selection__arrow {
+.select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 100% !important;
     top: 0 !important;
 }
@@ -356,6 +412,7 @@ footer .text-center {
     border: 1px solid #ced4da !important;
     border-radius: 0.25rem !important;
 }
+
 .file-upload {
     position: relative;
     display: inline-block;
@@ -402,6 +459,92 @@ footer .text-center {
 .file-selected .file-upload-btn {
     background-color: #357abd;
 }
+
+.radio-group {
+    margin-bottom: 20px;
+}
+
+.radio-title {
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.radio-container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 20px;
+    user-select: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+/* Hide the default radio button */
+.radio-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Create custom radio button */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 22px;
+    width: 22px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+/* On hover */
+.radio-container:hover input~.checkmark {
+    background-color: #d1d7e0;
+}
+
+/* When checked */
+.radio-container input:checked~.checkmark {
+    background-color: #3a86ff;
+}
+
+/* Create the indicator (dot) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show the indicator when checked */
+.radio-container input:checked~.checkmark:after {
+    display: block;
+}
+
+/* Style the indicator */
+.radio-container .checkmark:after {
+    top: 7px;
+    left: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+}
+
+/* Focus styles for accessibility */
+.radio-container input:focus~.checkmark {
+    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.3);
+}
+
+/* Active label color */
+.radio-container input:checked~span:not(.checkmark) {
+    color: #3a86ff;
+    font-weight: 500;
+}
+
 /* Add media queries for different screen sizes */
 @media (max-width: 768px) {
     .card .clickable-card {
@@ -409,18 +552,23 @@ footer .text-center {
     }
 
     .card .clickable-card p {
-        font-size: 0.9rem; /* Slightly smaller font on mobile */
-        -webkit-line-clamp: 5; /* Show 5 lines on mobile if needed */
+        font-size: 0.9rem;
+        /* Slightly smaller font on mobile */
+        -webkit-line-clamp: 5;
+        /* Show 5 lines on mobile if needed */
     }
 }
+
 @media (max-width: 768px) {
     .carousel-inner {
-        max-height: 300px; /* Match img height */
+        max-height: 300px;
+        /* Match img height */
         overflow: hidden;
     }
 
     .carousel-item {
-        height: 300px; /* Match img height */
+        height: 300px;
+        /* Match img height */
     }
 
     .carousel-item img {
@@ -428,8 +576,10 @@ footer .text-center {
         width: 100%;
         object-fit: cover;
     }
+
     .logo {
-        height: 40px; /* Smaller logo on mobile */
+        height: 40px;
+        /* Smaller logo on mobile */
         width: auto;
     }
 

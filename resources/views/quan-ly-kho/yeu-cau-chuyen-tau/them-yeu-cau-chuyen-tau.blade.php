@@ -127,9 +127,13 @@
                                 <h3 class="text-center mb-2">Thông tin tờ khai nhập</h3>
                                 <p class="fs-5"><strong>Số tờ khai:</strong> <span id="modal-so-to-khai"></span></p>
                                 <p class="fs-5"><strong>Số container:</strong> <span id="modal-so-container"></span></p>
-                                <p class="fs-5"><strong>Tàu hiện tại:</strong> <span id="modal-tau-cu"></span></p>
-                                <hr />
-                                <p class="fs-5"><strong>Tên tàu mới: </strong></p>
+                                <p class="fs-5 fw-bold">Tàu hiện tại:</p>
+                                <div>
+                                    <input type="text" class="form-control reset-input" id="modal-tau-cu"
+                                        maxlength="255" name="tau_cu" placeholder="Nhập tên tàu" required>
+                                </div>
+
+                                <p class="fs-5 fw-bold mt-3">Tên tàu mới:</p>
                                 <div>
                                     <input type="text" class="form-control reset-input" id="modal-tau-moi"
                                         maxlength="255" name="tau_moi" placeholder="Nhập tên tàu" required>
@@ -151,20 +155,16 @@
             const tableBody = document.querySelector('#displayTableYeuCau tbody');
             $('#searchButton').on('click', function() {
                 var soToKhaiNhap = $('#so-to-khai-nhap-dropdown-search')
-                    .val(); // Replace with the actual input field for so_to_khai_nhap
+                    .val();
                 const isDuplicate = Array.from(tableBody.querySelectorAll('tr')).some(
                     row => {
                         return row.querySelector('td:nth-child(2)').textContent
                             .trim() === soToKhaiNhap;
                     });
 
-                if (isDuplicate) {
-                    alert('Số tờ khai nhập đã tồn tại trong bảng!');
-                    return;
-                }
                 if (soToKhaiNhap) {
                     $.ajax({
-                        url: '/get-to-khai-items2', // The route to your controller method
+                        url: '/get-to-khai-items2',
                         method: 'GET',
                         data: {
                             so_to_khai_nhap: soToKhaiNhap
@@ -172,10 +172,9 @@
                         success: function(response) {
                             if (response.data) {
                                 $('#modal-so-to-khai').text(response.data.so_to_khai_nhap);
-                                $('#modal-tau-cu').text(response.data.phuong_tien_vt_nhap);
+                                $('#modal-tau-cu').val(response.data.phuong_tien_vt_nhap);
                                 $('#modal-so-container').text(response.data.so_container);
 
-                                // Open the modal if it's not triggered by data attributes
                                 $('#chonHangTheoToKhaiModal').modal('show');
                             } else {
                                 alert('Không tìm thấy thông tin tờ khai.');
@@ -201,49 +200,43 @@
                 });
             }
 
-            // When the "doneButton" is clicked, add a row to the table
             $('#doneButton').on('click', function() {
-                // Get the modal values
                 var soToKhai = $('#modal-so-to-khai').text();
-                var tauCu = $('#modal-tau-cu').text();
+                var tauCu = $('#modal-tau-cu').val();
                 var soContainer = $('#modal-so-container').text();
                 var tauMoi = document.getElementById('modal-tau-moi').value;
+
                 // Validate data before adding a row
-                if (!soToKhai) {
+                if (!soToKhai || !tauCu || !soContainer || !tauMoi) {
                     alert('Vui lòng chọn và điền đầy đủ thông tin trước khi thêm!');
                     return;
                 }
-                const isDuplicate = Array.from(tableBody.querySelectorAll('tr')).some(row => {
-                    return row.querySelector('td:nth-child(2)').textContent.trim() === soToKhai;
+
+                var containers = soContainer.split(';').map(item => item.trim()).filter(item => item !==
+                    "");
+
+                containers.forEach(function(container) {
+                    var newRow = `
+                        <tr>
+                            <td class="row-index"></td> <!-- Index column -->
+                            <td>${soToKhai}</td>
+                            <td>${container}</td>
+                            <td>${tauCu}</td>
+                            <td>${tauMoi}</td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-row">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#displayTableYeuCau tbody').append(newRow);
                 });
 
-                if (isDuplicate) {
-                    alert('Số tờ khai nhập đã tồn tại trong bảng!');
-                    return;
-                }
-                // Create a new row
-                var newRow = `
-                    <tr>
-                        <td class="row-index"></td> <!-- Index column -->
-                        <td>${soToKhai}</td>
-                        <td>${soContainer}</td>
-                        <td>${tauCu}</td>
-                        <td>${tauMoi}</td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm remove-row">Xóa</button>
-                        </td>
-                    </tr>
-                `;
-
-                // Append the new row to the table
-                $('#displayTableYeuCau tbody').append(newRow);
-
-                // Update table indexes
                 updateTableIndex();
                 updateRowsData();
-                // Close the modal (if applicable)
+
                 $('#chonHangTheoToKhaiModal').modal('hide');
             });
+
 
             // Remove a row and update indexes
             $('#displayTableYeuCau').on('click', '.remove-row', function() {

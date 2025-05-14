@@ -17,9 +17,10 @@
                 @endif
                 <div class="col-6 card p-3">
                     <h2 class="text-center">Tra cứu container</h2>
-                    <button data-bs-toggle="modal" data-bs-target="#themContainerModal"
-                        class="btn btn-success float-end">Thêm
-                        container mới</button>
+                    {{-- <a
+                        href="{{ route('export.bao-cao-tra-cuu-container') }}">
+                        <button class="btn btn-success float-end me-1">In báo cáo</button>
+                    </a> --}}
                     <div class="table-responsive mt-3">
                         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                             <thead>
@@ -30,6 +31,9 @@
                                     Số container
                                 </th>
                                 <th>
+                                    Tàu
+                                </th>
+                                <th>
                                     Số seal niêm phong
                                 </th>
                                 <th>
@@ -37,6 +41,18 @@
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
+                                @foreach ($containers as $key => $container)
+                                    @if (!is_null($container->so_container) && $container->so_container != '')
+                                        <tr
+                                            onclick="window.location='{{ route('quan-ly-kho.to-khai-trong-container', ['so_container' => $container->so_container]) }}'">
+                                            <td>{{ $key + 1 }}</td>
+                                            <td>{{ $container->so_container }}</td>
+                                            <td>{{ $container->phuong_tien_vt_nhap ?? '' }}</td>
+                                            <td>{{ $container->so_seal ?? '' }}</td>
+                                            <td>{{ $container->total_so_luong ?? 0 }}</td>
+                                        </tr>
+                                    @endif
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -197,10 +213,7 @@
         $(document).ready(function() {
             var table = $('#dataTable').DataTable({
                 processing: true,
-                serverSide: true,
                 stateSave: true,
-                ajax: "{{ route('quan-ly-kho.getTraCuuContainer') }}",
-
                 language: {
                     searchPlaceholder: "Tìm kiếm",
                     search: "",
@@ -226,28 +239,6 @@
                         title: ''
                     }
                 ],
-                columns: [{
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex'
-                    },
-                    {
-                        data: 'so_container',
-                        name: 'so_container'
-                    },
-                    {
-                        data: 'so_seal',
-                        name: 'so_seal'
-                    },
-                    {
-                        data: 'total_so_luong',
-                        name: 'total_so_luong'
-                    },
-                ],
-                createdRow: function(row, data, dataIndex) {
-                    $(row).addClass('clickable-row').attr('onclick',
-                        `window.location='{{ url('/to-khai-trong-container') }}/${data.so_container}'`
-                    );
-                },
             });
         });
     </script>

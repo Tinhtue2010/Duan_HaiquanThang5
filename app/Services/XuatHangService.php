@@ -13,6 +13,7 @@ use App\Models\NhapHang;
 use App\Models\TienTrinh;
 use App\Models\XuatHang;
 use App\Models\HangHoa;
+use App\Models\NiemPhong;
 use App\Models\XuatHangCont;
 use App\Models\XuatHangSua;
 use App\Models\YeuCauChuyenContainer;
@@ -24,6 +25,7 @@ use App\Models\PTVTXuatCanhCuaPhieuTruocSua;
 use App\Models\TheoDoiHangHoa;
 use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\YeuCauTauCont;
+use Carbon\Carbon;
 
 class XuatHangService
 {
@@ -247,7 +249,7 @@ class XuatHangService
                 'so_luong_ton' => $so_luong - $row['so_luong_xuat'],
                 'so_luong_xuat' => $row['so_luong_xuat'],
                 'so_container' => $row['so_container'],
-                'phuong_tien_vt_nhap' => $phuong_tien_vt_nhap,
+                'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? '',
                 'tri_gia' => $row['tri_gia'],
             ]);
         }
@@ -688,11 +690,13 @@ class XuatHangService
     public function themTheoDoi($xuatHang, $xuatHangCont, $hangHoaXuat, $ma_cong_chuc)
     {
         $ptvtXuatCanh = $this->getPTVTXuatCanhCuaPhieu($xuatHang->so_to_khai_xuat);
+        $ngayDangKy = Carbon::parse($xuatHang->ngay_dang_ky);
+        $thoiGian = $ngayDangKy->setTime(now()->hour, now()->minute);
         TheoDoiHangHoa::insert(
             [
                 'so_to_khai_nhap' => $xuatHangCont->so_to_khai_nhap,
                 'ma_hang' => $hangHoaXuat->ma_hang,
-                'thoi_gian' => now(),
+                'thoi_gian' => $thoiGian,
                 'so_luong_xuat' => $hangHoaXuat->so_luong_xuat,
                 'so_luong_ton' => $hangHoaXuat->so_luong - $hangHoaXuat->so_luong_xuat,
                 'phuong_tien_cho_hang' => '',
@@ -709,12 +713,11 @@ class XuatHangService
             'so_to_khai_nhap' => $xuatHangCont->so_to_khai_nhap,
             'so_ptvt_nuoc_ngoai' => $ptvtXuatCanh,
             'phuong_tien_vt_nhap' => '',
-            'ngay_them' => now(),
+            'ngay_them' => $xuatHang->ngay_dang_ky,
             'cong_viec' => 1,
             'ma_yeu_cau' => $xuatHang->so_to_khai_xuat,
         ]);
     }
-
     public function themLaiPTVTXuatCanhCuaPhieu($xuatHang, $ptvtSuas)
     {
         $ptvts = $ptvtSuas->map(function ($ptvtSua) use ($xuatHang) {
@@ -755,7 +758,7 @@ class XuatHangService
                 'so_luong_ton' => $chiTietSuaXuatHang->so_luong_ton,
                 'so_container' => $chiTietSuaXuatHang->so_container,
                 'tri_gia' => $chiTietSuaXuatHang->tri_gia,
-                'phuong_tien_vt_nhap' => $phuong_tien_vt_nhap,
+                'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $chiTietSuaXuatHang->so_container)->first()->phuong_tien_vt_nhap ?? '',
             ];
         });
 
@@ -850,6 +853,7 @@ class XuatHangService
         $maCongChuc = $ma_cong_chuc;
         $xuatHang = XuatHang::find($so_to_khai_xuat);
         $xuatHang->ma_cong_chuc = $ma_cong_chuc;
+        $xuatHang->save();
         if ($xuatHang->trang_thai != "2") {
             $this->capNhatPhieuXuatHang($xuatHang, $maCongChuc);
 
@@ -860,11 +864,30 @@ class XuatHangService
                 ->get();
             foreach ($xuatHangConts as $xuatHangCont) {
                 $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt phiếu xuất hàng số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
+                $this->kiemTraXuatHetHang($xuatHangCont->so_to_khai_nhap,$maCongChuc);
             }
         }
         session()->flash('alert-success', 'Trạng thái đã được cập nhật thành công!');
 
         return $xuatHang;
+    }
+    public function kiemTraXuatHetHang($so_to_khai_nhap,$maCongChuc)
+    {
+        $allZero = !HangTrongCont::whereHas('hangHoa', function ($query) use ($so_to_khai_nhap) {
+            $query->where('so_to_khai_nhap', $so_to_khai_nhap);
+        })->where('so_luong', '!=', 0)->exists();
+        if ($allZero) {
+            $this->capNhatXuatHetHang($so_to_khai_nhap,$maCongChuc);
+        }
+    }
+    public function capNhatXuatHetHang($so_to_khai_nhap,$maCongChuc)
+    {
+        NhapHang::find($so_to_khai_nhap)
+            ->update([
+                'ngay_xuat_het' => now(),
+                'trang_thai' => '4',
+                'ma_cong_chuc_ban_giao' => $maCongChuc
+            ]);
     }
     public function xuLyDuyetThucXuat($ma_cong_chuc, $so_to_khai_xuat)
     {

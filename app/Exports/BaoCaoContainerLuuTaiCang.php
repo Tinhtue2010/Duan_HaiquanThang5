@@ -31,71 +31,42 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['STT', 'Số tờ khai', 'Ngày đăng ký tờ khai', 'Chi cục HQ đăng ký tờ khai', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Số lượng tồn', 'Số container'],
+            ['STT','Tên DN','Loại hàng','Số container', 'Số lượng tồn', 'Số tàu', 'Số seal'],
 
         ];
 
         $containers = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
+            ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
             ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
             ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
             ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
-            ->select('container.*', 'niem_phong.so_seal')
+            ->select('container.*', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap','doanh_nghiep.ten_doanh_nghiep','hang_hoa.loai_hang')
             ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
-            ->groupBy('container.so_container', 'niem_phong.so_seal')
+            ->groupBy('container.so_container', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap')
             ->orderByRaw('total_so_luong DESC')
             ->get();
 
         $totalHangTon = 0;
-        $totalKhaiBao = 0;
         $stt = 1;
 
         foreach ($containers as $container) {
-            $item = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
-                ->where('hang_trong_cont.so_container', $container->so_container)
-                ->first();
-            $so_luong_khai_bao = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->where('hang_trong_cont.so_container', $container->so_container)
-                ->sum('hang_hoa.so_luong_khai_bao');
-            
-            if ($container->total_so_luong != 0) {
+            if ($container->total_so_luong != 0 && $container->so_container != '') {
                 $result[] = [
                     $stt++,
-                    $item->so_to_khai_nhap,
-                    Carbon::parse($item->ngay_dang_ky)->format('d-m-Y'),
-                    $item->ten_hai_quan,
-                    $item->ten_doanh_nghiep,
-                    $item->ma_doanh_nghiep,
-                    $item->dia_chi,
-                    $item->ten_hang,
-                    $item->xuat_xu,
-                    $so_luong_khai_bao,
-                    $item->don_vi_tinh,
-                    $item->trong_luong,
-                    $item->tri_gia,
+                    $container->ten_doanh_nghiep,
+                    $container->loai_hang,
+                    $container->so_container,
                     $container->total_so_luong,
-                    $item->so_container,
+                    $container->phuong_tien_vt_nhap,
+                    $container->so_seal,
                 ];
                 $totalHangTon += $container->total_so_luong;
-                $totalKhaiBao += $so_luong_khai_bao;
             }
         }
 
         $result[] = [
             '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            $totalKhaiBao,
             '',
             '',
             '',
@@ -116,7 +87,7 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:O' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:G' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -130,61 +101,51 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
 
                 // Auto-width columns
-                foreach (['A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'] as $column) {
+                foreach (['A', 'B', 'C', 'D'] as $column) {
                     $sheet->getColumnDimension($column)->setWidth(width: 10);
                 }
                 $sheet->getColumnDimension('A')->setWidth(width: 7); //STT
-                $sheet->getColumnDimension('B')->setWidth(width: 15); //Số tờ khai
-                $sheet->getColumnDimension('C')->setWidth(width: 12); //Ngày đăng ký
-                $sheet->getColumnDimension('D')->setWidth(width: 15); //Chi cục
-                $sheet->getColumnDimension('E')->setWidth(width: 15); //Tên DN
-                $sheet->getColumnDimension('F')->setWidth(width: 15); //Mã DN
-                $sheet->getColumnDimension('G')->setWidth(width: 25); //Địa chỉ
-                $sheet->getColumnDimension('H')->setWidth(width: 25); //Tên hàng
-                $sheet->getColumnDimension('I')->setWidth(width: 12);
-                $sheet->getColumnDimension('M')->setWidth(width: 15);
-                $sheet->getColumnDimension('N')->setWidth(width: 12);
-                $sheet->getColumnDimension('O')->setWidth(width: 15);
+                $sheet->getColumnDimension('B')->setWidth(width: 25); //Số tờ khai
+                $sheet->getColumnDimension('C')->setWidth(width: 15); //Số tờ khai
+                $sheet->getColumnDimension('D')->setWidth(width: 20); //Ngày đăng ký
+                $sheet->getColumnDimension('E')->setWidth(width: 15); //Chi cục
+                $sheet->getColumnDimension('F')->setWidth(width: 15); //Tên DN
+                $sheet->getColumnDimension('G')->setWidth(width: 15); //Tên DN
 
-                $sheet->getStyle('B')->getNumberFormat()->setFormatCode('0'); // Apply format
-                $sheet->getStyle('F')->getNumberFormat()->setFormatCode('0'); // Apply format
-                $sheet->getStyle('M')->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle('J')->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle('L')->getNumberFormat()->setFormatCode('#,##0.00');
-                $sheet->getStyle('N')->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle('E')->getNumberFormat()->setFormatCode('#,##0');
 
                 $lastRow = $sheet->getHighestRow();
                 $highestColumn = $sheet->getHighestColumn();
                 $sheet->getStyle('A1:' . $highestColumn . $lastRow)->getAlignment()->setWrapText(true);
 
                 // Merge cells for headers
-                $sheet->mergeCells('A1:E1'); // CỤC HẢI QUAN
-                $sheet->mergeCells('A2:E2'); // CHI CỤC
-                $sheet->mergeCells('A4:O4'); // BÁO CÁO
-                $sheet->mergeCells('A5:O5'); // Tính đến ngày
+                $sheet->mergeCells('A1:D1'); // CỤC HẢI QUAN
+                $sheet->mergeCells('A2:D2'); // CHI CỤC
+                $sheet->mergeCells('A4:G4'); // BÁO CÁO
+                $sheet->mergeCells('A5:G5'); // Tính đến ngày
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:O6')->applyFromArray([
+                $sheet->getStyle('A1:G6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:O6')->applyFromArray([
+                $sheet->getStyle('A2:G6')->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
-                $sheet->getStyle('A9:O' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A9:G' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:O5')->applyFromArray([
+                $sheet->getStyle('A5:G5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
                 // Bold and center align for table headers
-                $sheet->getStyle('A8:O8')->applyFromArray([
+                $sheet->getStyle('A8:G8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -199,7 +160,7 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A8:O' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:G' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -207,7 +168,6 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
                     ],
 
                 ]);
-
             },
         ];
     }

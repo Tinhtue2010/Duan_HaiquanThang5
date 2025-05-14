@@ -33,7 +33,7 @@
                 <div id="divPrint">
 
                     <h2 class="text-center">{{ $doanhNghiep->ten_doanh_nghiep }}</h2>
-                    <h2 class="text-center">YÊU CẦU CHUYỂN HÀNG SANG CONTAINER VÀ TÀU MỚI</h2>
+                    <h2 class="text-center">YÊU CẦU CHUYỂN HÀNG SANG CONTAINER</h2>
                     <h2 class="text-center">Số {{ $yeuCau->ma_yeu_cau }} - Ngày yêu cầu:
                         {{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</h2>
                     <hr>

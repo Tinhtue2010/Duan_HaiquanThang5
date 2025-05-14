@@ -20,6 +20,10 @@ class Container extends Model
     {
         return $this->hasOne(NiemPhong::class, 'so_container', 'so_container');
     }
+    public function hangTrongCont()
+    {
+        return $this->hasMany(HangTrongCont::class, 'so_container', 'so_container');
+    }
     public function nhapHang()
     {
         return $this->hasMany(NhapHang::class, 'so_container', 'so_container');

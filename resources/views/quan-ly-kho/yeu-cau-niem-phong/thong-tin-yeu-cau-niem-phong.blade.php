@@ -47,6 +47,7 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Số container</th>
+                                <th>Tàu</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,6 +55,7 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
                                     <td>{{ $chiTiet->so_container }}</td>
+                                    <td>{{ $chiTiet->phuong_tien_vt_nhap }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -156,6 +158,7 @@
                                         <tr>
                                             <th>STT</th>
                                             <th>Số container</th>
+                                            <th>Tàu</th>
                                             <th>Số seal niêm phong cũ</th>
                                             <th>Số seal niêm phong mới</th>
                                             @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
@@ -170,6 +173,7 @@
                                             <tr>
                                                 <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
                                                 <td>{{ $chiTiet->so_container }}</td>
+                                                <td>{{ $chiTiet->phuong_tien_vt_nhap }}</td>
                                                 <td>{{ $chiTiet->so_seal_cu }}</td>
                                                 <td>{{ $chiTiet->so_seal_moi }}</td>
                                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
@@ -188,6 +192,24 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                            @elseif(trim($yeuCau->trang_thai) == '3')
+                                <h2 class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</h2>
+                                <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
+                                <h2 class="text-primary">Cán bộ công chức phụ trách:
+                                    {{ $yeuCau->congChuc->ten_cong_chuc ?? '' }}</h2>
+                                <div class="row">
+                                    <center>
+                                        <div class="col-6">
+                                            <a
+                                                href="{{ route('quan-ly-kho.xem-sua-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                                                <button class="btn btn-warning px-4">
+                                                    <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                    Xem sửa đổi
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </center>
+                                </div>
                             @elseif(trim($yeuCau->trang_thai) == '0')
                                 <h2 class="text-danger">Yêu cầu đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
@@ -261,11 +283,7 @@
                             <select class="form-control" id="cong-chuc-dropdown-search" name="ma_cong_chuc">
                                 <option value="{{ $congChucHienTai->ma_cong_chuc ?? '' }}" selected>
                                     {{ $congChucHienTai->ten_cong_chuc ?? '' }}</option>
-                                {{-- @foreach ($congChucs as $congChuc)
-                                    <option value="{{ $congChuc->ma_cong_chuc }}">
-                                        {{ $congChuc->ten_cong_chuc }}
-                                    </option>
-                                @endforeach --}}
+
                             </select>
                             <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
                                 id="displayTableYeuCau">
@@ -494,9 +512,6 @@
                     updateSealDropdown($(this));
                 });
             });
-
-
-
 
             function updateSealDropdown2() {
                 let maCongChuc = document.getElementById("maCongChuc").value;

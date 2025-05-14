@@ -26,6 +26,7 @@ class HangHoaSua extends Model
         'tri_gia',
         'don_vi_tinh',
         'so_container_khai_bao',
+        'so_seal',
         'ma_nhap_sua'
     ];
     public function nhapHang()

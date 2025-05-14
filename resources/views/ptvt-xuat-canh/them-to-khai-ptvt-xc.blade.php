@@ -69,31 +69,62 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <h5>Thông số xuồng đến</h5>
                                 <div class="col-3">
                                     <label class="label-text" for="ten_thuyen_truong">Draft</label> <span
                                         class="text-danger missing-input-text"></span>
                                     <input type="text" class="form-control mt-2  reset-input" id=""
-                                        maxlength="20" name="draft" placeholder="Nhập Draft" required>
+                                        maxlength="20" name="draft_den" placeholder="Nhập Draft" required>
                                 </div>
                                 <div class="col-3">
                                     <label class="label-text" for="quoc_tich_tau">DWT</label> <span
                                         class="text-danger missing-input-text"></span>
                                     <input type="text" class="form-control mt-2  reset-input" id=""
-                                        maxlength="10" name="dwt" placeholder="Nhập DWT" required>
+                                        maxlength="10" name="dwt_den" placeholder="Nhập DWT" required>
                                 </div>
                                 <div class="col-3">
                                     <label class="label-text" for="so_giay_chung_nhan">LOA</label> <span
                                         class="text-danger missing-input-text"></span>
                                     <input type="text" class="form-control mt-2  reset-input" id=""
-                                        maxlength="10" name="loa" placeholder="Nhập LOA" required>
+                                        maxlength="10" name="loa_den" placeholder="Nhập LOA" required>
                                 </div>
                                 <div class="col-3">
                                     <label class="label-text" for="so_giay_chung_nhan">Breadth</label> <span
                                         class="text-danger missing-input-text"></span>
                                     <input type="text" class="form-control mt-2  reset-input" id=""
-                                        maxlength="10" name="breadth" placeholder="Nhập Breadth" required>
+                                        maxlength="10" name="breadth_den" placeholder="Nhập Breadth" required>
                                 </div>
                             </div>
+
+                            <div class="row">
+                                <h5>Thông số xuồng rời</h5>
+                                <div class="col-3">
+                                    <label class="label-text" for="ten_thuyen_truong">Draft</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="20" name="draft_roi" placeholder="Nhập Draft" required>
+                                </div>
+                                <div class="col-3">
+                                    <label class="label-text" for="quoc_tich_tau">DWT</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="dwt_roi" placeholder="Nhập DWT" required>
+                                </div>
+                                <div class="col-3">
+                                    <label class="label-text" for="so_giay_chung_nhan">LOA</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="loa_roi" placeholder="Nhập LOA" required>
+                                </div>
+                                <div class="col-3">
+                                    <label class="label-text" for="so_giay_chung_nhan">Breadth</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="breadth_roi" placeholder="Nhập Breadth" required>
+                                </div>
+                            </div>
+
+
                             <center>
                                 <button class="btn btn-success mb-3" type="submit">Thêm phương tiện</button>
                             </center>

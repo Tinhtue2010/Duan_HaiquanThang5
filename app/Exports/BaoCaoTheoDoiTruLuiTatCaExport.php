@@ -23,6 +23,7 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 
 class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawings
 {
@@ -32,6 +33,7 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
     protected $nhapHang;
     protected $sum;
     protected $array;
+    protected $ten_hai_quan;
 
     public function __construct($so_to_khai_nhap)
     {
@@ -63,7 +65,7 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
         $date = DateTime::createFromFormat('Y-m-d', $ngay_dang_ky);
 
         $ngay_thong_quan = NhapHang::where('so_to_khai_nhap', $nhapHang->so_to_khai_nhap)->value('ngay_thong_quan');
-        $ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
+        $this->ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
 
         $result = [
             [''],
@@ -72,7 +74,7 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
             [''],
             ['', '', '', '', '', '', '', 'Ngày ' . $currentDate . ' Tháng ' . $currentMonth . ' Năm ' . $currentYear],
             ['Tên Doanh Nghiệp: ' . $ten_doanh_nghiep],
-            ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Chi cục hải quan đăng ký: ' . $ten_hai_quan],
+            ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Chi cục hải quan đăng ký: ' . $this->ten_hai_quan],
             ['Tên hàng hóa: ' . $hangHoaLonNhat->ten_hang],
             ['Số lượng: ' . $tongSoLuongs . '; Đơn vị tính: ' . $hangHoaLonNhat->don_vi_tinh . '; Xuất xứ: ' . $hangHoaLonNhat->xuat_xu],
             [],
@@ -91,8 +93,8 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
             $this->createRichTextBoldItalic('Số lượng hàng hóa xuất khẩu ', '(Kiện)'),
             $this->createRichTextBoldItalic('Số Lượng hàng hóa chưa xuất khẩu ', '(Kiện)'),
             'Số seal hải quan niêm phong',
-            'Số hiệu PTVT ',
-            'Số hiệu Container',
+            $this->createRichTextBoldItalic('Số hiệu PTVT ','(tàu Việt Nam nếu có thay đổi)'),
+            $this->createRichTextBoldItalic('Số hiệu container ','(nếu có thay đổi)'),
             'Ghi chú'
         ];
         $result[] = [
@@ -176,8 +178,8 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
                     $item->so_luong_xuat,
                     $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
                     $item->so_seal_cuoi_ngay ? $item->so_seal_cuoi_ngay : '',
-                    $item->phuong_tien_vt_nhap,
-                    $item->so_container,
+                    $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                    $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
                     '',
                 ];
                 $sum += $item->so_luong_xuat;
@@ -227,29 +229,29 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
                     ->setFooter(0.3);
                 // Set font for entire sheet
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
-                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(14);
+                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(20);
+                
+                $sheet->getDelegate()->getSheetView()->setZoomScale(85);
 
                 // Auto-width columns
                 $sheet->getColumnDimension('A')->setWidth(width: 5);
-                $sheet->getColumnDimension('B')->setWidth(width: 20);
+                $sheet->getColumnDimension('B')->setWidth(width: 18);
                 $sheet->getColumnDimension('C')->setWidth(width: 18);
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
                 $sheet->getColumnDimension('E')->setWidth(width: 15);
-                $sheet->getColumnDimension('F')->setWidth(width: 10);
+                $sheet->getColumnDimension('F')->setWidth(width: 5);
                 $sheet->getColumnDimension('G')->setWidth(width: 10);
                 $sheet->getColumnDimension('H')->setWidth(width: 10);
-                $sheet->getColumnDimension('I')->setWidth(width: 18);
-                $sheet->getColumnDimension('J')->setWidth(width: 15);
+                $sheet->getColumnDimension('I')->setWidth(width: 13);
+                $sheet->getColumnDimension('J')->setWidth(width: 10);
                 $sheet->getColumnDimension('K')->setWidth(width: 15);
                 $sheet->getColumnDimension('L')->setWidth(width: 20);
-                $sheet->getRowDimension(1)->setRowHeight(20);
                 $sheet->getRowDimension(5)->setRowHeight(28);
                 $sheet->getRowDimension(6)->setRowHeight(28);
                 $sheet->getRowDimension(7)->setRowHeight(28);
                 $sheet->getRowDimension(8)->setRowHeight(28);
                 $sheet->getRowDimension(9)->setRowHeight(28);
                 $sheet->getRowDimension(10)->setRowHeight(28);
-                $sheet->getStyle('L')->getNumberFormat()->setFormatCode('0'); // Apply format
 
                 $sheet->setCellValue('L2', $this->so_to_khai_nhap);
                 $this->centerCell($sheet, "L2");
@@ -376,42 +378,52 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
                 $first = 0;
                 for ($row = $secondTableStart; $row <= $lastStart - 3; $row++) {
                     if ($first == 1) {
-                        $sheet->getStyle('D' . $row)->getAlignment()->setWrapText(true);
-                        $sheet->getRowDimension($row)->setRowHeight(height: 55);
+                        $sheet->getRowDimension($row)->setRowHeight(height: 80);
                     }
                     $first = 1;
                 }
-                $sheet->getRowDimension(12)->setRowHeight(20);
+                $sheet->getRowDimension(1)->setRowHeight(30);
+                $sheet->getRowDimension(12)->setRowHeight(30);
+                if (mb_strlen($this->ten_hai_quan, 'UTF-8') > 40) {
+                    $sheet->getRowDimension(7)->setRowHeight(50);
+                    $sheet->getStyle('A7:L7')->applyFromArray([
+                        'alignment' => [
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                        ]
+                    ]);
+                }
+
+                $sheet->getStyle('L')->getNumberFormat()->setFormatCode('0'); // Apply format
 
                 // Set left alignment for number columns
                 // $sheet->getStyle('A13:A'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             },
         ];
     }
+
     public function drawings()
     {
-        // Generate Barcode
+        // Generate barcode in memory
         $generator = new BarcodeGeneratorPNG();
-        $barcodeData = $generator->getBarcode($this->so_to_khai_nhap, $generator::TYPE_CODE_128);
+        $barcodeData = $generator->getBarcode($this->nhapHang->so_to_khai_nhap, $generator::TYPE_CODE_128);
 
-        // Save barcode temporarily
-        $barcodePath = storage_path('app/temp-barcode-tru-lui-2.png');
-        file_put_contents($barcodePath, $barcodeData);
+        // Create image from binary PNG data
+        $image = imagecreatefromstring($barcodeData);
 
-        // Create Barcode Drawing
-        $barcodeDrawing = new Drawing();
-        $barcodeDrawing->setName('Barcode');
-        $barcodeDrawing->setDescription('Barcode');
-        $barcodeDrawing->setPath($barcodePath);
-        $barcodeDrawing->setCoordinates('L1'); // Position barcode at the top right
-        $barcodeDrawing->setOffsetX(0);
-        $barcodeDrawing->setOffsetY(0);
-        $barcodeDrawing->setHeight(20);
-        $barcodeDrawing->setWidth(180);
+        // Create in-memory drawing
+        $drawing = new MemoryDrawing();
+        $drawing->setName('Barcode');
+        $drawing->setDescription('Barcode');
+        $drawing->setImageResource($image);
+        $drawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+        $drawing->setMimeType(MemoryDrawing::MIMETYPE_DEFAULT);
+        $drawing->setCoordinates('L1'); // Adjust as needed
+        $drawing->setOffsetX(0);
+        $drawing->setOffsetY(0);
+        $drawing->setHeight(30);
+        $drawing->setWidth(250);
 
-        $drawings[] = $barcodeDrawing; // Add barcode drawing to array
-
-        return $drawings; // Return both drawings
+        return $drawing;
     }
     function createRichText($text, $bold)
     {
@@ -429,11 +441,11 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
 
         // Bold text
         $boldText = $richText->createTextRun($text);
-        $boldText->getFont()->setBold(true)->setName('Times New Roman')->setSize(14);
+        $boldText->getFont()->setBold(true)->setName('Times New Roman')->setSize(20);
 
         // Italic text
         $italicText = $richText->createTextRun($italic);
-        $italicText->getFont()->setItalic(true)->setName('Times New Roman')->setSize(14);
+        $italicText->getFont()->setName('Times New Roman')->setSize(20);
 
         return $richText;
     }
@@ -445,11 +457,5 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
                 'vertical' => Alignment::VERTICAL_CENTER,
             ],
         ]);
-    }
-    public function __destruct()
-    {
-        if (file_exists(storage_path('app/temp-barcode-tru-lui.png'))) {
-            unlink(storage_path('app/temp-barcode-tru-lui.png'));
-        }
     }
 }

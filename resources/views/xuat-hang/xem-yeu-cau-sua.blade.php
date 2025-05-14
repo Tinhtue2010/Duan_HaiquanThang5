@@ -71,30 +71,30 @@
                                         $isRemoved = !$matched;
                                     @endphp
                                     <tr class="">
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">{{ $index + 1 }}</td>
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">{{ $index + 1 }}</td>
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
                                         </td>
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ $hangHoa->ten_hang }}
                                         </td>
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ $hangHoa->xuat_xu }}
                                         </td>
                                         <td
-                                            class="{{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning' : '' }} {{ $isRemoved ? 'text-danger' : '' }}">
+                                            class="{{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning fw-bold' : '' }} {{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ $hangHoa->so_luong_xuat }}
                                         </td>
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ $hangHoa->don_vi_tinh }}
                                         </td>
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ number_format($hangHoa->don_gia, 2) }}
                                         </td>
-                                        <td class="{{ $isRemoved ? 'text-danger' : '' }}">
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ number_format($hangHoa->tri_gia, 2) }}
                                         </td>
                                         <td
-                                            class="{{ $matched && $matched->so_container !== $hangHoa->so_container ? 'text-warning' : '' }} {{ $isRemoved ? 'text-danger' : '' }}">
+                                            class="{{ $matched && $matched->so_container !== $hangHoa->so_container ? 'text-warning fw-bold' : '' }} {{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ $hangHoa->so_container }}
                                         </td>
                                     </tr>
@@ -172,22 +172,22 @@
                                         $isNew = !$hangHoaRows->firstWhere('ma_hang_cont', $hangHoa->ma_hang_cont);
                                         $matched = $suaHangHoaRows->firstWhere('ma_hang_cont', $hangHoa->ma_hang_cont);
                                     @endphp
-                                    <tr class="{{ $isNew ? 'text-success' : '' }}">
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $index + 1 }}</td>
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
+                                    <tr class="{{ $isNew ? 'text-success fw-bold' : '' }}">
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $index + 1 }}</td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
                                         </td>
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->ten_hang }}</td>
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->xuat_xu }}</td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->ten_hang }}</td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->xuat_xu }}</td>
                                         <td
-                                            class="{{ $isNew ? 'text-success' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning' : '' }}">
+                                            class="{{ $isNew ? 'text-success fw-bold' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning fw-bold' : '' }}">
                                             {{ $hangHoa->so_luong_xuat }}</td>
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">{{ $hangHoa->don_vi_tinh }}</td>
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->don_vi_tinh }}</td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">
                                             {{ number_format($hangHoa->don_gia, 2) }}</td>
-                                        <td class="{{ $isNew ? 'text-success' : '' }}">
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">
                                             {{ number_format($hangHoa->tri_gia, 2) }}</td>
                                         <td
-                                            class="{{ $isNew ? 'text-success' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning' : '' }}">
+                                            class="{{ $isNew ? 'text-success fw-bold' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning fw-bold' : '' }}">
                                             {{ $hangHoa->so_container }}</td>
                                     </tr>
                                 @endforeach
@@ -224,9 +224,9 @@
                                                 );
                                                 $isNew = !$originalPTVT;
                                                 $rowClass = $isNew
-                                                    ? 'text-warning'
+                                                    ? 'text-warning fw-bold'
                                                     : ($isNew
-                                                        ? 'text-warning'
+                                                        ? 'text-warning fw-bold'
                                                         : '');
                                             @endphp
 

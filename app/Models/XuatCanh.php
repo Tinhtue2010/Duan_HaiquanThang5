@@ -39,7 +39,7 @@ class XuatCanh extends Model
     {
         return $this->belongsTo(PTVTXuatCanh::class, 'so_ptvt_xuat_canh', 'so_ptvt_xuat_canh');
     }
-    public function XuatCanhChiTiet()
+    public function xuatCanhChiTiet()
     {
         return $this->hasMany(XuatCanhChiTiet::class, 'ma_xuat_canh', 'ma_xuat_canh');
     }

@@ -122,7 +122,7 @@ class YeuCauContainerController extends Controller
                     ->pluck('nhap_hang.so_to_khai_nhap')
                     ->implode('</br>');
                 $so_to_khai_cont_moi .= ($so_to_khai_cont_moi ? '</br>' : '') . $row['so_to_khai_nhap'];
-                $tauGoc = NhapHang::find($row['so_to_khai_nhap'])->phuong_tien_vt_nhap;
+                $tauGoc = NiemPhong::where('so_container', $row['so_container_goc'])->first()->phuong_tien_vt_nhap ?? "";
                 $chiTietYeuCau = YeuCauContainerChiTiet::create([
                     'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                     'so_container_goc' => $row['so_container_goc'],
@@ -258,7 +258,7 @@ class YeuCauContainerController extends Controller
         if ($request->file('file')) {
             $this->luuFile($request, yeuCau: $suaYeuCau);
         }
-        $this->xuLyThemChiTietYeuCau($request, $suaYeuCau, $yeuCau);
+        $this->xuLyThemChiTietYeuCau($request,  $suaYeuCau, $yeuCau);
     }
 
     public function suaYeuCauDangChoDuyet($request, $yeuCau)
@@ -299,7 +299,7 @@ class YeuCauContainerController extends Controller
                 ->implode('</br>');
             $so_to_khai_cont_moi .= ($so_to_khai_cont_moi ? '</br>' : '') . $row['so_to_khai_nhap'];
 
-            $tauGoc = NhapHang::find($row['so_to_khai_nhap'])->phuong_tien_vt_nhap;
+            $tauGoc = NiemPhong::where('so_container', $row['so_container_goc'])->first()->phuong_tien_vt_nhap ?? "";
             $chiTietYeuCau = YeuCauContainerChiTiet::create([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                 'so_container_goc' => $row['so_container_goc'],
@@ -332,6 +332,7 @@ class YeuCauContainerController extends Controller
     public function xuLyThemChiTietYeuCau($request, $suaYeuCau, $yeuCauCu)
     {
         $rowsData = json_decode($request->rows_data, true);
+        $ma_yeu_cau = $yeuCauCu->ma_yeu_cau;
 
         $groupedData = collect($rowsData)
             ->groupBy(function ($item) {
@@ -353,16 +354,29 @@ class YeuCauContainerController extends Controller
                 ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                 ->sum('hang_trong_cont.so_luong');
 
-            $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            $soLuongTrongDon = YeuCauContainerChiTiet::where('ma_yeu_cau', $ma_yeu_cau)
+                ->where('so_container_dich', $row['so_container_dich'])
+                ->where('so_container_goc', $row['so_container_goc'])
+                ->sum('so_luong_chuyen');
+
+            $soToKhaiList = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                 ->distinct()
                 ->pluck('nhap_hang.so_to_khai_nhap')
-                ->implode('</br>');
-            $so_to_khai_cont_moi .= ($so_to_khai_cont_moi ? '</br>' : '') . $row['so_to_khai_nhap'];
+                ->toArray();
 
-            $tauGoc = NhapHang::find($row['so_to_khai_nhap'])->phuong_tien_vt_nhap;
+            // Check and add if not exists
+            if (!in_array($row['so_to_khai_nhap'], $soToKhaiList)) {
+                $soToKhaiList[] = $row['so_to_khai_nhap'];
+            }
+            
+            $so_to_khai_cont_moi = implode('</br>', $soToKhaiList);
+            $so_luong_ton_cont_moi -= $soLuongTrongDon;
+
+            // $tauGoc = NhapHang::find($row['so_to_khai_nhap'])->phuong_tien_vt_nhap;
+            $tauGoc = NiemPhong::where('so_container', $row['so_container_goc'])->first()->phuong_tien_vt_nhap ?? "";
             $chiTietYeuCau = YeuCauContainerChiTietSua::create([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                 'so_container_goc' => $row['so_container_goc'],
@@ -373,6 +387,7 @@ class YeuCauContainerController extends Controller
                 'so_to_khai_cont_moi' => $so_to_khai_cont_moi,
                 'ma_sua_yeu_cau' => $suaYeuCau->ma_sua_yeu_cau
             ]);
+
             foreach ($rowsData as $row2) {
                 if ($row2['so_to_khai_nhap'] == $row['so_to_khai_nhap'] && $row['so_container_goc'] == $row2['so_container_goc'] && $row['so_container_dich'] == $row2['so_container_dich']) {
                     YeuCauContainerHangHoaSua::insert([
@@ -438,14 +453,16 @@ class YeuCauContainerController extends Controller
                 $chiTietYeuCaus = YeuCauContainerChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
                 foreach ($chiTietYeuCaus as $chiTietYeuCau) {
                     $yeuCauContainerHangHoas = YeuCauContainerHangHoa::where('ma_chi_tiet', $chiTietYeuCau->ma_chi_tiet)->get();
+                    $this->xuLyContainer($chiTietYeuCau->so_container_dich, $chiTietYeuCau->tau_goc);
+
                     foreach ($yeuCauContainerHangHoas as $yeuCauContainerHangHoa) {
                         $hangTrongCont = HangTrongCont::find($yeuCauContainerHangHoa->ma_hang_cont);
                         $so_seal = NiemPhong::where('so_container', $hangTrongCont->so_container)->first()->so_seal ?? '';
-                        $ptvtNhanHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->phuong_tien_vt_nhap;
                         $sumSoLuong = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', 'hang_trong_cont.ma_hang')
                             ->where('hang_hoa.ma_hang', $hangTrongCont->ma_hang)
                             ->sum('hang_trong_cont.so_luong');
                         $hangTrongContMoi = $this->tienHanhChuyenCont($hangTrongCont, $yeuCauContainerHangHoa, $sumSoLuong);
+                        $ptvtChoHang = NiemPhong::where('so_container', $hangTrongCont->so_container)->first()->phuong_tien_vt_nhap ?? '';
 
                         TheoDoiHangHoa::insert([
                             'so_to_khai_nhap' => $chiTietYeuCau->so_to_khai_nhap,
@@ -453,7 +470,7 @@ class YeuCauContainerController extends Controller
                             'thoi_gian'  => now(),
                             'so_luong_xuat'  => $hangTrongContMoi->so_luong,
                             'so_luong_ton'  => $hangTrongContMoi->so_luong,
-                            'phuong_tien_cho_hang' => $ptvtNhanHang,
+                            'phuong_tien_cho_hang' => $ptvtChoHang,
                             'cong_viec' => 3,
                             'phuong_tien_nhan_hang' => '',
                             'so_container' => $hangTrongContMoi->so_container,
@@ -541,7 +558,29 @@ class YeuCauContainerController extends Controller
         return $hangTrongContMoi;
     }
 
+    private function xuLyContainer($so_container, $phuong_tien_vt_nhap)
+    {
+        if (!Container::find($so_container)) {
+            Container::insert([
+                'so_container' => $so_container,
+            ]);
+        }
 
+        $record = NiemPhong::where('so_container', $so_container)->first();
+
+        if (!$record) {
+            NiemPhong::insert([
+                'so_container' => $so_container,
+                'so_seal' => '',
+                'ngay_niem_phong' => now(),
+                'phuong_tien_vt_nhap' => $phuong_tien_vt_nhap,
+            ]);
+        } else {
+            $record->update([
+                'phuong_tien_vt_nhap' => $phuong_tien_vt_nhap,
+            ]);
+        }
+    }
 
     public function duyetSuaYeuCau(Request $request)
     {
@@ -573,6 +612,8 @@ class YeuCauContainerController extends Controller
             $chiTietYeuCaus = YeuCauContainerChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
             foreach ($chiTietYeuCaus as $chiTietYeuCau) {
                 $yeuCauContainerHangHoas = YeuCauContainerHangHoa::where('ma_chi_tiet', $chiTietYeuCau->ma_chi_tiet)->get();
+                $this->xuLyContainer($chiTietYeuCau->so_container_dich, $chiTietYeuCau->tau_goc);
+
                 foreach ($yeuCauContainerHangHoas as $yeuCauContainerHangHoa) {
                     $hangTrongCont = HangTrongCont::find($yeuCauContainerHangHoa->ma_hang_cont);
                     $sumSoLuong = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', 'hang_trong_cont.ma_hang')
@@ -647,7 +688,7 @@ class YeuCauContainerController extends Controller
     }
     public function themTheoDoiHangHoa($chiTietYeuCau, $row, $ma_cong_chuc)
     {
-        $ptvtNhanHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->phuong_tien_vt_nhap;
+        $ptvtChoHang = NiemPhong::where('so_container', $row->so_container)->first()->phuong_tien_vt_nhap ?? '';
         $so_seal = NiemPhong::where('so_container', $row->so_container)->first()->so_seal ?? "";
         TheoDoiHangHoa::insert([
             'so_to_khai_nhap' => $chiTietYeuCau->so_to_khai_nhap,
@@ -655,7 +696,7 @@ class YeuCauContainerController extends Controller
             'thoi_gian'  => now(),
             'so_luong_xuat'  => $row->so_luong,
             'so_luong_ton'  => $row->so_luong,
-            'phuong_tien_cho_hang' => $ptvtNhanHang,
+            'phuong_tien_cho_hang' => $ptvtChoHang,
             'cong_viec' => 3,
             'phuong_tien_nhan_hang' => '',
             'so_container' => $row->so_container,
@@ -869,15 +910,6 @@ class YeuCauContainerController extends Controller
         return redirect()->back();
     }
 
-    public function themContainerMoi($so_container)
-    {
-        if (!Container::find($so_container)) {
-            Container::insert([
-                'so_container' => $so_container,
-            ]);
-        }
-    }
-
     public function getSealNhoNhat($loai_seal, $ma_cong_chuc, $count = 1)
     {
         $soSeals = Seal::where('seal.trang_thai', 0)
@@ -959,7 +991,6 @@ class YeuCauContainerController extends Controller
         $theoDoi = TheoDoiTruLui::create([
             'so_to_khai_nhap' => $so_to_khai_nhap,
             'so_ptvt_nuoc_ngoai' => '',
-            'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap ?? '',
             'ngay_them' => now(),
             'cong_viec' => 3,
             'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
@@ -973,7 +1004,7 @@ class YeuCauContainerController extends Controller
                     'ma_theo_doi' => $theoDoi->ma_theo_doi,
                     'so_container' => $hangHoa->so_container,
                     'so_seal' => '',
-
+                    'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ""
                 ]
             );
         }
@@ -1041,12 +1072,14 @@ class YeuCauContainerController extends Controller
     {
         if ($request->ajax()) {
             if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-                $data = YeuCauChuyenContainer::join('nhap_hang', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
+                $data = YeuCauChuyenContainer::with(['doanhNghiep', 'yeuCauContainerChiTiet'])
                     ->join('doanh_nghiep', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
                     ->join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
                     ->select(
-                        'doanh_nghiep.*',
-                        'yeu_cau_chuyen_container.*',
+                        'doanh_nghiep.ten_doanh_nghiep',
+                        'yeu_cau_chuyen_container.ma_yeu_cau',
+                        'yeu_cau_chuyen_container.trang_thai',
+                        'yeu_cau_chuyen_container.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_container_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_container_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
                     )
                     ->groupBy('yeu_cau_chuyen_container.ma_yeu_cau')
@@ -1054,13 +1087,15 @@ class YeuCauContainerController extends Controller
                     ->get();
             } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
                 $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-                $data = YeuCauChuyenContainer::join('nhap_hang', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'nhap_hang.ma_doanh_nghiep')
+                $data = YeuCauChuyenContainer::with(['doanhNghiep', 'yeuCauContainerChiTiet'])
                     ->join('doanh_nghiep', 'yeu_cau_chuyen_container.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
                     ->join('yeu_cau_container_chi_tiet', 'yeu_cau_chuyen_container.ma_yeu_cau', '=', 'yeu_cau_container_chi_tiet.ma_yeu_cau')
                     ->where('yeu_cau_chuyen_container.ma_doanh_nghiep', $maDoanhNghiep)
                     ->select(
-                        'doanh_nghiep.*',
-                        'yeu_cau_chuyen_container.*',
+                        'doanh_nghiep.ten_doanh_nghiep',
+                        'yeu_cau_chuyen_container.ma_yeu_cau',
+                        'yeu_cau_chuyen_container.trang_thai',
+                        'yeu_cau_chuyen_container.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_container_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_container_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
                     )
                     ->groupBy('yeu_cau_chuyen_container.ma_yeu_cau')

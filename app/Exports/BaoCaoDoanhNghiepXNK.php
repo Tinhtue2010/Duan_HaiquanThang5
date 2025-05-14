@@ -18,24 +18,30 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class BaoCaoDoanhNghiepXNK implements FromArray, WithEvents
 {
+    protected $tu_ngay;
+    protected $den_ngay;
+
+    public function __construct($tu_ngay, $den_ngay)
+    {
+        $this->tu_ngay = $tu_ngay;
+        $this->den_ngay = $den_ngay;
+    }
     public function array(): array
     {
-        $currentDate = Carbon::now()->format('d');  // Day of the month
-        $currentMonth = Carbon::now()->format('m'); // Month number
-        $currentYear = Carbon::now()->format('Y');  // Year
-        $loaiHangs = LoaiHang::all();
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
 
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO CHI TIẾT HÀNG HÓA XUẤT NHẬP KHẨU', '', '', '', '', ''],
-            ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
+            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''], 
             ['', '', '', '', '', ''],
             ['STT', 'Số tờ khai', 'Ngày đăng ký tờ khai', 'Chi cục HQ đăng ký tờ khai', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', 'Số lượng tồn', 'Số tàu hiện tại', 'Số cont hiện tại'],
             ['', '', '', '', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Chủng loại tên hàng hóa', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Đã xuất', '', '', ''],
         ];
-        $today = Carbon::now()->format('Y-m-d'); // Format now() as yyyy-mm-dd
+        $today = Carbon::now()->format('Y-m-d');
 
         $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
@@ -43,6 +49,7 @@ class BaoCaoDoanhNghiepXNK implements FromArray, WithEvents
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+            ->whereBetween('xuat_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',

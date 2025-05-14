@@ -14,10 +14,20 @@
                     <strong>{{ session('alert-danger') }}</strong>
                 </div>
             @endif
-            <a class="return-link" href="/quan-ly-nhap-hang">
-                <p>
-                    < Quay lại quản lý nhập hàng</p>
-            </a>
+            <div class="row">
+                <div class="col-6">
+                    <a class="return-link" href="/quan-ly-nhap-hang">
+                        <p>
+                            < Quay lại quản lý nhập hàng</p>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a class="float-end" href="#">
+                        <button data-bs-toggle="modal" data-bs-target="#chonFileModal" class="btn btn-success ">
+                            Nhập từ file</button>
+                    </a>
+                </div>
+            </div>
             <h2 class="text-center text-dark">{{ $doanhNghiep->ten_doanh_nghiep }}</h2>
             <h2 class="text-center text-dark">TỜ KHAI NHẬP KHẨU HÀNG HÓA</h2>
             <!-- Input fields for each column -->
@@ -132,13 +142,13 @@
                             <div class="col-12">
                                 <label class="label-text" for="ten_hang">Tên hàng</label> <span
                                     class="text-danger missing-input-text"></span>
-                                <input type="text" class="form-control mt-2 reset-input" id="ten_hang" maxlength="255"
-                                    name="ten_hang" placeholder="Nhập tên hàng hóa" required>
-                                <input hidden type="text" id="ma_hang"name="ma_hang" value = 0>
+                                <input type="text" class="form-control mt-2 reset-input" id="ten_hang"
+                                    maxlength="255" name="ten_hang" placeholder="Nhập tên hàng hóa" required>
+                                <input hidden type="text" id="ma_hang"name="ma_hang" value=0>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-4">
+                            <div class="col-3">
                                 <div class="form-group">
                                     <label class="label-text mb-2" for="loai_hang">Loại hàng</label>
                                     <span class="text-danger missing-input-text"></span>
@@ -152,7 +162,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="label-text mb-2" for="xuat_xu">Xuất xứ</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <select class="form-control" id="xuat-xu-dropdown-search" name="xuat_xu">
@@ -164,11 +174,17 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="label-text" for="">Số container</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="so_container" maxlength="50"
                                     name="so_container" placeholder="Nhập số container" required>
+                            </div>
+                            <div class="col-3">
+                                <label class="label-text" for="so_seal">Số seal</label>
+                                <span class="text-danger missing-input-text"></span>
+                                <input type="text" class="form-control mt-2" id="so_seal" name="so_seal"
+                                    placeholder="Nhập số seal" required>
                             </div>
                         </div>
                     </div>
@@ -237,6 +253,7 @@
                         <th>Đơn giá (USD)</th>
                         <th>Trị giá (USD)</th>
                         <th>Số container</th>
+                        <th>Số seal</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -250,6 +267,78 @@
 
         </div>
     </div>
+
+
+    <div class="modal fade" id="chonFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Chọn file để nhập dữ liệu</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fw-bold mb-0 fs-5">Hãy đảm bảo file có đủ các cột sau:</p>
+                    <p class="fw-bold">Tên hàng, Số lượng, ĐVT, Trị Giá (USD)</p>
+                    <div class="file-upload">
+                        <input type="file" id="hys_file" class="file-upload-input">
+                        <button type="button" class="file-upload-btn">
+                            <svg class="file-upload-icon" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Chọn File
+                        </button>
+                        <span class="file-name" id="fileName"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="label-text mb-2 fw-bold" for="xuat_xu">Xuất xứ</label> <span
+                                class="text-danger missing-input-text"></span>
+                            <select class="form-control" id="xuat-xu-2-dropdown-search" name="xuat_xu_2">
+                                <option value="">Nhập xuất xứ của sản phẩm</option>
+                                @foreach ($xuatXus as $xuatXu)
+                                    <option value="{{ $xuatXu }}">
+                                        {{ $xuatXu }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-text mb-2 fw-bold" for="loai_hang">Loại hàng</label> <span
+                                class="text-danger missing-input-text"></span>
+                            <select class="form-control" id="loai-hang-2-dropdown-search" name="loai_hang_2">
+                                <option></option>
+                                @foreach ($loaiHangs as $loaiHang)
+                                    <option value="{{ $loaiHang->ten_loai_hang }}">
+                                        {{ $loaiHang->ten_loai_hang }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="label-text fw-bold" for="">Số container</label>
+                            <input type="text" class="form-control mt-2 px-3" id="so-container-2" maxlength="50"
+                                name="so_container" placeholder="Nhập số container" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-text fw-bold" for="">Số seal</label>
+                            <input type="text" class="form-control mt-2 px-3" id="so-seal-2" maxlength="50"
+                                name="so_seal" placeholder="Nhập số seal" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" id="uploadHys" class="btn btn-success">Xác nhận</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Modal xác nhận --}}
     <div class="modal fade" id="xacNhanModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -285,6 +374,27 @@
         const hangHoaRows = @json($hangHoaRows);
     </script>
     <script>
+        const fileInput = document.getElementById('hys_file');
+        const fileName = document.getElementById('fileName');
+        const fileUpload = document.querySelector('.file-upload');
+        document.getElementById("hys_file").addEventListener("change", function() {
+            let file = this.files[0]; // Get the selected file
+
+            if (file && file.size > 5 * 1024 * 1024) { // 5MB = 5 * 1024 * 1024 bytes
+                alert("File quá lớn! Vui lòng chọn tệp dưới 5MB.");
+                this.value = ""; // Clear the file input
+            } else {
+                if (this.files && this.files[0]) {
+                    fileName.textContent = this.files[0].name;
+                    fileUpload.classList.add('file-selected');
+                } else {
+                    fileName.textContent = '';
+                    fileUpload.classList.remove('file-selected');
+                }
+            }
+        });
+    </script>
+    <script>
         // Update hidden fields when dropdowns change
         document.getElementById('hai-quan-dropdown-search').addEventListener('change', function() {
             document.getElementById('ma_hai_quan').value = this.value;
@@ -312,7 +422,8 @@
                 don_vi_tinh: row.don_vi_tinh,
                 don_gia: row.don_gia,
                 tri_gia: row.tri_gia,
-                so_container: row.so_container_khai_bao
+                so_container: row.so_container_khai_bao,
+                so_seal: row.so_seal
             }));
             displayRows();
 
@@ -332,6 +443,7 @@
                             <td>${row.don_gia}</td>
                             <td>${row.tri_gia}</td>
                             <td>${row.so_container}</td>
+                            <td>${row.so_seal}</td>
                             <td>
                                 <button class="btn btn-warning btn-sm editRowButton">Sửa</button>
                                 <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
@@ -352,6 +464,7 @@
                 const don_gia = $("#don_gia").val();
                 const tri_gia = $("#tri_gia").val();
                 const so_container = $("#so_container").val();
+                const so_seal = $("#so_seal").val();
 
                 let isValid = true;
 
@@ -387,6 +500,10 @@
                         id: "#so_container",
                         value: so_container
                     },
+                    {
+                        id: "#so_seal",
+                        value: so_seal
+                    },
                 ];
 
                 fields.forEach(field => {
@@ -409,7 +526,8 @@
                         don_vi_tinh,
                         don_gia,
                         tri_gia,
-                        so_container
+                        so_container,
+                        so_seal,
                     });
                     displayRows();
                     $(".reset-input").val('');
@@ -432,6 +550,7 @@
                 $("#don_gia").val(rowData.don_gia);
                 $("#tri_gia").val(rowData.tri_gia);
                 $("#so_container").val(rowData.so_container);
+                $("#so_seal").val(rowData.so_seal);
 
                 $("#don-vi-tinh-dropdown-search").val(rowData.don_vi_tinh).trigger("change");
                 $("#xuat-xu-dropdown-search").val(rowData.xuat_xu).trigger("change");
@@ -501,6 +620,7 @@
                     don_gia: row.cells[7].textContent,
                     tri_gia: row.cells[8].textContent,
                     so_container: row.cells[9].textContent,
+                    so_seal: row.cells[10].textContent,
                 }));
 
                 // Set values for hidden inputs
@@ -515,6 +635,80 @@
 
                 // Submit the form
                 $('#xacNhanModal').modal('show');
+            });
+
+            $("#uploadHys").on("click", function() {
+                var file = $("#hys_file")[0].files[0];
+                if (!file) {
+                    alert("Xin hãy chọn 1 file!");
+                    return;
+                }
+                const loai_hang = $("#loai-hang-2-dropdown-search").val();
+                const xuat_xu = $("#xuat-xu-2-dropdown-search").val();
+                const so_container = $("#so-container-2").val();
+                const so_seal = $("#so-seal-2").val();
+
+                var formData = new FormData();
+                formData.append("hys_file", file);
+                formData.append("loai_hang", loai_hang);
+                formData.append("xuat_xu", xuat_xu);
+                formData.append("so_container", so_container);
+                formData.append("so_seal", so_seal);
+                formData.append("_token", "{{ csrf_token() }}");
+
+                $.ajax({
+                    url: "{{ route('nhap-hang.upload-file-nhap') }}", // Define the route in Laravel
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        if (!response.data) {
+                            alert(response);
+                        } else {
+                            var tbody = $("#displayTableNhapHang tbody");
+                            tbody.empty();
+
+                            $.each(response.data, function(index, row) {
+                                var tr = `<tr>
+                                        <td>${index + 1}</td>
+                                        <td>${row.ten_hang}</td>
+                                        <td>${row.loai_hang}</td>
+                                        <td>${row.xuat_xu}</td>
+                                        <td>${row.so_luong_khai_bao}</td>
+                                        <td>${row.don_vi_tinh}</td>
+                                        <td>${row.don_gia}</td>
+                                        <td>${row.tri_gia}</td>
+                                        <td>${row.so_container}</td>
+                                        <td>${row.so_seal}</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm editRowButton">Sửa</button>
+                                            <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                                        </td>                                    
+                                    </tr>`;
+                                tbody.append(tr);
+                                rowsData.push({
+                                    ten_hang: row.ten_hang,
+                                    loai_hang: row.loai_hang,
+                                    xuat_xu: row.xuat_xu,
+                                    so_luong_khai_bao: row.so_luong_khai_bao,
+                                    don_vi_tinh: row.don_vi_tinh,
+                                    don_gia: row.don_gia,
+                                    tri_gia: row.tri_gia,
+                                    so_container: row.so_container,
+                                    so_seal: row.so_seal,
+                                });
+                            });
+                            displayRows();
+                            alert("Nhập file thành công");
+                            $('#chonFileModal').modal('hide');
+                        }
+
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseText);
+                    }
+                });
             });
 
             // Additional listeners for calculations
@@ -532,6 +726,7 @@
 
             soLuongInput.addEventListener("input", calculateTriGia);
             donGiaInput.addEventListener("input", calculateTriGia);
+
 
         });
     </script>
@@ -575,5 +770,40 @@
             }
         });
     </script>
-
+    <script>
+        $(document).ready(function() {
+            $('#xuat-xu-2-dropdown-search').select2({
+                placeholder: "Chọn xuất xứ",
+                allowClear: true,
+            });
+            $('#chonFileModal ').on('shown.bs.modal', function() {
+                $('#xuat-xu-2-dropdown-search').select2('destroy');
+                $('#xuat-xu-2-dropdown-search').select2({
+                    placeholder: "Chọn xuất xứ",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonFileModal .modal-body'),
+                });
+            });
+            $('#loai-hang-2-dropdown-search').select2({
+                placeholder: "Chọn xuất xứ",
+                allowClear: true,
+            });
+            $('#chonFileModal ').on('shown.bs.modal', function() {
+                $('#loai-hang-2-dropdown-search').select2('destroy');
+                $('#loai-hang-2-dropdown-search').select2({
+                    placeholder: "Chọn loại hàng",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonFileModal .modal-body'),
+                });
+            });
+        });
+    </script>
 @stop

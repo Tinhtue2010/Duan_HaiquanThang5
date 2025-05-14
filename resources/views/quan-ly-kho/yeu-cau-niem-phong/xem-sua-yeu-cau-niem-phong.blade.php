@@ -46,13 +46,20 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Số container</th>
+                                <th>Tàu</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($chiTiets as $index => $chiTiet)
+                                @php
+                                    $matched = $chiTietSuas->firstWhere('so_container', $chiTiet->so_container);
+                                    $isRemoved = !$matched;
+                                    $rowClass = $isRemoved ? 'text-danger fw-bold' : '';
+                                @endphp
                                 <tr>
-                                    <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
-                                    <td>{{ $chiTiet->so_container }}</td>
+                                    <td class="{{ $rowClass }}">{{ $index + 1 }}</td> <!-- Display index (1-based) -->
+                                    <td class="{{ $rowClass }}">{{ $chiTiet->so_container }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTiet->phuong_tien_vt_nhap }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -62,7 +69,6 @@
                         <div class="custom-line mb-2"></div>
                     </center>
                     <h1 class="text-center">Yêu cầu sau khi sửa</h1>
-                    <h2 class="text-center">Đoàn tàu số: {{ $suaYeuCau->ten_doan_tau }}</h2>
 
                     <table class="table table-bordered mt-5" id="displayTable"
                         style="vertical-align: middle; text-align: center;">
@@ -70,13 +76,20 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Số container</th>
+                                <th>Tàu</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($chiTiets as $index => $chiTiet)
+                            @foreach ($chiTietSuas as $index => $chiTietSua)
+                                @php
+                                    $original = $chiTiets->firstWhere('so_container', $chiTietSua->so_container);
+                                    $isNew = !$original;
+                                    $rowClass = $isNew ? 'text-success fw-bold' : '';
+                                @endphp
                                 <tr>
-                                    <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
-                                    <td>{{ $chiTiet->so_container }}</td>
+                                    <td class="{{ $rowClass }}">{{ $index + 1 }}</td> <!-- Display index (1-based) -->
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->so_container }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->phuong_tien_vt_nhap }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -91,12 +104,14 @@
                             <hr />
                             <div class="row mt-3">
                                 <div class="col-6">
-                                    <a href="#">
-                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
-                                            class="btn btn-success ">
-                                            <img class="side-bar-icon" src="{{ asset('images/icons/approved2.png') }}">
-                                            Duyệt yêu cầu sửa</button>
-                                    </a>
+                                    @if ($yeuCau->ma_cong_chuc == Auth::user()->congChuc->ma_cong_chuc)
+                                        <a href="#">
+                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
+                                                class="btn btn-success ">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/approved2.png') }}">
+                                                Duyệt yêu cầu sửa</button>
+                                        </a>
+                                    @endif
                                 </div>
                                 <div class="col-6">
                                     <a href="#">
@@ -132,7 +147,7 @@
     </div>
     {{-- Tình trạng: Chờ duyệt --}}
     <div class="modal fade" id="xacNhanModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="exampleModalLabel">Xác nhận duyệt yêu cầu sửa</h4>
@@ -142,10 +157,48 @@
                     @csrf
                     <div class="modal-body">
                         <h5>Xác nhận duyệt yêu cầu sửa này ?</h5>
+                        <h5>Công chức: {{ $yeuCau->congChuc->ten_cong_chuc }}</h5>
+                        <h5>Dưới đây là các container mới được thêm vào</h5>
+                        <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
+                            id="displayTableYeuCau">
+                            <thead class="align-middle">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Số container</th>
+                                    <th>Loại seal</th>
+                                    <th>Seal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($chiTietThemVao as $index => $chiTiet)
+                                    <tr class="container-row">
+                                        <td>{{ $index }}</td> <!-- Display index (1-based) -->
+                                        <td>{{ $chiTiet->so_container }}</td>
+                                        <td>
+                                            <select class="form-control loai-seal-dropdown-search" name="loai_seal"
+                                                placeholder="Chọn loại seal" required>
+                                                <option></option>
+                                                <option value="1">Seal dây cáp đồng</option>
+                                                <option value="2">Seal dây cáp thép</option>
+                                                <option value="3">Seal container</option>
+                                                <option value="4">Seal dây nhựa dẹt</option>
+                                                <option value="5">Seal định vị điện tử</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-control seal-dropdown-search" name="so_seal">
+                                                <option value="">Chọn seal</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                     <div class="modal-footer">
-                        <input type="hidden" name="ma_sua_yeu_cau" value="{{ $suaYeuCau->ma_sua_yeu_cau }}">
+                        <input type="hidden" name="rows_data" id="rowsDataInput">
                         <input type="hidden" name="ma_yeu_cau" value="{{ $yeuCau->ma_yeu_cau }}">
+                        <input type="hidden" name="ma_cong_chuc" value="{{ $yeuCau->ma_cong_chuc }}">
                         <button type="submit" class="btn btn-success">Xác nhận duyệt</button>
                 </form>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -169,7 +222,6 @@
                         <label for="ghi_chu">Ghi chú:</label>
                         <textarea class="form-control" rows="3" placeholder="Nhập ghi chú" name="ghi_chu" maxlength="200"></textarea>
                         <input type="hidden" name="ma_yeu_cau" value="{{ $yeuCau->ma_yeu_cau }}">
-                        <input type="hidden" name="ma_sua_yeu_cau" value="{{ $suaYeuCau->ma_sua_yeu_cau }}">
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
@@ -258,9 +310,6 @@
                     updateSealDropdown($(this));
                 });
             });
-
-
-
 
             function updateSealDropdown2() {
                 let maCongChuc = document.getElementById("maCongChuc").value;

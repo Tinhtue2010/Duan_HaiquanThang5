@@ -17,10 +17,11 @@ use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use Picqer\Barcode\BarcodeGeneratorPNG;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\QrCode;
 
 class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, WithCustomStartCell, WithDrawings
 {
@@ -144,7 +145,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
 
 
 
-        $data[] = ['Tổng cộng','','','','','','',$sumSoLuongXuat];
+        $data[] = ['Tổng cộng', '', '', '', '', '', '', $sumSoLuongXuat];
         $data[] = ['Ghi chú: Công ty chúng tôi cam kết chịu trách nhiệm trước pháp luật đối với các nội dung thông tin khai báo như trên.'];
 
         $data[] = [''];
@@ -257,7 +258,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
         $totalPos = $secondStart - 1;
         $sheet->mergeCells("A{$secondStart}:L{$secondStart}");
         $sheet->mergeCells("A{$totalPos}:G{$totalPos}");
-        $this->centerCell($sheet, 'A'. $totalPos.':G' . $totalPos);
+        $this->centerCell($sheet, 'A' . $totalPos . ':G' . $totalPos);
 
 
         $sheet->getStyle('A' . $secondStart . ':L' . $secondStart)->applyFromArray([
@@ -313,31 +314,34 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
 
     public function drawings()
     {
-        $drawings = []; // Array to store both QR code and barcode drawings
+        $drawings = [];
 
         if (in_array($this->xuatHang->trang_thai, ["2", "12", "13", "11"])) {
-            // Generate QR Code
-            $qrContent = 'Cán bộ công chức phê duyệt: ' . ($this->xuatHang->congChuc->ten_cong_chuc ?? '');
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrContent);
-            $qrImageContent = file_get_contents($qrCodeUrl);
+            $qrCodeText = 'Cán bộ công chức phê duyệt: ' . ($this->xuatHang->congChuc->ten_cong_chuc ?? '');
+
+            // Create the QR code
+            $qrCode = QrCode::create($qrCodeText)->setSize(150);
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+            $imageData = $result->getString();
 
             // Save QR Code temporarily
             $qrTempPath = tempnam(sys_get_temp_dir(), 'qr_') . '.png';
-            file_put_contents($qrTempPath, $qrImageContent);
+            file_put_contents($qrTempPath, $imageData);
 
             // Create QR Code Drawing
-            $qrDrawing = new Drawing();
+            $qrDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
             $qrDrawing->setName('QR Code');
             $qrDrawing->setDescription('QR Code');
             $qrDrawing->setPath($qrTempPath);
-            $qrDrawing->setHeight(130);
+            $qrDrawing->setHeight(150);
             $lastRow = count($this->data) + 6;
             $qrDrawing->setCoordinates('A' . $lastRow);
 
-            $drawings[] = $qrDrawing; // Add QR drawing to array
+            $drawings[] = $qrDrawing;
         }
 
-        return $drawings; // Return both drawings
+        return $drawings;
     }
 
     // Optional: Clean up temporary file after export
@@ -380,3 +384,5 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
         ]);
     }
 }
+
+

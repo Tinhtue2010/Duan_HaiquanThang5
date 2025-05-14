@@ -17,5 +17,7 @@ class TheoDoiTruLuiChiTiet extends Model
         'ma_theo_doi',
         'so_container',
         'so_seal',
+        'phuong_tien_vt_nhap',
     ];
+
 }

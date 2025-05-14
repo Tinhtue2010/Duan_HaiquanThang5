@@ -40,9 +40,10 @@
                                         <option></option>
                                         @foreach ($soContainers as $soContainer)
                                             <option value=""></option>
-                                            <option value="{{ $soContainer->so_container }}">
-                                                {{ $soContainer->so_container }} 
-                                                {{-- @if(!empty($soContainer->phuong_tien_vt_nhap)) ({{ $soContainer->phuong_tien_vt_nhap }}) @endif --}}
+                                            <option
+                                                value="{{ $soContainer['so_container'] }}|{{ $soContainer['phuong_tien_vt_nhap'] ?? '' }}">
+                                                {{ $soContainer['so_container'] }}
+                                                ({{ $soContainer['phuong_tien_vt_nhap'] ?? '' }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -61,6 +62,7 @@
                     <tr style="vertical-align: middle; text-align: center;">
                         <th>STT</th>
                         <th>Số container</th>
+                        <th>Số tàu</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -100,15 +102,17 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const addRowButton = document.getElementById('addRowButton');
-            const tableBody = document.querySelector('#displayTableYeuCau tbody');
             const soContainerInput = document.getElementById('container-dropdown-search');
+            const tableBody = document.querySelector('#displayTableYeuCau tbody');
             const rowsDataInput = document.getElementById('rowsDataInput'); // Ensure this exists in your HTML form
 
             let rowIndex = 0;
 
             // Add a new row
             addRowButton.addEventListener('click', function() {
-                const soContainer = soContainerInput.value.trim();
+                const values = soContainerInput.value.split('|');
+                const soContainer = values[0] ? values[0].trim() : '';
+                const phuongTien = values[1] ? values[1].trim() : '';
 
                 if (soContainer === '') {
                     alert('Vui lòng nhập số container!');
@@ -125,22 +129,19 @@
                     return;
                 }
 
-                rowIndex++;
-
-                // Create a new table row
-                const newRow = `
+                // Insert row HTML
+                tableBody.insertAdjacentHTML('beforeend', `
                     <tr data-index="${rowIndex}">
                         <td class="text-center">${rowIndex}</td>
                         <td class="text-center">${soContainer}</td>
+                        <td class="text-center">${phuongTien}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
                     </tr>
-                `;
-                tableBody.insertAdjacentHTML('beforeend', newRow);
+                `);
 
-                // Clear the input field
-                soContainerInput.value = '';
+                rowIndex++;
             });
 
             // Delete a row
@@ -163,7 +164,8 @@
                 const rowsData = rows.map(row => {
                     return {
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
-                        so_container: row.querySelector('td:nth-child(2)').textContent.trim()
+                        so_container: row.querySelector('td:nth-child(2)').textContent.trim(),
+                        phuong_tien_vt_nhap: row.querySelector('td:nth-child(3)').textContent.trim()
                     };
                 });
                 const rowCount = $('#displayTableYeuCau tbody tr').length;
@@ -189,6 +191,7 @@
                                 <tr>
 =                                    <td>${index + 1}</td>
                                      <td>${item.so_container}</td>
+                                     <td>${item.phuong_tien_vt_nhap}</td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                                     </td>
@@ -196,7 +199,7 @@
                             `);
                         });
                     } else {
-                        tbody.append('<tr><td colspan="2">Không có dữ liệu</td></tr>');
+                        tbody.append('<tr><td colspan="4">Không có dữ liệu</td></tr>');
                     }
                 }
             });

@@ -15,7 +15,18 @@
                 <p>
                     < Quay lại quản lý yêu cầu chuyển container</p>
             </a>
-            <h2>Thêm yêu cầu chuyển container</h2>
+            <div class="row">
+                <div class="col-6">
+                    <h2>Thêm yêu cầu chuyển container</h2>
+                </div>
+                <div class="col-6">
+                    <button data-bs-toggle="modal" data-bs-target="#chonTheoContainerModal"
+                        class="btn btn-success float-end">
+                        Chọn theo container
+                    </button>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
@@ -130,6 +141,73 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="chonTheoContainerModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="exampleModalLabel">Chọn theo container</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <label class="label-text mb-2 fw-bold" for="ma_to_khai">Chọn số container:</label>
+                        <select class="form-control" id="container-dropdown-search-2" name="so_container_goc">
+                            <option></option>
+                            @foreach ($soContainers as $soContainer)
+                                <option value=""></option>
+                                <option value="{{ $soContainer->so_container }}"
+                                    data-so-container-moi="{{ $soContainer->so_container }}"
+                                    data-total-so-luong="{{ $soContainer->total_so_luong }}">
+                                    {{ $soContainer->so_container }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <label class="label-text mb-2 fw-bold" for="ma_to_khai">Chọn số container mới:</label>
+                        <select class="form-control" id="container-dropdown-search-3" name="so_container_moi">
+                            <option></option>
+                            @foreach ($soContainers as $soContainer)
+                                <option value=""></option>
+                                <option value="{{ $soContainer->so_container }}"
+                                    data-so-container-moi="{{ $soContainer->so_container }}"
+                                    data-total-so-luong="{{ $soContainer->total_so_luong }}">
+                                    {{ $soContainer->so_container }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <table class="table table-bordered  mt-3" id="soToKhaiTable"
+                            style="vertical-align: middle; text-align: center;">
+                            <thead style="vertical-align: middle; text-align: center;">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="checkAll" checked>
+                                    </th>
+                                    <th>
+                                        Số tờ khai
+                                    </th>
+                                    <th>
+                                        Số lượng hàng
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" id="xacNhanChonNhanhBtn" type="button">
+                        Xác nhận
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
             </div>
         </div>
     </div>
@@ -311,6 +389,36 @@
                     $(this).val(maxVal);
                 }
             });
+
+            $('#container-dropdown-search-2').on('change', function() {
+                let selectedValue = $(this).val();
+                $.ajax({
+                    url: '/get-to-khai-trong-cont-2',
+                    method: 'GET',
+                    data: {
+                        so_container: selectedValue
+                    },
+                    success: function(response) {
+                        let tableBody = $("#soToKhaiTable tbody");
+                        tableBody.empty();
+                        $.each(response.nhapHangs, function(index, item) {
+                            let row = `
+                                <tr>
+                                    <td><input type="checkbox" class="check-item" checked></td>
+                                    <td>${item.so_to_khai_nhap}</td>
+                                    <td>${item.tong_so_luong}</td>
+                                </tr>
+                            `;
+                            tableBody.append(row);
+                        });
+
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
+
+            });
         });
     </script>
     <script>
@@ -326,6 +434,8 @@
             }
 
             $("#doneButton").on("click", function() {
+
+
                 $("#displayTableHangHoa tbody tr").each(function() {
                     var $cells = $(this).find("td");
                     var soToKhai = $('#modal-so-to-khai').text();
@@ -375,6 +485,71 @@
                 updateRowsData();
                 getYeuCauTableData();
                 $('#chonHangTheoToKhaiModal').modal('hide');
+            });
+
+
+            $("#xacNhanChonNhanhBtn").on("click", function() {
+                const rows = $('#soToKhaiTable tbody tr')
+                    .filter(function() {
+                        return $(this).find('.check-item').is(':checked');
+                    })
+                    .map(function() {
+                        const cells = $(this).find('td');
+                        return {
+                            so_to_khai_nhap: $(cells[1]).text(),
+                        };
+                    })
+                    .get();
+
+                if (rows.length === 0) {
+                    alert('Vui lòng chọn ít nhất một tờ khai.');
+                    return;
+                }
+
+                let so_container_goc = $("#container-dropdown-search-2").val();
+                let so_container_dich = $("#container-dropdown-search-3").val();
+
+                $.ajax({
+                    url: `/get-thong-tin-chuyen-chon-nhanh`,
+                    data: {
+                        rows: rows,
+                        so_container_goc: so_container_goc,
+                    },
+                    method: 'GET',
+                    success: function(response) {
+                        let tbody = $("#soToKhaiTable tbody");
+                        tbody.empty();
+                        if (response) {
+                            response.hangHoas.forEach(function(hangHoaGroup) {
+                                hangHoaGroup.forEach(function(item) {
+                                    var newRow = `
+                                        <tr class="text-center">
+                                            <td class="text-center" hidden>${item.ma_hang_cont}</td>
+                                            <td class="text-center">${item.so_to_khai_nhap}</td>
+                                            <td class="text-center">${item.ten_hang}</td>
+                                            <td class="text-center">${item.so_luong}</td>
+                                            <td class="text-center">${so_container_goc}</td>
+                                            <td class="text-center">${so_container_dich}</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-danger btn-sm remove-row">Xóa</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    $('#displayTableChiTiet tbody').append(
+                                        newRow);
+                                });
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="6">Không có dữ liệu</td></tr>');
+                        }
+                        updateRowsData();
+                        getYeuCauTableData();
+                    },
+                    error: function() {}
+                });
+                $('#chonTheoContainerModal').modal('hide');
+
+
             });
 
 
@@ -482,6 +657,30 @@
                     dropdownAutoWidth: true,
                     width: '100%',
                     dropdownParent: $('#chonHangTheoToKhaiModal .modal-body'),
+                });
+            });
+            $('#chonTheoContainerModal').on('shown.bs.modal', function() {
+                $('#container-dropdown-search-2').select2('destroy');
+                $('#container-dropdown-search-2').select2({
+                    tags: true,
+                    placeholder: "Chọn container",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonTheoContainerModal .modal-body'),
+                });
+                $('#container-dropdown-search-3').select2('destroy');
+                $('#container-dropdown-search-3').select2({
+                    tags: true,
+                    placeholder: "Chọn container",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonTheoContainerModal .modal-body'),
                 });
             });
         });

@@ -69,6 +69,74 @@ class SealNiemPhongController extends Controller
         session()->flash('alert-success', 'Xóa seal thành công');
         return redirect()->back();
     }
+    public function xoaNhanhSeal(Request $request)
+    {
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        return view('quan-ly-khac.xoa-nhanh-seal', data: compact('congChucs'));
+    }
+    public function xoaNhanhSealSubmit(Request $request)
+    {
+        $rowsData = json_decode($request->rows_data, true);
+        foreach ($rowsData as $row) {
+            Seal::find($row["so_seal"])->delete();
+        }
+        session()->flash('alert-success', 'Xóa nhanh seal thành công');
+        return redirect()->back();
+    }
+    public function getThongTinXoaNhanhSeal(Request $request)
+    {
+        $seals = Seal::join('cong_chuc', 'cong_chuc.ma_cong_chuc', 'seal.ma_cong_chuc')
+            ->when(!empty($request->ngay_cap), function ($query) use ($request) {
+                $ngay_cap = Carbon::createFromFormat('d/m/Y', $request->ngay_cap)->format('Y-m-d');
+                return $query->where('seal.ngay_cap', $ngay_cap);
+            })
+            ->when(!empty($request->ma_cong_chuc), function ($query) use ($request) {
+                return $query->where('seal.ma_cong_chuc', $request->ma_cong_chuc);
+            })
+            ->when(!empty($request->loai_seal), function ($query) use ($request) {
+                return $query->where('seal.loai_seal', $request->loai_seal);
+            })
+            ->get()
+            ->map(function ($seal) {
+                switch ($seal->trang_thai) {
+                    case 0:
+                        $seal->trang_thai = 'Chưa sử dụng';
+                        break;
+                    case 1:
+                        $seal->trang_thai = 'Đã sử dụng';
+                        break;
+                    case 2:
+                        $seal->trang_thai = 'Seal hỏng';
+                        break;
+                    default:
+                        $seal->trang_thai = 'N/A';
+                }
+
+                switch ($seal->loai_seal) {
+                    case 1:
+                        $seal->loai_seal = 'Seal dây cáp đồng';
+                        break;
+                    case 2:
+                        $seal->loai_seal = 'Seal dây cáp thép';
+                        break;
+                    case 3:
+                        $seal->loai_seal = 'Seal container';
+                        break;
+                    case 4:
+                        $seal->loai_seal = 'Seal dây nhựa dẹt';
+                        break;
+                    case 5:
+                        $seal->loai_seal = 'Seal định vị điện tử';
+                        break;
+                    default:
+                        $seal->loai_seal = 'N/A';
+                }
+
+                return $seal;
+            });
+
+        return response()->json(['seals' => $seals]);
+    }
 
 
     //Api lấy data qua Ajax
@@ -83,6 +151,7 @@ class SealNiemPhongController extends Controller
             'data' => $items
         ]);
     }
+
     public function getChiNiemPhong(Request $request)
     {
         if ($request->ajax()) {
@@ -155,7 +224,7 @@ class SealNiemPhongController extends Controller
                                 Xóa
                             </button>';
                 })
-                ->rawColumns(['trang_thai', 'thao_tac','loai_seal'])
+                ->rawColumns(['trang_thai', 'thao_tac', 'loai_seal'])
                 ->make(true);
         }
     }

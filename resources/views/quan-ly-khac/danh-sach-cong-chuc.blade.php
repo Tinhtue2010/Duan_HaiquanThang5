@@ -345,6 +345,28 @@
                         <br>
                         <input class="mt-2" type="checkbox" name="19" id="19" value="1">
                         <label for="myCheckbox">Báo cáo sử dụng seal niêm phong hải quan</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="25" id="25" value="1">
+                        <label for="myCheckbox">Báo cáo sử dụng seal niêm phong chi tiết</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="20" id="20" value="1">
+                        <label for="myCheckbox">Báo cáo tàu lưu tại cảng</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="21" id="21" value="1">
+                        <label for="myCheckbox">Báo cáo phương tiện nhập cảnh</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="22" id="22" value="1">
+                        <label for="myCheckbox">Báo cáo phương tiện xuất cảnh</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="23" id="23" value="1">
+                        <label for="myCheckbox">Báo cáo phân công nhiệm vụ</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="24" id="24" value="1">
+                        <label for="myCheckbox">Bảng kê công việc</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="26" id="26" value="1">
+                        <label for="myCheckbox">Theo dõi phương tiện xuất nhập cảnh tại khu vực đầu tán</label>
+
 
                         <input type="hidden" name="ma_cong_chuc" id="modalInputMaCongChucBC">
                     </div>
@@ -461,7 +483,7 @@
                 button.addEventListener('click', function() {
                     const maCongChucBC = this.getAttribute('data-ma-cong-chuc');
                     const tenCongChucBC = this.getAttribute('data-ten-cong-chuc');
-                    for (let i = 1; i <= 18; i++) {
+                    for (let i = 1; i <= 26; i++) {
                         $(`#${i}`).prop("checked", false);
                     }
 

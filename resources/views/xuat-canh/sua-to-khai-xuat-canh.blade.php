@@ -23,8 +23,8 @@
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
                             <h3 class="text-center">Thông tin tờ khai</h3>
-                            <div class="col-4">
-                                <div class="form-group mt-3">
+                            <div class="col-3">
+                                <div class="form-group mt-4">
                                     <label for="ptvtxc" class="mb-1 fw-bold">Phương tiện vận tải xuất cảnh</label>
                                     <select class="form-control" id="ptvt-xc-dropdown-search" name="ptvtxc">
                                         <option selected value="{{ $xuatCanh->so_ptvt_xuat_canh }}">
@@ -35,10 +35,9 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <div class="form-group mt-3">
-                                    <label class="label-text mb-1 mt-2 fw-bold" for="">Chọn thuyền trưởng (Hoặc nhập
-                                        tên khác trong ô tìm kiếm)</label>
+                                    <label class="label-text mb-1 mt-2 fw-bold" for="">Chọn thuyền trưởng</label>
                                     <select class="form-control" id="thuyen-truong-dropdown-search" name="ten_thuyen_truong"
                                         required>
                                         <option value="{{ $xuatCanh->ten_thuyen_truong }}" selected>
@@ -49,7 +48,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <div class="form-group mt-3">
                                     <label class="label-text mb-1 mt-2 fw-bold" for="">Chọn doanh nghiệp/ Chủ
                                         hàng</label>
@@ -61,7 +60,17 @@
                                                 {{ $doanhNghiep->ten_doanh_nghiep }}
                                             </option>
                                         @endforeach
+                                        <option value="0">Không</option>
+
                                     </select>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="form-group mt-4">
+                                    <label class="label-text mb-1 fw-bold" for="">Ngày xuất cảnh</label>
+                                    <input type="text" class="form-control datepicker" placeholder="dd/mm/yyyy"
+                                        id="ngay-dang-ky" readonly
+                                        value="{{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d/m/Y') }}">
                                 </div>
                             </div>
                         </div>
@@ -140,6 +149,7 @@
                         <input type="hidden" name="rows_data" id="rowsDataInput">
                         <input type="hidden" name="ma_xuat_canh" id="ma_xuat_canh_hidden"
                             value={{ $xuatCanh->ma_xuat_canh }}>
+                        <input type="hidden" name="ngay_dang_ky" id="ngay_dang_ky_hidden">
                         <button id="submitData" type="submit" class="btn btn-success">Sửa tờ khai xuất cảnh</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </form>
@@ -153,10 +163,12 @@
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
                 let tenThuyenTruong = document.getElementById('thuyen-truong-dropdown-search').value.trim();
+                let ngayDangKy = document.getElementById('ngay-dang-ky').value;
                 let maDoanhNghiepChon = document.getElementById('doanh-nghiep-dropdown-search').value
                     .trim();
                 document.getElementById('ten_thuyen_truong_hidden').value = tenThuyenTruong;
                 document.getElementById('ma_doanh_nghiep_chon_hidden').value = maDoanhNghiepChon;
+                document.getElementById('ngay_dang_ky_hidden').value = ngayDangKy;
 
                 const rows = $('#toKhaiXuatTable tbody tr')
                     .map(function() {
@@ -175,6 +187,10 @@
                 }
                 if (!maDoanhNghiepChon) {
                     alert('Vui lòng chọn doanh nghiệp');
+                    return false;
+                }
+                if (!ngayDangKy) {
+                    alert('Vui lòng chọn ngày đăng ký');
                     return false;
                 }
 
@@ -198,14 +214,11 @@
 
             function updateTable() {
                 let so_ptvt_xuat_canh = $('#ptvt-xc-dropdown-search').val();
-                let ma_xuat_canh = $('#ma_xuat_canh_hidden').val();
-                console.log(ma_xuat_canh_hidden);
                 $.ajax({
                     url: "{{ route('xuat-canh.getPhieuXuats') }}", // Adjust with your route
                     type: "GET",
                     data: {
                         so_ptvt_xuat_canh: so_ptvt_xuat_canh,
-                        ma_xuat_canh: ma_xuat_canh,
                     },
 
                     success: function(response) {
@@ -213,57 +226,51 @@
                         let tfoot = $("#toKhaiXuatTable tfoot");
                         tbody.empty(); // Clear previous data
                         let totalTongSoLuongXuat = 0; // Initialize total sum
+                        let doanhNghiepDropdown = $("#doanh-nghiep-dropdown-search");
+                        doanhNghiepDropdown.empty().append(
+                            '<option value="">Chọn doanh nghiệp</option>');
+
+                        let addedDoanhNghieps = new Set(); // Track unique doanh nghiep
 
                         if (response.xuatHangs && response.xuatHangs.length > 0) {
                             $.each(response.xuatHangs, function(index, item) {
                                 totalTongSoLuongXuat += parseFloat(item.tong_so_luong_xuat) ||
-                                    0; // Sum up values
+                                    0;
+
                                 tbody.append(`
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${item.so_to_khai_xuat}</td>
-                                    <td>${item.ten_doanh_nghiep}</td>
-                                    <td>${item.ten_chu_hang}</td>
-                                    <td>${item.ma_loai_hinh}</td>
-                                    <td>${item.tong_so_luong_xuat}</td>
-                                    <td>${convertDateFormat(item.ngay_dang_ky)}</td>
-                                    <td>
-                                        <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                                    </td>     
-                                </tr>
-                            `);
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${item.so_to_khai_xuat}</td>
+                                        <td>${item.ten_doanh_nghiep}</td>
+                                        <td>${item.ten_chu_hang}</td>
+                                        <td>${item.ma_loai_hinh}</td>
+                                        <td>${item.tong_so_luong_xuat}</td>
+                                        <td>${convertDateFormat(item.ngay_dang_ky)}</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                                        </td>     
+                                    </tr>
+                                `);
+
+                                if (!addedDoanhNghieps.has(item.ma_doanh_nghiep)) {
+                                    addedDoanhNghieps.add(item.ma_doanh_nghiep);
+                                    doanhNghiepDropdown.append(
+                                        `<option value="${item.ma_doanh_nghiep}">${item.ten_doanh_nghiep}</option>`
+                                    );
+                                }
                             });
                             calculateTotal();
                         } else {
                             tbody.append('<tr><td colspan="9">Không có dữ liệu</td></tr>');
                         }
-                    }
-                });
-            }
-
-            function updateDoanhNghiepsDropdown() {
-                let so_ptvt_xuat_canh = $('#ptvt-xc-dropdown-search').val();
-                let doanhNghiepDropdown = $("#doanh-nghiep-dropdown-search"); // Use jQuery for easier manipulation
-                $.ajax({
-                    url: "{{ route('xuat-canh.getDoanhNghiepsTrongCacPhieu') }}", // Adjust with your route
-                    type: "GET",
-                    data: {
-                        so_ptvt_xuat_canh: so_ptvt_xuat_canh,
-                    },
-
-                    success: function(response) {
-                        doanhNghiepDropdown.empty().append(
-                            '<option value="">Chọn doanh nghiệp</option>'); // Clear and add default
-                        if (response.doanhNghieps && response.doanhNghieps.length > 0) {
-                            $.each(response.doanhNghieps, function(index, doanhNghiep) {
-                                doanhNghiepDropdown.append(
-                                    `<option value="${doanhNghiep.ma_doanh_nghiep}">${doanhNghiep.ten_doanh_nghiep}</option>`
-                                );
-                            });
+                        if (addedDoanhNghieps.size === 0) {
+                            doanhNghiepDropdown.append(
+                                `<option value="0">Không</option>`
+                            );
                         }
                     }
-                });
 
+                });
             }
 
             const tableBody = document.querySelector('#toKhaiXuatTable tbody');
@@ -282,8 +289,15 @@
             });
 
             $('#cap-nhat-lai-btn').on('click', function() {
-                updateDoanhNghiepsDropdown();
                 updateTable($(this));
+            });
+
+            $('.datepicker').datepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true,
+                todayHighlight: true,
+                language: 'vi',
+                endDate: '0d'
             });
         });
     </script>

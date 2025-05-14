@@ -1,6 +1,6 @@
 @extends('layout.user-layout')
 
-@section('title', 'Thêm yêu cầu niêm phong')
+@section('title', 'Sửa yêu cầu niêm phong')
 
 @section('content')
     <div id="layoutSidenav_content">
@@ -32,8 +32,10 @@
                                         <option></option>
                                         @foreach ($soContainers as $soContainer)
                                             <option value=""></option>
-                                            <option value="{{ $soContainer->so_container }}">
-                                                {{ $soContainer->so_container }}
+                                            <option
+                                                value="{{ $soContainer['so_container'] }}|{{ $soContainer['phuong_tien_vt_nhap'] ?? '' }}">
+                                                {{ $soContainer['so_container'] }}
+                                                ({{ $soContainer['phuong_tien_vt_nhap'] ?? '' }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -52,6 +54,7 @@
                     <tr style="vertical-align: middle; text-align: center;">
                         <th>STT</th>
                         <th>Số container</th>
+                        <th>Tàu</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -96,38 +99,37 @@
         document.addEventListener('DOMContentLoaded', function() {
             const addRowButton = document.getElementById('addRowButton');
             const tableBody = document.querySelector('#displayTableYeuCau tbody');
-            const soContainerInput =  document.getElementById('container-dropdown-search');
+            const soContainerInput = document.getElementById('container-dropdown-search');
             const rowsDataInput = document.getElementById('rowsDataInput');
 
-            // Set initial rowIndex based on the chiTiets data
             let rowIndex = 0;
 
-            // Function to add a row
-            function addRow(containerNumber) {
+            function addRow(soContainer, phuongTien) {
                 rowIndex++;
 
                 const newRow = `
-            <tr data-index="${rowIndex}">
-                <td class="text-center">${rowIndex}</td>
-                <td class="text-center">${containerNumber}</td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                </td>
-            </tr>
-        `;
+                    <tr data-index="${rowIndex}">
+                        <td class="text-center">${rowIndex}</td>
+                        <td class="text-center">${soContainer}</td>
+                        <td class="text-center">${phuongTien}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                        </td>
+                    </tr>
+                `;
                 tableBody.insertAdjacentHTML('beforeend', newRow);
             }
 
-            // Load existing rows from chiTiets
             if (chiTiets && Array.isArray(chiTiets)) {
                 chiTiets.forEach((chiTiet, index) => {
-                    addRow(chiTiet.so_container);
+                    addRow(chiTiet.so_container, chiTiet.phuong_tien_vt_nhap);
                 });
             }
 
-            // Add a new row
             addRowButton.addEventListener('click', function() {
-                const soContainer = soContainerInput.value.trim();
+                const values = soContainerInput.value.split('|');
+                const soContainer = values[0] ? values[0].trim() : '';
+                const phuongTien = values[1] ? values[1].trim() : '';
 
                 if (soContainer === '') {
                     alert('Vui lòng nhập số container!');
@@ -144,10 +146,19 @@
                     return;
                 }
 
-                addRow(soContainer);
+                // Insert row HTML
+                tableBody.insertAdjacentHTML('beforeend', `
+                    <tr data-index="${rowIndex}">
+                        <td class="text-center">${rowIndex}</td>
+                        <td class="text-center">${soContainer}</td>
+                        <td class="text-center">${phuongTien}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                        </td>
+                    </tr>
+                `);
 
-                // Clear the input field
-                soContainerInput.value = '';
+                rowIndex++;
             });
 
             // Delete a row
@@ -172,7 +183,8 @@
                 const rowsData = rows.map(row => {
                     return {
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
-                        so_container: row.querySelector('td:nth-child(2)').textContent.trim()
+                        so_container: row.querySelector('td:nth-child(2)').textContent.trim(),
+                        phuong_tien_vt_nhap: row.querySelector('td:nth-child(3)').textContent.trim()
                     };
                 });
                 const rowCount = $('#displayTableYeuCau tbody tr').length;

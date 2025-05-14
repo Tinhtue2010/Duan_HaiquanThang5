@@ -137,6 +137,9 @@
                     );
                     select.append('<option class="text-success" value="ĐÃ DUYỆT">ĐÃ DUYỆT</option>');
                     select.append(
+                        '<option class="text-warning" value="DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU</option>'
+                    );
+                    select.append(
                         '<option class="text-danger" value="DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU</option>'
                     );
                     select.append('<option class="text-danger" value="ĐÃ HỦY">ĐÃ HỦY</option>');

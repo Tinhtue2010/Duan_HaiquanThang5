@@ -7,6 +7,9 @@ use App\Models\YeuCauTauContChiTiet;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\QrCode;
 
 class InPhieuChuyenTauCont
 {
@@ -196,7 +199,7 @@ class InPhieuChuyenTauCont
         }
 
 
-        if($yeuCau->ngay_hoan_thanh){
+        if ($yeuCau->ngay_hoan_thanh) {
             $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y');
         } else {
             $date = '';
@@ -215,12 +218,25 @@ class InPhieuChuyenTauCont
         $cell1->addText('- HQCK cảng Vạn Gia (để b/c);');
         $cell1->addText('- Lưu văn thư: 01 bản.');
         if ($yeuCau->ngay_hoan_thanh) {
-            $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
+            $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' .
+                Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') .
+                ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
 
-            $section->addImage($qrCodeUrl, [
-                'width' => 100,
-                'height' => 100,
+            // Create the QR code
+            $qrCode = QrCode::create($qrCodeText)
+                ->setSize(150);
+
+            // Generate the QR code image
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+
+            // Get the image binary data
+            $imageData = $result->getString();
+
+            // Embed the image directly into the Word document
+            $section->addImage($imageData, [
+                'width' => 150,
+                'height' => 150,
             ]);
         }
 

@@ -64,32 +64,70 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <h5>Thông số xuồng đến</h5>
                                 <div class="col-3">
                                     <label class="label-text" for="ten_thuyen_truong">Draft</label> <span
                                         class="text-danger missing-input-text"></span>
-                                    <input type="text" class="form-control mt-2  reset-input" id="" maxlength="20"
-                                        name="draft" placeholder="Nhập Draft" value="{{ trim($phuong_tien_vt->draft) }}" required>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="20" name="draft_den" placeholder="Nhập Draft" required
+                                        value="{{ trim($phuong_tien_vt->draft_den) }}">
                                 </div>
                                 <div class="col-3">
                                     <label class="label-text" for="quoc_tich_tau">DWT</label> <span
                                         class="text-danger missing-input-text"></span>
-                                    <input type="text" class="form-control mt-2  reset-input" id="" maxlength="10"
-                                        name="dwt" placeholder="Nhập DWT" value="{{ trim($phuong_tien_vt->dwt) }}" required>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="dwt_den" placeholder="Nhập DWT" required
+                                        value="{{ trim($phuong_tien_vt->dwt_den) }}">
                                 </div>
                                 <div class="col-3">
                                     <label class="label-text" for="so_giay_chung_nhan">LOA</label> <span
                                         class="text-danger missing-input-text"></span>
-                                    <input type="text" class="form-control mt-2  reset-input" id="" maxlength="10"
-                                        name="loa" placeholder="Nhập LOA" value="{{ trim($phuong_tien_vt->loa) }}" required>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="loa_den" placeholder="Nhập LOA" required
+                                        value="{{ trim($phuong_tien_vt->loa_den) }}">
                                 </div>
                                 <div class="col-3">
                                     <label class="label-text" for="so_giay_chung_nhan">Breadth</label> <span
                                         class="text-danger missing-input-text"></span>
-                                    <input type="text" class="form-control mt-2  reset-input" id="" maxlength="10"
-                                        name="breadth" placeholder="Nhập Breadth" value="{{ trim($phuong_tien_vt->breadth) }}" required>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="breadth_den" placeholder="Nhập Breadth" required
+                                        value="{{ trim($phuong_tien_vt->breadth_den) }}">
                                 </div>
                             </div>
-                            <input type="hidden" name="so_ptvt_xuat_canh" value={{ $phuong_tien_vt->so_ptvt_xuat_canh }}>
+
+                            <div class="row">
+                                <h5>Thông số xuồng rời</h5>
+                                <div class="col-3">
+                                    <label class="label-text" for="ten_thuyen_truong">Draft</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="20" name="draft_roi" placeholder="Nhập Draft" required
+                                        value="{{ trim($phuong_tien_vt->draft_roi) }}">
+                                </div>
+                                <div class="col-3">
+                                    <label class="label-text" for="quoc_tich_tau">DWT</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="dwt_roi" placeholder="Nhập DWT" required
+                                        value="{{ trim($phuong_tien_vt->dwt_roi) }}">
+                                </div>
+                                <div class="col-3">
+                                    <label class="label-text" for="so_giay_chung_nhan">LOA</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="loa_roi" placeholder="Nhập LOA" required
+                                        value="{{ trim($phuong_tien_vt->loa_roi) }}">
+                                </div>
+                                <div class="col-3">
+                                    <label class="label-text" for="so_giay_chung_nhan">Breadth</label> <span
+                                        class="text-danger missing-input-text"></span>
+                                    <input type="text" class="form-control mt-2  reset-input" id=""
+                                        maxlength="10" name="breadth_roi" placeholder="Nhập Breadth" required
+                                        value="{{ trim($phuong_tien_vt->breadth_roi) }}">
+                                </div>
+                            </div>
+                            <input type="hidden" name="so_ptvt_xuat_canh"
+                                value={{ $phuong_tien_vt->so_ptvt_xuat_canh }}>
                             <center>
                                 <button class="btn btn-success mb-3" type="submit">Sửa thông tin</button>
                             </center>

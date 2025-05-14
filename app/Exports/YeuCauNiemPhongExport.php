@@ -34,13 +34,14 @@ class YeuCauNiemPhongExport implements FromArray, WithEvents
             ["Số {$yeuCau->ma_yeu_cau}, ngày: {$date}", '', '', '', '', ''],
             ["Công chức phụ trách: " . $yeuCau->congChuc->ten_cong_chuc, '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['STT', 'Số container', 'Số seal niêm phong cũ', 'Số seal niêm phong mới'],
+            ['STT', 'Số container','Tàu', 'Số seal niêm phong cũ', 'Số seal niêm phong mới'],
         ];
         $stt = 1;
         foreach ($chiTiets as $chiTiet) {
             $result[] = [
                 $stt++,
                 $chiTiet->so_container,
+                $chiTiet->phuong_tien_vt_nhap,
                 $chiTiet->so_seal_cu,
                 $chiTiet->so_seal_moi
             ];
@@ -48,6 +49,7 @@ class YeuCauNiemPhongExport implements FromArray, WithEvents
 
 
         $result[] = [
+            '',
             '',
             '',
             '',
@@ -69,7 +71,7 @@ class YeuCauNiemPhongExport implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:D' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:E' . $sheet->getHighestRow());
 
                 // Set margins (in inches)
                 $sheet->getPageMargins()
@@ -86,8 +88,9 @@ class YeuCauNiemPhongExport implements FromArray, WithEvents
 
                 $sheet->getColumnDimension('A')->setWidth(width: 7);
                 $sheet->getColumnDimension('B')->setWidth(width: 25);
-                $sheet->getColumnDimension('C')->setWidth(width: 25);
+                $sheet->getColumnDimension('C')->setWidth(width: 15);
                 $sheet->getColumnDimension('D')->setWidth(width: 25);
+                $sheet->getColumnDimension('E')->setWidth(width: 25);
 
                 $lastRow = $sheet->getHighestRow();
                 $highestColumn = $sheet->getHighestColumn();
@@ -96,35 +99,35 @@ class YeuCauNiemPhongExport implements FromArray, WithEvents
                 $sheet->mergeCells('A1:C1');
                 $sheet->mergeCells('A2:C2');
 
-                $sheet->mergeCells('A4:D4');
-                $sheet->mergeCells('A5:D5');
-                $sheet->mergeCells('A6:D6');
+                $sheet->mergeCells('A4:E4');
+                $sheet->mergeCells('A5:E5');
+                $sheet->mergeCells('A6:E6');
 
                 // Your existing styles
-                $sheet->getStyle('A1:D6')->applyFromArray([
+                $sheet->getStyle('A1:E6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:D6')->applyFromArray([
+                $sheet->getStyle('A2:E6')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A9:D' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A9:E' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A5:D5')->applyFromArray([
+                $sheet->getStyle('A5:E5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
-                $sheet->getStyle('A8:D8')->applyFromArray([
+                $sheet->getStyle('A8:E8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -137,7 +140,7 @@ class YeuCauNiemPhongExport implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->getStyle('A8:D' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:E' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,

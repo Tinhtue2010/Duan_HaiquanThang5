@@ -39,6 +39,7 @@ use App\Models\PTVTXuatCanhCuaPhieuTruocSua;
 use App\Models\XuatCanh;
 use App\Models\XuatCanhChiTietSua;
 use App\Models\XuatCanhSua;
+use Carbon\Carbon;
 
 class XuatCanhService
 {
@@ -85,14 +86,7 @@ class XuatCanhService
             ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('xuat_hang.ngay_dang_ky', today())
-                        ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
-                } else {
-                    $query->whereDate('xuat_hang.ngay_dang_ky', today());
-                }
-            })
+            ->whereBetween('xuat_hang.ngay_dang_ky', [today()->subDays(7), today()])
             ->where('xuat_hang.trang_thai', '2') // Now correctly applied to both date conditions
             ->select(
                 'xuat_hang.*',
@@ -118,7 +112,7 @@ class XuatCanhService
                 'doanh_nghiep.ten_doanh_nghiep',
                 'chu_hang.ten_chu_hang',
 
-            ) // Nhóm theo khóa chính của bảng xuat_hang
+            )
             ->get();
     }
     public function getXuatHangDaDuyetSua($so_ptvt_xuat_canh, $ma_xuat_canh)
@@ -131,15 +125,8 @@ class XuatCanhService
             ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('xuat_hang.ngay_dang_ky', today())
-                        ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
-                } else {
-                    $query->whereDate('xuat_hang.ngay_dang_ky', today());
-                }
-            })
-            ->where('xuat_hang.trang_thai', '2') // Now correctly applied to both date conditions
+            ->whereBetween('xuat_hang.ngay_dang_ky', [today()->subDays(7), today()])
+            ->where('xuat_hang.trang_thai', '2')
             ->select(
                 'xuat_hang.*',
                 'doanh_nghiep.ten_doanh_nghiep',
@@ -216,12 +203,14 @@ class XuatCanhService
     public function themXuatCanhSua($request, $xuatCanh)
     {
         $doanh_nghiep = $this->getDoanhNghiepHienTai();
+        $ngay_dang_ky = Carbon::createFromFormat('d/m/Y', $request->ngay_dang_ky)->format('Y-m-d');
         if ($xuatCanh->trang_thai == '4') {
             $xuatCanhSua =  XuatCanhSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)->orderBy('ma_yeu_cau', 'desc')->first();
             $xuatCanhSua->update([
                 'so_ptvt_xuat_canh' => $xuatCanh->so_ptvt_xuat_canh,
                 'ma_doanh_nghiep_chon' => $request->ma_doanh_nghiep_chon,
                 'ten_thuyen_truong' => $request->ten_thuyen_truong,
+                'ngay_dang_ky' => $ngay_dang_ky,
             ]);
         } else {
             $xuatCanhSua = XuatCanhSua::create([
@@ -229,9 +218,10 @@ class XuatCanhService
                 'so_ptvt_xuat_canh' => $xuatCanh->so_ptvt_xuat_canh,
                 'ma_doanh_nghiep_chon' => $request->ma_doanh_nghiep_chon,
                 'ten_thuyen_truong' => $request->ten_thuyen_truong,
-                'ngay_dang_ky' => now(),
                 'trang_thai' => "1",
                 'ma_xuat_canh' => $request->ma_xuat_canh,
+                'ngay_dang_ky' => $ngay_dang_ky,
+
             ]);
         }
         return $xuatCanhSua;
@@ -259,12 +249,14 @@ class XuatCanhService
             XuatCanh::find($xuatCanhSua->ma_xuat_canh)->update([
                 'ma_doanh_nghiep_chon' => $xuatCanhSua->ma_doanh_nghiep_chon,
                 'ten_thuyen_truong' => $xuatCanhSua->ten_thuyen_truong,
+                'ngay_dang_ky' => $xuatCanhSua->ngay_dang_ky,
             ]);
         } else {
             XuatCanh::find($xuatCanhSua->ma_xuat_canh)->update([
                 'trang_thai' => '2',
                 'ma_doanh_nghiep_chon' => $xuatCanhSua->ma_doanh_nghiep_chon,
                 'ten_thuyen_truong' => $xuatCanhSua->ten_thuyen_truong,
+                'ngay_dang_ky' => $xuatCanhSua->ngay_dang_ky,
             ]);
         }
         // $xuatCanhSua->delete();
@@ -285,9 +277,8 @@ class XuatCanhService
                 $xuatHang->trang_thai = "12";
             }
             $xuatHang->save();
-
         }
- 
+
         // $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
         //     ->delete();
     }

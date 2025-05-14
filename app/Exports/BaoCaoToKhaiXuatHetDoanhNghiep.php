@@ -53,7 +53,7 @@ class BaoCaoToKhaiXuatHetDoanhNghiep implements FromArray, WithEvents
             ->join('hai_quan', 'hai_quan.ma_hai_quan', 'nhap_hang.ma_hai_quan')
             ->where('xuat_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
             ->whereIn('nhap_hang.trang_thai', ['7', '4'])
-            ->whereBetween('nhap_hang.ngay_xuat_het', [$this->tu_ngay, $this->den_ngay])
+            ->whereBetween('nhap_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->where('xuat_hang.trang_thai', '!=', '0')
             ->select(
                 'hang_hoa.ten_hang',

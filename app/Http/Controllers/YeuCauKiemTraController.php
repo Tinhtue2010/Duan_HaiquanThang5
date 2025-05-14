@@ -71,10 +71,10 @@ class YeuCauKiemTraController extends Controller
             foreach ($rowsData as $row) {
                 $nhapHang = NhapHang::find($row['so_to_khai_nhap']);
                 $firstResult = $this->getThongTinTenHang($row);
-
+                $tau = NiemPhong::where('so_container',  $row['so_container'])->first()->phuong_tien_vt_nhap ?? '';
                 YeuCauKiemTraChiTiet::insert([
                     'so_to_khai_nhap' => $row['so_to_khai_nhap'],
-                    'so_tau' => $nhapHang->phuong_tien_vt_nhap,
+                    'so_tau' => $tau,
                     'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                     'ten_hang' => $firstResult['hang_hoa'] ?? '',
                     'so_container' => $row['so_container'],
@@ -170,7 +170,7 @@ class YeuCauKiemTraController extends Controller
                         ->get();
 
                     foreach ($hangTrongConts as $row) {
-                        $ptvtNhanHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->phuong_tien_vt_nhap;
+                        $ptvtChoHang =  NiemPhong::where('so_container', $row->so_container)->first()->phuong_tien_vt_nhap ?? '';
                         $so_seal = NiemPhong::where('so_container', $row->so_container)->first()->so_seal ?? "";
                         TheoDoiHangHoa::insert([
                             'so_to_khai_nhap' => $chiTietYeuCau->so_to_khai_nhap,
@@ -178,7 +178,7 @@ class YeuCauKiemTraController extends Controller
                             'thoi_gian'  => now(),
                             'so_luong_xuat'  => $row->so_luong,
                             'so_luong_ton'  => $row->so_luong,
-                            'phuong_tien_cho_hang' => $ptvtNhanHang,
+                            'phuong_tien_cho_hang' => $ptvtChoHang,
                             'cong_viec' => 7,
                             'phuong_tien_nhan_hang' => '',
                             'so_container' => $row->so_container,
@@ -387,7 +387,7 @@ class YeuCauKiemTraController extends Controller
             $firstResult = $this->getThongTinTenHang($row);
             YeuCauKiemTraChiTiet::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
-                'so_tau' => $nhapHang->phuong_tien_vt_nhap,
+                'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? '',
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'so_container' => $row['so_container'],
@@ -428,7 +428,7 @@ class YeuCauKiemTraController extends Controller
 
             YeuCauKiemTraChiTietSua::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
-                'so_tau' => $nhapHang->phuong_tien_vt_nhap,
+                'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? '',
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'so_container' => $row['so_container'],
@@ -499,7 +499,8 @@ class YeuCauKiemTraController extends Controller
 
     public function themTheoDoiHangHoa($chiTietYeuCau, $row, $ma_cong_chuc)
     {
-        $ptvtNhanHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->phuong_tien_vt_nhap;
+        // $ptvtNhanHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->phuong_tien_vt_nhap;
+        $ptvtChoHang = NiemPhong::where('so_container', $row->so_container)->first()->phuong_tien_vt_nhap ?? '';
         $so_seal = NiemPhong::where('so_container', $row->so_container)->first()->so_seal ?? "";
         TheoDoiHangHoa::insert([
             'so_to_khai_nhap' => $chiTietYeuCau->so_to_khai_nhap,
@@ -507,7 +508,7 @@ class YeuCauKiemTraController extends Controller
             'thoi_gian'  => now(),
             'so_luong_xuat'  => $row->so_luong,
             'so_luong_ton'  => $row->so_luong,
-            'phuong_tien_cho_hang' => $ptvtNhanHang,
+            'phuong_tien_cho_hang' => $ptvtChoHang,
             'cong_viec' => 7,
             'phuong_tien_nhan_hang' => '',
             'so_container' => $row->so_container,
@@ -636,12 +637,10 @@ class YeuCauKiemTraController extends Controller
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
             ->get();
-        $nhapHang = NhapHang::find($so_to_khai_nhap);
 
         $theoDoi = TheoDoiTruLui::create([
             'so_to_khai_nhap' => $so_to_khai_nhap,
             'so_ptvt_nuoc_ngoai' => '',
-            'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap,
             'ngay_them' => now(),
             'cong_viec' => 7,
             'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
@@ -655,8 +654,7 @@ class YeuCauKiemTraController extends Controller
                     'ma_theo_doi' => $theoDoi->ma_theo_doi,
                     'so_container' => $hangHoa->so_container,
                     'so_seal' => '',
-
-
+                    'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? '',
                 ]
             );
         }
@@ -718,8 +716,10 @@ class YeuCauKiemTraController extends Controller
                 $data = YeuCauKiemTra::join('doanh_nghiep', 'yeu_cau_kiem_tra.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
                     ->join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra.ma_yeu_cau', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau')
                     ->select(
-                        'doanh_nghiep.*',
-                        'yeu_cau_kiem_tra.*',
+                        'doanh_nghiep.ten_doanh_nghiep',
+                        'yeu_cau_kiem_tra.ma_yeu_cau',
+                        'yeu_cau_kiem_tra.trang_thai',
+                        'yeu_cau_kiem_tra.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
 
                     )
@@ -732,8 +732,10 @@ class YeuCauKiemTraController extends Controller
                     ->join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra.ma_yeu_cau', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau')
                     ->where('yeu_cau_kiem_tra.ma_doanh_nghiep', $maDoanhNghiep)
                     ->select(
-                        'doanh_nghiep.*',
-                        'yeu_cau_kiem_tra.*',
+                        'doanh_nghiep.ten_doanh_nghiep',
+                        'yeu_cau_kiem_tra.ma_yeu_cau',
+                        'yeu_cau_kiem_tra.trang_thai',
+                        'yeu_cau_kiem_tra.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_kiem_tra_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
                     )
                     ->groupBy('yeu_cau_kiem_tra.ma_yeu_cau')

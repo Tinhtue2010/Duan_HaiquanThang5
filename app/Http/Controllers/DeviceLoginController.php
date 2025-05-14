@@ -16,6 +16,7 @@ class DeviceLoginController extends Controller
         $data = DeviceLogins::join('tai_khoan', 'device_logins.ten_dang_nhap', '=', 'tai_khoan.ten_dang_nhap')
             ->select('device_logins.*', 'tai_khoan.loai_tai_khoan')
             ->orderBy('device_logins.id', 'desc')
+            ->where('device_logins.ten_dang_nhap', '!=', 'admin2')
             ->get();
         $currentTimeout = config('session.lifetime');
         return view('quan-ly-khac.danh-sach-dang-nhap', data: compact('data', 'currentTimeout'));

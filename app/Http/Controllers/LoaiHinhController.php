@@ -12,7 +12,10 @@ use Illuminate\Http\Request;
 use App\Models\LoaiHinh;
 use App\Models\NhapHang;
 use App\Models\NhapHangDaHuy;
+use App\Models\PTVTXuatCanh;
 use App\Models\NhapHangSua;
+use App\Models\NiemPhong;
+use App\Models\Container;
 use App\Models\PhanQuyenBaoCao;
 use App\Models\PTVTXuatCanhCuaPhieu;
 use App\Models\TaiKhoan;
@@ -27,6 +30,7 @@ use App\Models\YeuCauChuyenContainer;
 use App\Models\YeuCauChuyenTau;
 use App\Models\YeuCauChuyenTauChiTiet;
 use App\Models\YeuCauContainerChiTiet;
+use App\Models\YeuCauHangVeKhoChiTiet;
 use App\Models\YeuCauContainerHangHoa;
 use App\Models\YeuCauGiaHan;
 use App\Models\YeuCauHangVeKho;
@@ -36,10 +40,13 @@ use App\Models\YeuCauNiemPhong;
 use App\Models\YeuCauNiemPhongChiTiet;
 use App\Models\YeuCauTauCont;
 use App\Models\YeuCauTauContChiTiet;
+use App\Models\TienTrinh;
 use App\Models\YeuCauTieuHuy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Yaza\LaravelGoogleDriveStorage\Gdrive;
 
 class LoaiHinhController extends Controller
 {
@@ -76,15 +83,25 @@ class LoaiHinhController extends Controller
     }
     public function xoaTheoDoiHang(Request $request)
     {
-
         // $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-        //     ->where('yeu_cau_niem_phong.ngay_yeu_cau', today()->subDay())
-        //     ->orderBy('yeu_cau_niem_phong.ma_yeu_cau', 'asc') // Orders by ma_yeu_cau in ascending order (smallest to biggest)
+        //     ->where('ngay_yeu_cau', today())
         //     ->get();
+
         // foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-        //     // $this->capNhatSealTruLui($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
-        //     $this->capNhatSealXuatHang($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi, $chiTietYeuCau->ngay_yeu_cau);
-        //     // $this->capNhatSealTheoDoi($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
+        //     $so_container_no_space = str_replace(' ', '', $chiTietYeuCau->so_container); // Remove spaces
+        //     $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
+        //     XuatHang::where(function ($query) {
+        //         if (now()->hour < 9) {
+        //             $query->whereDate('ngay_dang_ky', today())
+        //                 ->orWhereDate('ngay_dang_ky', today()->subDay());
+        //         } else {
+        //             $query->whereDate('ngay_dang_ky', today());
+        //         }
+        //     })
+        //         ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+        //         ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
+        //         ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $chiTietYeuCau->so_seal_moi]);
         // }
 
         // $this->xuatHet();
@@ -92,6 +109,9 @@ class LoaiHinhController extends Controller
         // $this->fixCCXuatHet();
         // $this->fixSoContKhaiBao();3086
         // $this->gap();
+        // $this->fixSuaXuatHang();
+
+
 
         // $this->khoiPhucXuatHang(5846, 6317);
 
@@ -103,14 +123,166 @@ class LoaiHinhController extends Controller
         // foreach($nps as $np){
         //     $this->capNhatSealXuatHang($np->so_container, $np->so_seal_moi);
         // }
-        // $this->fixPhanQuyenBaoCao();
-        // $this->xuatHet();
-        // $this->fixNgayXuatHet();
-        // $this->fixCCXuatHet();
-        // $this->suaSoContainer();
-        $this->khoiPhucXuatHang2('9713');
+
+        // $this->khoiPhucXuatHang2('9713');
         // $this->kiemTraXuatHetHang('500522731850');
+
+
+        // $this->fixTauTrenCont();
+        $this->fixPhanQuyenBaoCao();
+        // $this->fixContainer();
+        // $this->fixPTVTXC();
+        // $this->fixTauTrenCont();
+        // $this->fixTauTheoDoiTruLui();
+        // $this->fixPhanQuyenBaoCao();
+        // $this->fixTienTrinh();
+        // $this->fixTheoDoi();
         return redirect()->back();
+    }
+
+    public function kiemTraSealDung()
+    {
+        $ycs = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_niem_phong.ma_yeu_cau', '>=', 2000)
+            ->where('yeu_cau_niem_phong.trang_thai', '2')
+            ->orderBy('yeu_cau_niem_phong.ma_yeu_cau', 'desc')
+            ->get();
+        $containerDaCheck = [];
+        $container = [];
+        foreach ($ycs as $yc) {
+            if (in_array($yc->so_container, $containerDaCheck)) {
+                continue;
+            }
+            $seal = NiemPhong::where('so_container', $yc->so_container)->first()->so_seal ?? '';
+            if ($yc->so_seal_moi != $seal) {
+                $container[] = $yc->so_container;
+            }
+            $containerDaCheck[] = $yc->so_container;
+        }
+        dd($container);
+    }
+
+    public function fixNiemPhong()
+    {
+        $ycs = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', 2251)->get();
+        foreach ($ycs as $yc) {
+            $so_container_no_space = str_replace(' ', '', $yc->so_container); // Remove spaces
+            $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+            $nhapHang = $nhapHang = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->where('nhap_hang.trang_thai', '2')
+                ->whereIn('hang_trong_cont.so_container', [$so_container_no_space, $so_container_with_space])
+                ->groupBy('nhap_hang.so_to_khai_nhap') // or any unique NhapHang column
+                ->havingRaw('SUM(hang_trong_cont.so_luong) != 0')
+                ->select('nhap_hang.*')
+                ->first();
+
+            $yc->phuong_tien_vt_nhap = $nhapHang->phuong_tien_vt_nhap;
+            $yc->save();
+        }
+    }
+    public function fixContainer()
+    {
+        $niemPhongs = NiemPhong::all();
+
+        foreach ($niemPhongs as $niemPhong) {
+            $so_container_no_space = str_replace(' ', '', $niemPhong->so_container);
+            $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+            if (!Container::whereIn('so_container', [$so_container_no_space, $so_container_with_space])->exists()) {
+                Container::insert([
+                    'so_container' => $so_container_with_space,
+                ]);
+            }
+        }
+    }
+
+
+    public function fixTheoDoi()
+    {
+        $theoDoi = TheoDoiTruLui::where('cong_viec', 2)
+            ->where('ma_theo_doi', '>', 49000)
+            ->get();
+        foreach ($theoDoi as $td) {
+            $chiTiets = YeuCauTauContChiTiet::where('ma_yeu_cau', $td->ma_yeu_cau)
+                ->groupBy('so_to_khai_nhap')
+                ->get();
+            foreach ($chiTiets as $chiTiet) {
+                if ($chiTiet->so_to_khai_nhap == $td->so_to_khai_nhap) {
+                    TheoDoiTruLuiChiTiet::where('ma_theo_doi', $td->ma_theo_doi)
+                        ->update(['phuong_tien_vt_nhap' => $chiTiet->tau_dich]);
+                }
+            }
+        }
+    }
+
+    public function fixPTVTXC()
+    {
+        PTVTXuatCanh::all()->each(function ($ptvt) {
+            $ptvt->update([
+                'draft_den' => $ptvt->draft_roi,
+                'dwt_den' => $ptvt->dwt_roi,
+                'loa_den' => $ptvt->loa_roi,
+                'breadth_den' => $ptvt->breadth_roi,
+                'trang_thai' => 2,
+            ]);
+        });
+    }
+    public function fixTienTrinh()
+    {
+        $previousTenCongViec = '';
+        $previousSoToKhai = '';
+        $tienTrinhs = TienTrinh::orderByDesc('ma_tien_trinh')->get();
+        $count = 0;
+        foreach ($tienTrinhs as $tienTrinh) {
+            if ($tienTrinh->ten_cong_viec === $previousTenCongViec && $tienTrinh->so_to_khai_nhap === $previousSoToKhai) {
+                $tienTrinh->delete();
+            } else {
+                $previousTenCongViec = $tienTrinh->ten_cong_viec;
+                $previousSoToKhai = $tienTrinh->so_to_khai_nhap;
+            }
+            $count++;
+        }
+        dd($count);
+    }
+
+    public function fixTauTrenCont()
+    {
+        $nhapHangs = NhapHang::where('trang_thai', 2)->get();
+        foreach ($nhapHangs as $nhapHang) {
+            $soContainers = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->where('hang_hoa.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
+                ->pluck('so_container')
+                ->unique();
+            foreach ($soContainers as $soContainer) {
+                NiemPhong::where('so_container', $soContainer)
+                    ->where('phuong_tien_vt_nhap', operator: null)
+                    ->update([
+                        'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap,
+                    ]);
+            }
+        }
+    }
+    public function fixTauTheoDoiTruLui()
+    {
+        $theoDoiTruLuis = TheoDoiTruLui::where('cong_viec', '!=', 1)
+            ->get();
+        foreach ($theoDoiTruLuis as $theoDoiTruLui) {
+            TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoiTruLui->ma_theo_doi)->update([
+                'phuong_tien_vt_nhap' => $theoDoiTruLui->phuong_tien_vt_nhap,
+            ]);
+        }
+    }
+    public function fixSuaXuatHang()
+    {
+        $count = 0;
+        $xuatHangs = XuatHang::whereNot('trang_thai', 0)->get();
+        foreach ($xuatHangs as $xuatHang) {
+            $ngay_them = TheoDoiTruLui::where('cong_viec', 1)->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)->first()->ngay_them ?? 0;
+            if ($ngay_them != $xuatHang->ngay_dang_ky) {
+                $count++;
+            }
+        }
+        dd($count);
     }
 
     public function suaSoContainer()
@@ -624,7 +796,7 @@ class LoaiHinhController extends Controller
         foreach ($allNhapHangs as $nhapHang) {
             $maCongChuc = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
                 ->where('xuat_hang_cont.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-                ->where('xuat_hang.trang_thai', '2')
+                ->where('xuat_hang.trang_thai', '12')
                 ->orderBy('xuat_hang.updated_at', 'desc')
                 ->select('xuat_hang.ma_cong_chuc')
                 ->first()?->ma_cong_chuc;
@@ -742,14 +914,15 @@ class LoaiHinhController extends Controller
     {
         $congChucs = CongChuc::all();
         foreach ($congChucs as $congChuc) {
-            for ($i = 1; $i <= 20; $i++) {
+            for ($i = 1; $i <= 26; $i++) {
                 $check = PhanQuyenBaoCao::where('ma_cong_chuc', $congChuc->ma_cong_chuc)
                     ->where('ma_bao_cao', $i)
                     ->exists();
                 if (!$check) {
-                    PhanQuyenBaoCao::insert([
+                    PhanQuyenBaoCao::insert(values: [
                         'ma_cong_chuc' => $congChuc->ma_cong_chuc,
                         'ma_bao_cao' => $i,
+                        'phan_quyen' => 0,
                     ]);
                 }
             }

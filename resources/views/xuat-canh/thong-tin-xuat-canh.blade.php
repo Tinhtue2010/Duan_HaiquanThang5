@@ -45,7 +45,7 @@
                         {{ $xuatCanh->doanhNghiep->ten_doanh_nghiep }}
                     </h2>
                     <h2 class="text-center text-dark">
-                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep }}
+                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep ?? "Không" }}
                     </h2>
 
                     <h2 class="text-center text-dark">Tờ khai xuất cảnh số {{ $xuatCanh->ma_xuat_canh }} - Ngày
@@ -182,7 +182,7 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            <center>
+                                        <center>
                                     @endif
                                 @endif
                         </div>

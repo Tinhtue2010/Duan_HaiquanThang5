@@ -150,7 +150,12 @@
                             <div class="row">
                                 <h3 class="text-center mb-2">Thông tin tờ khai nhập</h3>
                                 <p class="fs-5"><strong>Số tờ khai:</strong> <span id="modal-so-to-khai"></span></p>
-                                <p class="fs-5"><strong>Số tàu hiện tại:</strong> <span id="modal-tau-cu"></span></p>
+                                <p class="fs-5"><strong>Số tàu hiện tại:</strong></p>
+                                <div>
+                                    <input type="text" class="form-control reset-input" id="modal-tau-cu"
+                                        maxlength="255" name="tau_cu" placeholder="Nhập tên tàu" required>
+                                </div>
+
                                 <p class="fs-5 mt-3"><strong>Tên tàu mới: </strong></p>
                                 <div>
                                     <input type="text" class="form-control reset-input" id="modal-tau-moi"
@@ -215,14 +220,17 @@
                         url: '/get-to-khai-items', // The route to your controller method
                         method: 'GET',
                         data: {
-                            so_to_khai_nhap: soToKhaiNhap
+                            ma_yeu_cau: {{ $ma_yeu_cau }},
+                            so_to_khai_nhap: soToKhaiNhap,
+                            loai: 'tau_cont'
                         },
                         success: function(response) {
+                            console.log(response);
                             let tableBody = $("#displayTableHangHoa tbody");
                             tableBody.empty();
 
                             $('#modal-so-to-khai').text(response.so_to_khai_nhap);
-                            $('#modal-tau-cu').text(response.phuong_tien_vt_nhap);
+                            $('#modal-tau-cu').val(response.phuong_tien_vt_nhap);
                             $('#modal-so-to-khai').text(response.so_to_khai_nhap);
                             let options =
                                 '<option value=""></option>';
@@ -350,7 +358,7 @@
                             <td class="row-index text-center">${rowIndex}</td>
                             <td class="text-center">${chiTiet.so_to_khai_nhap}</td>
                             <td class="text-center">${chiTiet.so_container_goc || ''} (${chiTiet.tau_goc})</td>
-                            <td class="text-center">${chiTiet.so_luong_chuyen || ''}</td>
+                            <td class="text-center">${chiTiet.so_luong_chuyen || 0}</td>
                             <td class="text-center">${chiTiet.so_container_dich || ''} (${chiTiet.tau_dich})</td>
                             <td class="text-center">${chiTiet.so_to_khai_cont_moi || '' }</td>
                             <td class="text-center">${chiTiet.so_luong_ton_cont_moi || '0'}</td>
@@ -367,7 +375,7 @@
                             <td class="text-center" hidden>${chiTietHangHoa.ma_hang_cont}</td>
                             <td class="text-center">${chiTietHangHoa.so_to_khai_nhap}</td>
                             <td class="text-center">${chiTietHangHoa.ten_hang}</td>
-                            <td class="text-center">${chiTietHangHoa.so_luong || ''}</td>
+                            <td class="text-center">${chiTietHangHoa.so_luong || 0}</td>
                             <td class="text-center">${chiTietHangHoa.so_container_cu || ''}</td>
                             <td class="text-center">${chiTietHangHoa.so_container_moi || '' }</td>
                             <td class="text-center" hidden>${chiTietHangHoa.tau_goc || '' }</td>
@@ -386,6 +394,16 @@
 
             // When the "doneButton" is clicked, add a row to the table
             $("#doneButton").on("click", function() {
+                var tauGoc = $('#modal-tau-cu').val();
+                var tauDich = document.getElementById('modal-tau-moi').value;
+                if (!tauGoc || !tauDich) {
+                    alert('Vui lòng chọn và điền đầy đủ thông tin trước khi thêm!');
+                    return;
+                }
+                if (tauGoc === tauDich) {
+                    alert('Tàu hiện tại đang trùng với tàu mới');
+                    return;
+                }
                 $("#displayTableHangHoa tbody tr").each(function() {
                     var $cells = $(this).find("td");
                     var soToKhai = $('#modal-so-to-khai').text();
@@ -419,8 +437,7 @@
                     if (foundMatch) {
                         return false;
                     }
-                    var tauGoc = $('#modal-tau-cu').text();
-                    var tauDich = document.getElementById('modal-tau-moi').value;
+
                     var newRow = `
                         <tr class="text-center">
                             <td class="text-center" hidden>${maHangCont}</td>
@@ -458,7 +475,9 @@
                     type: "GET",
                     contentType: "application/json",
                     data: {
-                        rows_data: rowsData
+                        ma_yeu_cau: {{ $ma_yeu_cau }},
+                        rows_data: rowsData,
+                        loai: 'tau_cont'
                     },
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(

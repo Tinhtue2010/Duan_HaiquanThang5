@@ -7,10 +7,12 @@
     "require": {
         "php": "^8.2",
         "dompdf/dompdf": "^3.1",
+        "endroid/qr-code": "^5.0",
         "jenssegers/agent": "^2.6",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
+        "masbug/flysystem-google-drive-ext": "^2.4",
         "milon/barcode": "^11.0",
         "mpdf/mpdf": "^8.2",
         "nesbot/carbon": "^3.8",

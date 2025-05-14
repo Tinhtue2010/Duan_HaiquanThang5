@@ -48,73 +48,67 @@ class BaoCaoChiTietXNKTheoDN implements FromArray, WithEvents
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-            ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
-            ->whereBetween('xuat_hang.ngay_xuat_canh', [$this->tu_ngay, $this->den_ngay])
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
+            ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+            ->whereBetween('xuat_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',
                 'nhap_hang.trong_luong',
                 'nhap_hang.phuong_tien_vt_nhap',
-                DB::raw("(SELECT SUM(hh.so_luong_khai_bao) 
-                      FROM hang_hoa hh 
-                      WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"),
-                DB::raw("MIN(hang_hoa.ma_hang) as ma_hang"),
-                DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"),
-                DB::raw("MIN(hang_hoa.xuat_xu) as xuat_xu"),
-                DB::raw("MIN(hang_hoa.don_vi_tinh) as don_vi_tinh"),
-                DB::raw("MIN(hang_hoa.don_gia) as don_gia"),
-                DB::raw("MIN(hang_trong_cont.so_container) as so_container"),
-                DB::raw("MIN(doanh_nghiep.ma_doanh_nghiep) as ma_doanh_nghiep"),
-                DB::raw("MIN(doanh_nghiep.ten_doanh_nghiep) as ten_doanh_nghiep"),
-                DB::raw("MIN(doanh_nghiep.dia_chi) as dia_chi"),
-                DB::raw("MIN(hai_quan.ten_hai_quan) as ten_hai_quan"),
-                DB::raw("MIN(xuat_hang.ngay_xuat_canh) as ngay_xuat_canh"),
-                DB::raw("MIN(xuat_hang.ten_phuong_tien_vt) as ten_phuong_tien_vt"),
-                DB::raw("(SELECT SUM(htc.so_luong) 
-                    FROM hang_hoa hh 
-                    JOIN hang_trong_cont htc ON hh.ma_hang = htc.ma_hang 
-                    WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong"),
+                'hang_hoa.so_luong_khai_bao',
+                'hang_hoa.ma_hang',
+                'hang_hoa.ten_hang',
+                'hang_hoa.xuat_xu',
+                'hang_hoa.don_vi_tinh',
+                'hang_hoa.don_gia',
+                'hang_trong_cont.so_container',
+                'doanh_nghiep.ma_doanh_nghiep',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'doanh_nghiep.dia_chi',
+                'hai_quan.ten_hai_quan',
+                'xuat_hang.ngay_dang_ky',
+                'xuat_hang.ten_phuong_tien_vt',
+                'xuat_hang_cont.so_luong_xuat',
+                'xuat_hang_cont.so_luong_ton',
             )
             ->groupBy(
                 'nhap_hang.so_to_khai_nhap',
-                'nhap_hang.ngay_dang_ky',
-                'nhap_hang.trong_luong',
-                'nhap_hang.phuong_tien_vt_nhap',
+                'xuat_hang.so_to_khai_xuat',
             )
             ->get();
 
-        $totalHangTon = 0;
+        $totalXuat = 0;
         $totalKhaiBao = 0;
-
+        $totalHangTon = 0;
         $stt = 1;
         foreach ($nhapHangs as $item) {
-            if ($item->total_so_luong != 0) {
-                $result[] = [
-                    $stt++,
-                    $item->so_to_khai_nhap,
-                    Carbon::createFromFormat('Y-m-d', $item->ngay_dang_ky)->format('d-m-Y'),
-                    $item->ten_hai_quan,
-                    $item->ten_doanh_nghiep,
-                    $item->ma_doanh_nghiep,
-                    $item->dia_chi,
-                    $item->ten_hang,
-                    $item->xuat_xu,
-                    $item->total_so_luong_khai_bao,
-                    $item->don_vi_tinh,
-                    $item->trong_luong,
-                    $item->don_gia * $item->total_so_luong,
-                    isset($item->ngay_xuat_canh) ? Carbon::parse($item->ngay_xuat_canh)->format('d-m-Y') : '',
-                    ($item->total_so_luong_khai_bao - $item->total_so_luong) == 0 ? '0' : ($item->total_so_luong_khai_bao - $item->total_so_luong),
-                    $item->total_so_luong,
-                    $item->ten_phuong_tien_vt ?? '',
-                    $item->phuong_tien_vt_nhap,
-                    $item->so_container,
-                ];
-                $totalHangTon += $item->total_so_luong;
-                $totalKhaiBao += $item->total_so_luong_khai_bao;
-            }
+            $result[] = [
+                $stt++,
+                $item->so_to_khai_nhap,
+                Carbon::createFromFormat('Y-m-d', $item->ngay_dang_ky)->format('d-m-Y'),
+                $item->ten_hai_quan,
+                $item->ten_doanh_nghiep,
+                $item->ma_doanh_nghiep,
+                $item->dia_chi,
+                $item->ten_hang,
+                $item->xuat_xu,
+                $item->so_luong_khai_bao,
+                $item->don_vi_tinh,
+                $item->trong_luong,
+                $item->don_gia * $item->so_luong_xuat,
+                isset($item->ngay_dang_ky) ? Carbon::parse($item->ngay_dang_ky)->format('d-m-Y') : '',
+                $item->so_luong_xuat,
+                $item->so_luong_ton > 0 ? $item->so_luong_ton : '0',
+                $item->ten_phuong_tien_vt ?? '',
+                $item->phuong_tien_vt_nhap,
+                $item->so_container,
+            ];
+            $totalXuat += $item->so_luong_xuat;
+            $totalKhaiBao += $item->so_luong_khai_bao;
+            $totalHangTon += $item->so_luong_ton > 0 ? $item->so_luong_ton : 0;
         }
+
         $result[] = [
             '',
             '',
@@ -130,7 +124,7 @@ class BaoCaoChiTietXNKTheoDN implements FromArray, WithEvents
             '',
             '',
             '',
-            $totalKhaiBao - $totalHangTon,
+            $totalXuat,
             $totalHangTon,
         ];
 

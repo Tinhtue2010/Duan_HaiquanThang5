@@ -17,23 +17,25 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 class BaoCaoDoanhNghiepXNKTheoDN implements FromArray, WithEvents
 {
     protected $ma_doanh_nghiep;
+    protected $tu_ngay;
+    protected $den_ngay;
 
-    public function __construct($ma_doanh_nghiep)
+    public function __construct($tu_ngay,$den_ngay,$ma_doanh_nghiep)
     {
+        $this->tu_ngay = $tu_ngay;
+        $this->den_ngay = $den_ngay;
         $this->ma_doanh_nghiep = $ma_doanh_nghiep;
     }
     public function array(): array
     {
-        $currentDate = Carbon::now()->format('d');  // Day of the month
-        $currentMonth = Carbon::now()->format('m'); // Month number
-        $currentYear = Carbon::now()->format('Y');  // Year
-        $loaiHangs = LoaiHang::all();
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO CHI TIẾT HÀNG HÓA XUẤT NHẬP KHẨU', '', '', '', '', ''],
-            ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
+            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''], 
             ['', '', '', '', '', ''],
             ['STT', 'Số tờ khai', 'Ngày đăng ký tờ khai', 'Chi cục HQ đăng ký tờ khai', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', 'Số lượng tồn', 'Số tàu hiện tại', 'Số cont hiện tại'],
             ['', '', '', '', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Chủng loại tên hàng hóa', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Đã xuất', '', '', ''],
@@ -47,6 +49,7 @@ class BaoCaoDoanhNghiepXNKTheoDN implements FromArray, WithEvents
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
+            ->whereBetween('xuat_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',

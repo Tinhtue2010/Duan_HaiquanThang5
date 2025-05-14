@@ -36,8 +36,10 @@ class YeuCauHangVeKhoController extends Controller
                 $data = YeuCauHangVeKho::join('doanh_nghiep', 'yeu_cau_hang_ve_kho.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
                     ->join('yeu_cau_hang_ve_kho_chi_tiet', 'yeu_cau_hang_ve_kho.ma_yeu_cau', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau')
                     ->select(
-                        'doanh_nghiep.*',
-                        'yeu_cau_hang_ve_kho.*',
+                        'doanh_nghiep.ten_doanh_nghiep',
+                        'yeu_cau_hang_ve_kho.ma_yeu_cau',
+                        'yeu_cau_hang_ve_kho.trang_thai',
+                        'yeu_cau_hang_ve_kho.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
     
                     )
@@ -50,8 +52,10 @@ class YeuCauHangVeKhoController extends Controller
                     ->join('yeu_cau_hang_ve_kho_chi_tiet', 'yeu_cau_hang_ve_kho.ma_yeu_cau', 'yeu_cau_hang_ve_kho_chi_tiet.ma_yeu_cau')
                     ->where('yeu_cau_hang_ve_kho.ma_doanh_nghiep', $maDoanhNghiep)
                     ->select(
-                        'doanh_nghiep.*',
-                        'yeu_cau_hang_ve_kho.*',
+                        'doanh_nghiep.ten_doanh_nghiep',
+                        'yeu_cau_hang_ve_kho.ma_yeu_cau',
+                        'yeu_cau_hang_ve_kho.trang_thai',
+                        'yeu_cau_hang_ve_kho.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
     
                     )
@@ -136,7 +140,7 @@ class YeuCauHangVeKhoController extends Controller
 
                 YeuCauHangVeKhoChiTiet::insert([
                     'so_to_khai_nhap' => $row['so_to_khai_nhap'],
-                    'so_tau' => $nhapHang->phuong_tien_vt_nhap,
+                    'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
                     'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                     'ten_hang' => $firstResult['hang_hoa'] ?? '',
                     'so_container' => $row['so_container'],
@@ -472,7 +476,7 @@ class YeuCauHangVeKhoController extends Controller
 
             YeuCauHangVeKhoChiTiet::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
-                'so_tau' => $nhapHang->phuong_tien_vt_nhap,
+                'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'so_container' => $row['so_container'],
@@ -504,7 +508,7 @@ class YeuCauHangVeKhoController extends Controller
             YeuCauHangVeKhoChiTietSua::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                 'so_container' => $row['so_container'],
-                'so_tau' => $nhapHang->phuong_tien_vt_nhap,
+                'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ma_sua_yeu_cau' => $suaYeuCau->ma_sua_yeu_cau,
@@ -634,7 +638,6 @@ class YeuCauHangVeKhoController extends Controller
         $theoDoi = TheoDoiTruLui::create([
             'so_to_khai_nhap' => $so_to_khai_nhap,
             'so_ptvt_nuoc_ngoai' => '',
-            'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap,
             'ngay_them' => now(),
             'cong_viec' => 5,
             'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
@@ -648,7 +651,7 @@ class YeuCauHangVeKhoController extends Controller
                     'ma_theo_doi' => $theoDoi->ma_theo_doi,
                     'so_container' => $hangHoa->so_container,
                     'so_seal' => '',
-
+                    'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ""
                 ]
             );
         }

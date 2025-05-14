@@ -136,11 +136,6 @@
             nhapYeuCauButton.addEventListener('click', function() {
 
                 let dropdownValue = document.getElementById('ptvt-xc-dropdown-search').value;
-                if (!dropdownValue) {
-                    alert('Vui lòng chọn phương tiện vận tải xuất cảnh');
-                    return false;
-                }
-
                 let tenThuyenTruong = document.getElementById('thuyen-truong-dropdown-search').value.trim();
                 let maDoanhNghiepChon = document.getElementById('doanh-nghiep-dropdown-search').value
                     .trim();
@@ -173,7 +168,7 @@
             function convertDateFormat(dateStr) {
                 return dateStr.split("-").reverse().join("-");
             }
-            
+
             function calculateTotal() {
                 let total = 0;
                 document.querySelectorAll("#toKhaiXuatTable tbody tr").forEach(row => {
@@ -199,58 +194,53 @@
                         let tfoot = $("#toKhaiXuatTable tfoot");
                         tbody.empty(); // Clear previous data
                         let totalTongSoLuongXuat = 0; // Initialize total sum
+                        let doanhNghiepDropdown = $("#doanh-nghiep-dropdown-search");
+                        doanhNghiepDropdown.empty().append(
+                            '<option value="">Chọn doanh nghiệp</option>');
+
+                        let addedDoanhNghieps = new Set(); // Track unique doanh nghiep
 
                         if (response.xuatHangs && response.xuatHangs.length > 0) {
                             $.each(response.xuatHangs, function(index, item) {
                                 totalTongSoLuongXuat += parseFloat(item.tong_so_luong_xuat) ||
-                                    0; // Sum up values
+                                    0;
+
                                 tbody.append(`
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${item.so_to_khai_xuat}</td>
-                                    <td>${item.ten_doanh_nghiep}</td>
-                                    <td>${item.ten_chu_hang}</td>
-                                    <td>${item.ma_loai_hinh}</td>
-                                    <td>${item.tong_so_luong_xuat}</td>
-                                    <td>${convertDateFormat(item.ngay_dang_ky)}</td>
-                                    <td>
-                                        <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-                                    </td>     
-                                </tr>
-                            `);
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${item.so_to_khai_xuat}</td>
+                                        <td>${item.ten_doanh_nghiep}</td>
+                                        <td>${item.ten_chu_hang}</td>
+                                        <td>${item.ma_loai_hinh}</td>
+                                        <td>${item.tong_so_luong_xuat}</td>
+                                        <td>${convertDateFormat(item.ngay_dang_ky)}</td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
+                                        </td>     
+                                    </tr>
+                                `);
+
+                                if (!addedDoanhNghieps.has(item.ma_doanh_nghiep)) {
+                                    addedDoanhNghieps.add(item.ma_doanh_nghiep);
+                                    doanhNghiepDropdown.append(
+                                        `<option value="${item.ma_doanh_nghiep}">${item.ten_doanh_nghiep}</option>`
+                                    );
+                                }
                             });
                             calculateTotal();
                         } else {
                             tbody.append('<tr><td colspan="9">Không có dữ liệu</td></tr>');
                         }
-                    }
-                });
-            }
-
-            function updateDoanhNghiepsDropdown() {
-                let so_ptvt_xuat_canh = $('#ptvt-xc-dropdown-search').val();
-                let doanhNghiepDropdown = $("#doanh-nghiep-dropdown-search"); // Use jQuery for easier manipulation
-                $.ajax({
-                    url: "{{ route('xuat-canh.getDoanhNghiepsTrongCacPhieu') }}", // Adjust with your route
-                    type: "GET",
-                    data: {
-                        so_ptvt_xuat_canh: so_ptvt_xuat_canh,
-                    },
-
-                    success: function(response) {
-                        doanhNghiepDropdown.empty().append(
-                            '<option value="">Chọn doanh nghiệp</option>'); // Clear and add default
-                        if (response.doanhNghieps && response.doanhNghieps.length > 0) {
-                            $.each(response.doanhNghieps, function(index, doanhNghiep) {
-                                doanhNghiepDropdown.append(
-                                    `<option value="${doanhNghiep.ma_doanh_nghiep}">${doanhNghiep.ten_doanh_nghiep}</option>`
-                                );
-                            });
+                        if (addedDoanhNghieps.size === 0) {
+                            doanhNghiepDropdown.append(
+                                `<option value="0">Không</option>`
+                            );
                         }
                     }
-                });
 
+                });
             }
+
 
             const tableBody = document.querySelector('#toKhaiXuatTable tbody');
 
@@ -272,7 +262,6 @@
             $('#ptvt-xc-dropdown-search').on('change', function() {
                 document.getElementById('so_ptvt_xuat_canh_hidden').value = document.getElementById(
                     'ptvt-xc-dropdown-search').value.trim();
-                updateDoanhNghiepsDropdown();
                 $('#toKhaiXuatTable tr').each(function() {
                     updateTable($(this));
                 });

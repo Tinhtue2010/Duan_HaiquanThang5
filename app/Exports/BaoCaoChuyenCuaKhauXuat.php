@@ -18,28 +18,37 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
 {
+    protected $tu_ngay;
+    protected $den_ngay;
+
+    public function __construct($tu_ngay, $den_ngay)
+    {
+        $this->tu_ngay = $tu_ngay;
+        $this->den_ngay = $den_ngay;
+    }
     public function array(): array
     {
-        $currentDate = Carbon::now()->format('d');  // Day of the month
-        $currentMonth = Carbon::now()->format('m'); // Month number
-        $currentYear = Carbon::now()->format('Y');  // Year
-
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO HÀNG CHUYỂN CỬA KHẨU XUẤT (QUAY VỀ KHO)', '', '', '', '', ''],
-            ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
+            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', 'Số lượng chuyển đi', 'Ngày đăng ký','Số container'],
+            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', 'Số lượng chuyển đi', 'Ngày đăng ký', 'Số container'],
             ['', '', '', '', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng hóa', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Ngày xuất', '', ''],
         ];
         $totalKhaiBao = 0;
         $totalSoLuong = 0;
         $stt = 1;
-        $yeuCaus = YeuCauHangVeKho::all();
+        $yeuCaus = YeuCauHangVeKho::whereBetween('ngay_yeu_cau', [$this->tu_ngay, $this->den_ngay])
+            ->get();
+
         foreach ($yeuCaus as $yeuCau) {
-            $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->get();
+            $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->get();
             foreach ($chiTiets as $chiTiet) {
                 $nhapHang = NhapHang::find($chiTiet->so_to_khai_nhap);
                 $hangHoas = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
@@ -53,27 +62,28 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                     $totalKhaiBao += $hangHoa->so_luong_khai_bao;
                     $totalSoLuong += $hangHoa->so_luong;
                 }
-                $formattedDate = $nhapHang->updated_at->format('d-m-Y');
-                $formattedDate = Carbon::parse($nhapHang->updated_at)->format('d-m-Y');
-                $result[] = [
-                    $stt++,
-                    $nhapHang->so_to_khai_nhap,
-                    Carbon::createFromFormat('Y-m-d', $nhapHang->ngay_dang_ky)->format('d-m-Y'),
-                    $nhapHang->haiQuan->ten_hai_quan,
-                    $nhapHang->doanhNghiep->ten_doanh_nghiep,
-                    $nhapHang->doanhNghiep->ma_doanh_nghiep,
-                    $nhapHang->doanhNghiep->dia_chi,
-                    $hangHoa->ten_hang,
-                    $hangHoa->xuat_xu,
-                    $soLuongKhaiBao,
-                    $hangHoa->don_vi_tinh,
-                    $nhapHang->trong_luong,
-                    $hangHoa->tri_gia,
-                    $formattedDate,
-                    $soLuong,
-                    Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('d-m-Y'),
-                    $hangHoa->so_container
-                ];
+                if ($nhapHang && $nhapHang->updated_at) {
+                    $formattedDate = Carbon::parse($nhapHang->updated_at)->format('d-m-Y');
+                    $result[] = [
+                        $stt++,
+                        $nhapHang->so_to_khai_nhap,
+                        Carbon::createFromFormat('Y-m-d', $nhapHang->ngay_dang_ky)->format('d-m-Y'),
+                        $nhapHang->haiQuan->ten_hai_quan,
+                        $nhapHang->doanhNghiep->ten_doanh_nghiep,
+                        $nhapHang->doanhNghiep->ma_doanh_nghiep,
+                        $nhapHang->doanhNghiep->dia_chi,
+                        $hangHoa->ten_hang,
+                        $hangHoa->xuat_xu,
+                        $soLuongKhaiBao,
+                        $hangHoa->don_vi_tinh,
+                        $nhapHang->trong_luong,
+                        $hangHoa->tri_gia,
+                        $formattedDate,
+                        $soLuong,
+                        Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('d-m-Y'),
+                        $hangHoa->so_container
+                    ];
+                } 
             }
         }
         $result[] = [

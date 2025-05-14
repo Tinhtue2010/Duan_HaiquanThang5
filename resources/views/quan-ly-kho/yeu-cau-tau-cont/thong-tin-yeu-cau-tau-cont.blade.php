@@ -133,16 +133,18 @@
                                 @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $yeuCau->ma_doanh_nghiep)
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <a
-                                                href="{{ route('quan-ly-kho.sua-yeu-cau-tau-cont', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
-                                                <button class="btn btn-warning px-4">
-                                                    <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
-                                                    Sửa yêu cầu
-                                                </button>
-                                            </a>
-                                        </div>
+                                            <center>
+                                                <div class="col-6">
+                                                    <a
+                                                        href="{{ route('quan-ly-kho.sua-yeu-cau-tau-cont', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                                                        <button class="btn btn-warning px-4">
+                                                            <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                            Sửa yêu cầu
+                                                        </button>
+                                                    </a>
+                                                </div>
+                                            </center>
+                                    {{-- <div class="row">
                                         <div class="col-6">
                                             <a href="#">
                                                 <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
@@ -153,7 +155,7 @@
                                                 </button>
                                             </a>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                 @endif
                             @elseif(trim($yeuCau->trang_thai) == '2')
                                 <h2 class="text-success">Đã duyệt</h2>

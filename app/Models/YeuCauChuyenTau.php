@@ -29,4 +29,8 @@ class YeuCauChuyenTau extends Model
     {
         return $this->belongsTo(CongChuc::class, 'ma_cong_chuc', 'ma_cong_chuc');
     }
+    public function yeuCauChuyenTauChiTiet()
+    {
+        return $this->hasMany(YeuCauChuyenTauChiTiet::class, 'ma_yeu_cau', 'ma_yeu_cau');
+    }
 }

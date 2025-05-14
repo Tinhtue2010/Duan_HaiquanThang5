@@ -99,6 +99,9 @@
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
                                 <th>Số container ban đầu</th>
+                                @if ($nhapHang->trang_thai == '1')
+                                    <th>Số seal</th>
+                                @endif
                                 @if (trim($nhapHang->trang_thai) != '1' && trim($nhapHang->trang_thai) != '0')
                                     <th>Thao tác</th>
                                 @endif
@@ -116,6 +119,9 @@
                                     <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
                                     <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
                                     <td>{{ $hangHoa->so_container_khai_bao }}</td>
+                                    @if ($nhapHang->trang_thai == '1')
+                                        <td>{{ $hangHoa->so_seal }}</td>
+                                    @endif
                                     @if (trim($nhapHang->trang_thai) != '1' && trim($nhapHang->trang_thai) != '0')
                                         <td>
                                             <form action="{{ route('export.theo-doi-hang-hoa') }}" method="GET">
@@ -137,6 +143,10 @@
                                 <td></td>
                                 <td></td>
                                 <td><strong>{{ number_format($triGiaSum, 2) }}</strong></td>
+                                <td></td>
+                                @if ($nhapHang->trang_thai == '1')
+                                    <td></td>
+                                @endif
                             </tr>
                         </tfoot>
                     </table>
@@ -220,7 +230,8 @@
                                 @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
                                     <div class="row">
-                                        <center>
+
+                                        {{-- <center>
                                             <div class="col-6">
                                                 <a
                                                     href="{{ route('nhap-hang.sua-to-khai-nhap-cong-chuc', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
@@ -231,7 +242,7 @@
                                                     </button>
                                                 </a>
                                             </div>
-                                        </center>
+                                        </center> --}}
                                     </div>
                                 @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
@@ -272,6 +283,24 @@
                                 <h2 class="text-success">Đã bàn giao hồ sơ</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 </h2>
+                            @elseif(trim($nhapHang->trang_thai) == '8')
+                                <h2 class="text-warning">Đã duyệt sửa lần 1</h2>
+                                <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
+                                </h2>
+                                <div class="row">
+                                    <center>
+                                        <div class="col-6">
+                                            <a
+                                                href="{{ route('nhap-hang.xem-sua-to-khai-nhap', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                                <button class="btn btn-warning px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/edit.png') }}">
+                                                    Xem sửa đổi
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </center>
+                                </div>
                             @elseif(trim($nhapHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">

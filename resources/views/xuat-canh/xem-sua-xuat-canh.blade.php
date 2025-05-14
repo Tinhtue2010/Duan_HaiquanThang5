@@ -38,16 +38,17 @@
                     </h2>
                     <h2 class="text-center text-dark">Tờ khai xuất cảnh số {{ $xuatCanh->ma_xuat_canh }}
                     </h2>
-                    <h2 class="text-center text-dark"> Phương tiện: {{ $xuatCanh->PTVTXuatCanh->ten_phuong_tien_vt }} -
-                        Ngày
-                        {{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d-m-Y') }}</h2>
+                    <h2 class="text-center text-dark"> Phương tiện: {{ $xuatCanh->PTVTxuatCanh->ten_phuong_tien_vt }}</h2>
                     <hr />
                     <h2 class="text-center mt-3">Tờ khai xuất cảnh ban đầu</h2>
                     <h2 class="text-center text-dark">
-                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep }}
+                        Ngày {{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d-m-Y') }}</h2>
+                    <h2 class="text-center text-dark">
+                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep ?? 'Không' }}
                     </h2>
                     <h2 class="text-center text-dark"> Thuyền trưởng: {{ $xuatCanh->ten_thuyen_truong }}</h2>
                     <hr />
+
                     <h3 class="text-center text-dark">Thông tin phiếu xuất</h3>
                     <table class="table table-bordered mt-2 fs-6" id="displayTable"
                         style="vertical-align: middle; text-align: center;">
@@ -95,13 +96,18 @@
                         </tbody>
                     </table>
 
+
                     <center>
                         <div class="custom-line mb-2"></div>
                     </center>
                     <h2 class="text-center">Tờ khai xuất cảnh sau khi sửa</h2>
                     <h2
+                        class="text-center {{ $xuatCanh->ngay_dang_ky !== $xuatCanhSua->ngay_dang_ky ? 'text-warning' : 'text-dark' }}">
+                        Ngày {{ \Carbon\Carbon::parse($xuatCanhSua->ngay_dang_ky)->format('d-m-Y') }}
+                    </h2>
+                    <h2
                         class="text-center {{ $xuatCanh->ma_doanh_nghiep_chon !== $xuatCanhSua->ma_doanh_nghiep_chon ? 'text-warning' : 'text-dark' }}">
-                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep }}
+                        Chủ hàng: {{ $xuatCanhSua->doanhNghiepChon->ten_doanh_nghiep ?? 'Không' }}
                     </h2>
                     <h2
                         class="text-center {{ $xuatCanh->ten_thuyen_truong !== $xuatCanhSua->ten_thuyen_truong ? 'text-warning' : 'text-dark' }}">
@@ -133,14 +139,17 @@
                                     $isNew = !$original;
                                     $rowClass = $isNew ? 'text-success' : '';
                                 @endphp
-                                <tr >
+                                <tr>
                                     <td class="text-success">{{ $index + 1 }}</td>
                                     <td class="text-success">{{ $chiTietSua->so_to_khai_xuat }}</td>
-                                    <td class="{{ $rowClass }}">{{ $chiTietSua->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
-                                    <td class="{{ $rowClass }}">{{ $chiTietSua->xuatHang->doanhNghiep->chuHang->ten_chu_hang ?? '' }}</td>
+                                    <td class="{{ $rowClass }}">
+                                        {{ $chiTietSua->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
+                                    <td class="{{ $rowClass }}">
+                                        {{ $chiTietSua->xuatHang->doanhNghiep->chuHang->ten_chu_hang ?? '' }}</td>
                                     <td class="{{ $rowClass }}">{{ $chiTietSua->xuatHang->ma_loai_hinh }}</td>
                                     <td class="{{ $rowClass }}">{{ $chiTietSua->tong_so_luong_xuat }}</td>
-                                    <td class="{{ $rowClass }}">{{ \Carbon\Carbon::parse($chiTietSua->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
+                                    <td class="{{ $rowClass }}">
+                                        {{ \Carbon\Carbon::parse($chiTietSua->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -150,8 +159,8 @@
                                 <td colspan="2"></td>
                             </tr>
                         </tbody>
-
                     </table>
+
                 </div>
             </div>
 

@@ -207,7 +207,9 @@
                         url: '/get-to-khai-items', // The route to your controller method
                         method: 'GET',
                         data: {
-                            so_to_khai_nhap: soToKhaiNhap
+                            so_to_khai_nhap: soToKhaiNhap,
+                            ma_yeu_cau: {{ $ma_yeu_cau }},
+                            loai: 'container'
                         },
                         success: function(response) {
                             let tableBody = $("#displayTableHangHoa tbody");
@@ -439,7 +441,9 @@
                     type: "GET",
                     contentType: "application/json",
                     data: {
-                        rows_data: rowsData
+                        ma_yeu_cau: {{ $ma_yeu_cau }},
+                        rows_data: rowsData,
+                        loai: 'container'
                     },
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(

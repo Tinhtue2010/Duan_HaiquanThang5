@@ -6,6 +6,8 @@ use App\Models\YeuCauChuyenTau;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use Carbon\Carbon;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\QrCode;
 
 class InPhieuChuyenTau
 {
@@ -149,16 +151,28 @@ class InPhieuChuyenTau
         $cell1->addText('- HQCK cảng Vạn Gia (để b/c);');
         $cell1->addText('- Lưu văn thư: 01 bản.');
 
-        if($yeuCau->ngay_hoan_thanh) {
-            $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' . Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') . ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrCodeText);
-    
-            $section->addImage($qrCodeUrl, [
-                'width' => 100,
-                'height' => 100,
+        if ($yeuCau->ngay_hoan_thanh) {
+            $qrCodeText = 'Yêu cầu số ' . $yeuCau->ma_yeu_cau . ' được duyệt vào ngày ' .
+                Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_hoan_thanh)->format('d-m-Y') .
+                ', bởi công chức ' . ($yeuCau->congChuc->ten_cong_chuc ?? '');
+
+            // Create the QR code
+            $qrCode = QrCode::create($qrCodeText)
+                ->setSize(150);
+
+            // Generate the QR code image
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+
+            // Get the image binary data
+            $imageData = $result->getString();
+
+            // Embed the image directly into the Word document
+            $section->addImage($imageData, [
+                'width' => 150,
+                'height' => 150,
             ]);
         }
-
         // Second cell of the header
         $cell2 = $headerTable2->addCell(6000);
         $cell2->addText($yeuCau->doanhNghiep->ten_doanh_nghiep ?? '', ['bold' => true], ['alignment' => 'center']);

@@ -129,6 +129,7 @@
                             aria-placeholder="Chọn loại tài khoản" required>
                             <option></option>
                             <option value="Admin">Admin</option>
+                            <option value="Lãnh đạo">Lãnh đạo</option>
                             <option value="Công chức">Công chức</option>
                             <option value="Thủ kho">Thủ kho</option> 
                         </select>

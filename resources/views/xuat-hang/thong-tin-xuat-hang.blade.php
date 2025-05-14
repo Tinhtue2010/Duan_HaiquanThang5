@@ -76,7 +76,8 @@
                             href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
                             <button class="btn btn-success float-end me-1">In phiếu xuất</button>
                         </a>
-                        <a href="{{ route('xuat-hang.lich-su-sua-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
+                        <a
+                            href="{{ route('xuat-hang.lich-su-sua-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
                             <button class="btn btn-primary float-end me-1">Các lần sửa đổi</button>
                         </a>
                         {{-- <a
@@ -147,7 +148,7 @@
                                         <td>
                                             <a
                                                 href="{{ route('export.theo-doi-tru-lui-theo-ngay', ['so_to_khai_nhap' => $hangHoa->so_to_khai_nhap, 'ngay_dang_ky' => $xuatHang->ngay_dang_ky, 'xuat_hang' => true]) }}">
-                                                <button class="btn btn-success float-end me-1">Theo dõi trừ lùi</button>
+                                                <button class="btn btn-success me-1">Theo dõi trừ lùi</button>
                                             </a>
                                         </td>
                                     @endif
@@ -477,6 +478,41 @@
                                             </div>
                                         </div>
                                     </center>
+                                @endif
+                            @elseif($xuatHang->trang_thai == '14')
+                                <h2 class="text-warning">Đã duyệt sửa lần 1</h2>
+                                <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
+                                @if ($xuatHang->ghi_chu)
+                                    <h3 class="text-dark">Ghi chú: {{ $xuatHang->ghi_chu }}</h3>
+                                @endif
+                                <center>
+                                    @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
+                                            DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
+                                                $xuatHang->ma_doanh_nghiep)
+                                        <a
+                                            href="{{ route('xuat-hang.xem-yeu-cau-sua', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat, 0]) }}">
+                                            <button class="btn btn-warning px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                Xem sửa đổi
+                                            </button>
+                                        </a>
+                                    @endif
+                                </center>
+                                @if (Auth::user()->loai_tai_khoan == 'Lãnh đạo')
+                                    <hr />
+                                    <h2 class="text-dark">Cập nhật trạng thái</h2>
+                                    <div class="row mt-3">
+                                        <center>
+                                            <a
+                                                href="{{ route('xuat-hang.xem-yeu-cau-sua', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat, 0]) }}">
+                                                <button class="btn btn-warning px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/edit.png') }}">
+                                                    Xem sửa đổi
+                                                </button>
+                                            </a>
+                                        </center>
+                                    </div>
                                 @endif
                             @elseif(trim($xuatHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>

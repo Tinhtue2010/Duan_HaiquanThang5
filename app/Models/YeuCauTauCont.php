@@ -25,6 +25,10 @@ class YeuCauTauCont extends Model
     {
         return $this->belongsTo(DoanhNghiep::class, 'ma_doanh_nghiep', 'ma_doanh_nghiep');
     }
+    public function yeuCauTauContChiTiet()
+    {
+        return $this->hasMany(YeuCauTauContChiTiet::class, 'ma_yeu_cau', 'ma_yeu_cau');
+    }
     public function congChuc()
     {
         return $this->belongsTo(CongChuc::class, 'ma_cong_chuc', 'ma_cong_chuc');

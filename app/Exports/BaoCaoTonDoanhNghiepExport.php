@@ -78,34 +78,32 @@ class BaoCaoTonDoanhNghiepExport implements FromArray, WithEvents
                 ->get();
             $processedSoToKhaiNhap = [];
             foreach ($hangTrongConts as $hangTrongCont) {
-                if ($hangTrongCont->is_da_chuyen_cont == 0) {
-                    if ($hangTrongCont->total_so_luong != 0) {
-                        if (!in_array($item->so_to_khai_nhap, $processedSoToKhaiNhap)) {
-                            $result[] = [
-                                $stt++,
-                                $item->so_to_khai_nhap,
-                                $item->ten_hang,
-                                $item->total_so_luong_khai_bao,
-                                ($item->total_so_luong_khai_bao - $hangTrongCont->total_so_luong) == 0 ? '0' : ($item->total_so_luong_khai_bao - $hangTrongCont->total_so_luong),
-                                $hangTrongCont->total_so_luong,
-                                $item->so_container,
-                            ];
-                        } else {
-                            $result[] = [
-                                $stt++,
-                                $item->so_to_khai_nhap,
-                                '',
-                                0,
-                                0,
-                                $hangTrongCont->total_so_luong,
-                                $item->so_container,
-                            ];
-                        }
-
-                        $processedSoToKhaiNhap[] = $hangTrongCont->so_to_khai_nhap;
-                        $totalHangTon += $hangTrongCont->total_so_luong;
-                        $totalKhaiBao += $item->total_so_luong_khai_bao;
+                if ($hangTrongCont->total_so_luong != 0) {
+                    if (!in_array($item->so_to_khai_nhap, $processedSoToKhaiNhap)) {
+                        $result[] = [
+                            $stt++,
+                            $item->so_to_khai_nhap,
+                            $item->ten_hang,
+                            $item->total_so_luong_khai_bao,
+                            ($item->total_so_luong_khai_bao - $hangTrongCont->total_so_luong) == 0 ? '0' : ($item->total_so_luong_khai_bao - $hangTrongCont->total_so_luong),
+                            $hangTrongCont->total_so_luong,
+                            $item->so_container,
+                        ];
+                    } else {
+                        $result[] = [
+                            $stt++,
+                            $item->so_to_khai_nhap,
+                            '',
+                            0,
+                            0,
+                            $hangTrongCont->total_so_luong,
+                            $item->so_container,
+                        ];
                     }
+
+                    $processedSoToKhaiNhap[] = $hangTrongCont->so_to_khai_nhap;
+                    $totalHangTon += $hangTrongCont->total_so_luong;
+                    $totalKhaiBao += $item->total_so_luong_khai_bao;
                 }
             }
         }

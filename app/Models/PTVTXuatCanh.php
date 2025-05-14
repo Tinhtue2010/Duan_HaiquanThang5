@@ -13,15 +13,20 @@ class PTVTXuatCanh extends Model
 
     protected $fillable = [
         'ten_phuong_tien_vt',
+        'ma_doanh_nghiep',
         'quoc_tich_tau',
         'cang_den',
         'ten_thuyen_truong',
         'so_giay_chung_nhan',
         'trang_thai',
-        'draft',
-        'dwt',
-        'loa',
-        'breadth',
+        'draft_den',
+        'dwt_den',
+        'loa_den',
+        'breadth_den',
+        'draft_roi',
+        'dwt_roi',
+        'loa_roi',
+        'breadth_roi',
     ];
     public function PTVTXuatCanhCuaPhieu()
     {

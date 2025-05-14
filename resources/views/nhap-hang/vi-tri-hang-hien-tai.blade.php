@@ -58,7 +58,7 @@
                         <tbody>
                             @php
                                 $totalSoLuong = 0;
-                                $displayIndex = 1; // Separate counter for displayed rows
+                                $displayIndex = 1;
                             @endphp
                             @foreach ($hangTrongConts as $hang)
                                 @if ($hang->is_da_chuyen_cont == 0)
@@ -66,7 +66,7 @@
                                         $totalSoLuong += $hang->so_luong;
                                     @endphp
                                     <tr>
-                                        <td>{{ $displayIndex }}</td> <!-- Incremented only when condition is met -->
+                                        <td>{{ $displayIndex }}</td>
                                         <td>{{ $hang->hangHoa->nhapHang->so_to_khai_nhap }}</td>
                                         <td>{{ $hang->hangHoa->ten_hang }}</td>
                                         <td>{{ $hang->hangHoa->xuat_xu }}</td>
@@ -76,7 +76,7 @@
                                         <td>{{ $hang->so_container }}</td>
                                     </tr>
                                     @php
-                                        $displayIndex++; // Increment only after displaying a row
+                                        $displayIndex++; 
                                     @endphp
                                 @endif
                             @endforeach

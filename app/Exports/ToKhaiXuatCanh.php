@@ -20,8 +20,9 @@ use DateTime;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Endroid\QrCode\QrCode;
 use Maatwebsite\Excel\Concerns\WithDrawings;
+use Endroid\QrCode\Writer\PngWriter;
 
 class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
 {
@@ -129,7 +130,7 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
                     }
                 }
 
-                $doanhNghiep = DoanhNghiep::find($xuatCanh->ma_doanh_nghiep_chon);
+                $doanhNghiep = DoanhNghiep::find($xuatCanh->ma_doanh_nghiep);
 
 
                 // Set font for entire sheet
@@ -300,7 +301,7 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
                 $sheet->mergeCells('D27:D28');
                 $sheet->setCellValue('B27', "10. Trọng tải toàn phần:");
                 $sheet->setCellValue('B28', "Deadweight(DWT)");
-                $sheet->setCellValue('D27', $xuatCanh->PTVTXuatCanh->dwt);
+                $sheet->setCellValue('D27', $xuatCanh->PTVTXuatCanh->dwt_roi);
                 $sheet->getStyle('D27')->getFont()->setBold(true);
 
                 $this->applyOuterBorder($sheet, 'B27:D28');
@@ -322,7 +323,7 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
                 $sheet->mergeCells('E27:J28');
                 $sheet->mergeCells('E29:J30');
                 $sheet->setCellValue('E27', $doanhNghiep->chuHang->ten_day_du ?? '');
-                $sheet->setCellValue('E29', "ĐC: " . $doanhNghiep->chuHang->dia_chi ?? '');
+                $sheet->setCellValue('E29', "ĐC: " . $doanhNghiep?->chuHang?->dia_chi ?? "");
                 $sheet->getStyle('E27:J30')->getFont()->setBold(true);
                 $this->centerCell($sheet, 'E27:J30');
                 $this->applyOuterBorder($sheet, 'E23:J30');
@@ -376,7 +377,7 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
                 $sheet->setCellValue('H38', "Unit");
 
                 $sheet->setCellValue('A39', "Xuất khẩu(Export cargo)");
-                $sheet->setCellValue('D39', $hangHoaLonNhat->loai_hang);
+                $sheet->setCellValue('D39', $hangHoaLonNhat->loai_hang ?? "");
                 $sheet->setCellValue('F39', "(" . $tongSoHangXuat . " Kiện)");
                 $sheet->setCellValue('G39', "      TẤN");
                 $sheet->setCellValue('H39', "KIỆN/TẤN");
@@ -616,17 +617,17 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
                 $richText = new RichText();
                 $richText->createText("");
 
-                $boldText = $richText->createTextRun($xuatCanh->PTVTXuatCanh->draft);
+                $boldText = $richText->createTextRun($xuatCanh->PTVTXuatCanh->draft_roi);
                 $boldText->getFont()->setBold(true)->setName('Times New Roman');
                 $boldText->getFont()->setSize(10);
 
                 $richText->createText("\n");
-                $boldText = $richText->createTextRun($xuatCanh->PTVTXuatCanh->loa);
+                $boldText = $richText->createTextRun($xuatCanh->PTVTXuatCanh->loa_roi);
                 $boldText->getFont()->setBold(true)->setName('Times New Roman');
                 $boldText->getFont()->setSize(10);
 
                 $richText->createText("\n");
-                $boldText = $richText->createTextRun($xuatCanh->PTVTXuatCanh->breadth);
+                $boldText = $richText->createTextRun($xuatCanh->PTVTXuatCanh->breadth_roi);
                 $boldText->getFont()->setBold(true)->setName('Times New Roman');
                 $boldText->getFont()->setSize(10);
 
@@ -654,8 +655,8 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
                 $sheet->mergeCells("G56:J56");
                 $sheet->mergeCells("G57:J58");
                 $sheet->setCellValue('F57', "CHỦ HÀNG");
-                $sheet->setCellValue('G56', $doanhNghiepDuocChon->ten_doanh_nghiep);
-                $sheet->setCellValue('G57', $doanhNghiepDuocChon->dia_chi);
+                $sheet->setCellValue('G56', $doanhNghiepDuocChon->ten_doanh_nghiep ?? '');
+                $sheet->setCellValue('G57', $doanhNghiepDuocChon->dia_chi ?? '');
 
                 $sheet->getStyle('F56:J58')->getFont()->setBold(true);
                 $this->centerCell($sheet, "F56:J60");
@@ -694,31 +695,30 @@ class ToKhaiXuatCanh implements FromArray, WithEvents, WithDrawings
 
     public function drawings()
     {
-        $drawings = []; // Array to store both QR code and barcode drawings
+        $drawings = [];
         $xuatCanh = XuatCanh::find($this->ma_xuat_canh);
         if (in_array($xuatCanh->trang_thai, ["2"])) {
-            // Generate QR Code
-            $qrContent = 'Số tờ khai xuất cảnh: ' . $xuatCanh->ma_xuat_canh .
-                ', cán bộ công chức phê duyệt: ' . ($xuatCanh->congChuc->ten_cong_chuc ?? '');
-            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($qrContent);
-            $qrImageContent = file_get_contents($qrCodeUrl);
+            $qrCodeText = 'Số tờ khai nhập cảnh: ' . $xuatCanh->ma_nhap_canh .
+                ', cán bộ công chức phê duyệt: ' . ($nhapCanh->congChuc->ten_cong_chuc ?? '');
+            $qrCode = QrCode::create($qrCodeText)->setSize(150);
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+            $imageData = $result->getString();
 
-            // Save QR Code temporarily
             $qrTempPath = tempnam(sys_get_temp_dir(), 'qr_') . '.png';
-            file_put_contents($qrTempPath, $qrImageContent);
+            file_put_contents($qrTempPath, $imageData);
 
             // Create QR Code Drawing
-            $qrDrawing = new Drawing();
+            $qrDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
             $qrDrawing->setName('QR Code');
             $qrDrawing->setDescription('QR Code');
             $qrDrawing->setPath($qrTempPath);
             $qrDrawing->setHeight(130);
-            $qrDrawing->setCoordinates('A64');
+            $qrDrawing->setCoordinates('A65');
 
-            $drawings[] = $qrDrawing; // Add QR drawing to array
+            $drawings[] = $qrDrawing;
         }
-
-        return $drawings; // Return both drawings
+        return $drawings;
     }
 
     function createRichText($text, $bold)

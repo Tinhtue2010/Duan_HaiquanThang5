@@ -42,13 +42,15 @@
                         </thead>
                         <tbody class="clickable-row">
                             @foreach ($nhapHangs as $index => $nhapHang)
-                                <tr class="clickable-row"
-                                    onclick="window.location='{{ route('nhap-hang.vi-tri-hang-hien-tai', $nhapHang->so_to_khai_nhap) }}'">
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $nhapHang->so_to_khai_nhap }}</td>
-                                    <td>{{ $nhapHang->doanhNghiep->ten_doanh_nghiep }}</td>
-                                    <td>{{ number_format($nhapHang->total_so_luong) }}</td>
-                                </tr>
+                                @if ($nhapHang->total_so_luong > 0)
+                                    <tr class="clickable-row"
+                                        onclick="window.location='{{ route('nhap-hang.vi-tri-hang-hien-tai', $nhapHang->so_to_khai_nhap) }}'">
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $nhapHang->so_to_khai_nhap }}</td>
+                                        <td>{{ $nhapHang->doanhNghiep->ten_doanh_nghiep }}</td>
+                                        <td>{{ number_format($nhapHang->total_so_luong) }}</td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

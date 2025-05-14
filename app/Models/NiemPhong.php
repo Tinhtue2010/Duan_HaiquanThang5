@@ -13,6 +13,7 @@ class NiemPhong extends Model
 
     protected $fillable = [
         'ma_niem_phong',
+        'phuong_tien_vt_nhap',
         'so_seal',
         'ngay_niem_phong',
         'so_container',

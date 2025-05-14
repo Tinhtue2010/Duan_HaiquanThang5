@@ -40,18 +40,22 @@ class BaoCaoTauLuuTaiCang implements FromArray, WithEvents
             ['STT', 'Tên tàu', 'Số container', 'Số lượng hàng'],
 
         ];
+        $tau_no_space = str_replace(' ', '', $this->phuong_tien_vt_nhap); // Remove spaces
+        $tau_with_space = substr($tau_no_space, 0, 2) . ' ' . substr($tau_no_space, 2);
+        $tau_normalized = substr($tau_with_space, 0, 2) . '-' . substr($tau_with_space, 2);
 
-        $soContainers = Container::leftJoin('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
+        $soContainers = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
             ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
             ->join('nhap_hang', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->where('nhap_hang.phuong_tien_vt_nhap', $this->phuong_tien_vt_nhap)
+            ->join('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
+            ->where('nhap_hang.trang_thai', '2')
+            ->whereIn('niem_phong.phuong_tien_vt_nhap', [$tau_no_space, $tau_with_space,$tau_normalized])
             ->groupBy('container.so_container')
             ->select('container.so_container', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
             ->get();
-
         $stt = 1;
         foreach ($soContainers as $container) {
-            if($container->total_so_luong == 0) {
+            if ($container->total_so_luong == 0) {
                 continue;
             }
             $result[] = [

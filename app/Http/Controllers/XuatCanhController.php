@@ -52,7 +52,7 @@ class XuatCanhController extends Controller
         $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
 
         return view('xuat-canh.them-to-khai-xuat-canh', [
-            'PTVTXuatCanhs' => PTVTXuatCanh::all(),
+            'PTVTXuatCanhs' => PTVTXuatCanh::where('trang_thai', '2')->get(),
             'doanhNghiep' => $doanhNghiep,
             'thuyenTruongs' => $thuyenTruongs,
         ]);
@@ -67,12 +67,13 @@ class XuatCanhController extends Controller
 
                 $xuatCanh = $this->xuatCanhService->themXuatCanh($request);
                 $rowsData = json_decode($request->rows_data, true);
-
-                foreach ($rowsData as $row) {
-                    $xuatHang = XuatHang::find($row['so_to_khai_xuat']);
-                    $xuatHang->trang_thai = "11";
-                    $xuatHang->save();
-                    $this->xuatCanhService->themChiTietXuatCanh($xuatCanh->ma_xuat_canh, $row['so_to_khai_xuat']);
+                if ($rowsData[0]['so_to_khai_xuat'] != '') {
+                    foreach ($rowsData as $row) {
+                        $xuatHang = XuatHang::find($row['so_to_khai_xuat']);
+                        $xuatHang->trang_thai = "11";
+                        $xuatHang->save();
+                        $this->xuatCanhService->themChiTietXuatCanh($xuatCanh->ma_xuat_canh, $row['so_to_khai_xuat']);
+                    }
                 }
 
                 $thuyenTruongs = ThuyenTruong::pluck("ten_thuyen_truong")->toArray();
@@ -287,6 +288,7 @@ class XuatCanhController extends Controller
             DB::beginTransaction();
 
             $xuatCanh = XuatCanh::find($request->ma_xuat_canh);
+            $trang_thai = $xuatCanh->trang_thai;
             if ($xuatCanh->trang_thai == '4') {
                 XuatCanhChiTietSua::where('ma_yeu_cau', $request->ma_xuat_canh)->orderBy('ma_yeu_cau', 'desc')->delete();
             }
@@ -299,13 +301,14 @@ class XuatCanhController extends Controller
                 $this->xuatCanhService->themChiTietXuatCanhSua($xuatCanhSua, $xuatHang);
             }
 
-            $xuatCanh->trang_thai = '4';
-            $xuatCanh->save();
             $this->themTienTrinh($xuatCanh->ma_xuat_canh, "yêu cầu sửa tờ khai xuất cảnh số " . $xuatCanh->ma_xuat_canh);
 
             DB::commit();
-            if ($xuatCanh->trang_thai == '1') {
+            if ($trang_thai == '1') {
                 $this->duyetSuaXuatCanh($xuatCanhSua->ma_yeu_cau);
+            } else {
+                $xuatCanh->trang_thai = '4';
+                $xuatCanh->save();
             }
             session()->flash('alert-success', 'Thêm sửa tờ khai xuất cảnh thành công!');
             return redirect()->route('xuat-canh.thong-tin-xuat-canh', ['ma_xuat_canh' => $request->ma_xuat_canh]);
@@ -383,13 +386,9 @@ class XuatCanhController extends Controller
                 if (!in_array($xuatHangCont->so_to_khai_nhap, $processedSoToKhaiNhap)) {
                     if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
                         $congChuc = $this->xuatCanhService->getCongChucHienTai();
-                        foreach ($xuatHangConts as $xuatHangCont) {
-                            $this->xuatCanhService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức " . $noi_dung, $congChuc->ma_cong_chuc);
-                        }
+                        $this->xuatCanhService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức " . $noi_dung, $congChuc->ma_cong_chuc);
                     } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-                        foreach ($xuatHangConts as $xuatHangCont) {
-                            $this->xuatCanhService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Doanh nghiệp " . $noi_dung, '');
-                        }
+                        $this->xuatCanhService->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Doanh nghiệp " . $noi_dung, '');
                     }
                     $processedSoToKhaiNhap[] = $xuatHangCont->so_to_khai_nhap;
                 }
@@ -486,61 +485,6 @@ class XuatCanhController extends Controller
         }
 
         return response()->json(['xuatHangs' => $xuatHangs]);
-    }
-    public function getDoanhNghiepsTrongCacPhieu(Request $request)
-    {
-        $doanhNghieps = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep')
-            ->join('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
-            ->where('xuat_hang.trang_thai', '2')
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('xuat_hang.ngay_dang_ky', today())
-                        ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
-                } else {
-                    $query->whereDate('xuat_hang.ngay_dang_ky', today());
-                }
-            })
-            ->select('doanh_nghiep.*');
-        if ($request->ma_xuat_canh) {
-            $chiTiets = XuatCanh::join('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.ma_xuat_canh', 'xuat_canh.ma_xuat_canh')
-                ->where('xuat_canh.ma_xuat_canh', $request->ma_xuat_canh)
-                ->pluck('so_to_khai_xuat')->unique()->values();
-
-            $doanhNghieps2 = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
-                ->whereIn('xuat_hang.so_to_khai_xuat', $chiTiets)
-                ->where(function ($query) {
-                    if (now()->hour < 9) {
-                        $query->whereDate('xuat_hang.ngay_dang_ky', today())
-                            ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
-                    } else {
-                        $query->whereDate('xuat_hang.ngay_dang_ky', today());
-                    }
-                })
-                ->select('doanh_nghiep.*');
-            $doanhNghieps = $doanhNghieps->union($doanhNghieps2)
-                ->groupBy('xuat_hang.ma_doanh_nghiep')
-                ->get();
-        } else {
-            $doanhNghieps = XuatHang::join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep')
-                ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
-                ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $request->so_ptvt_xuat_canh)
-                ->where('xuat_hang.trang_thai', '2')
-                ->where(function ($query) {
-                    if (now()->hour < 9) {
-                        $query->whereDate('xuat_hang.ngay_dang_ky', today())
-                            ->orWhereDate('xuat_hang.ngay_dang_ky', today()->subDay());
-                    } else {
-                        $query->whereDate('xuat_hang.ngay_dang_ky', today());
-                    }
-                })
-                ->select('doanh_nghiep.*')
-                ->distinct()
-                ->get();
-        }
-
-
-        return response()->json(['doanhNghieps' => $doanhNghieps]);
     }
 
     public function getXuatCanhs(Request $request)

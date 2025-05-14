@@ -42,12 +42,13 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
             ['', '', '', '', '', ''],
             ['STT', 'Tên HQ', 'Tên hàng', 'Số lượng tờ khai', 'Số lượng cont', 'Số lượng', 'Trị giá (USD)'],
         ];
-
+        $from = Carbon::parse($this->tu_ngay)->startOfDay();
+        $to = Carbon::parse($this->den_ngay)->endOfDay();
         $today = Carbon::now()->format('Y-m-d'); // Format now() as yyyy-mm-dd
         $stt = 1;
         $totalSoLuong = 0;
         $thongTinData = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->whereBetween('nhap_hang.created_at', [$this->tu_ngay, $this->den_ngay])
+            ->whereBetween('nhap_hang.created_at', [$from, $to])
             ->select(
                 'nhap_hang.ma_hai_quan',
                 'hang_hoa.loai_hang',

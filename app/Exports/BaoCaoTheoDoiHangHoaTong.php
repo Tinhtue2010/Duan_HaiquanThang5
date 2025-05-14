@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 
 class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
 {
@@ -32,7 +33,9 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
     public function array(): array
     {
         $this->nhapHang = NhapHang::find($this->so_to_khai_nhap);
-        $theoDoiHangHoas = TheoDoiHangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)->get();
+        $theoDoiHangHoas = TheoDoiHangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->orderBy('thoi_gian', 'asc') // or 'asc' for ascending
+            ->get();
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
@@ -136,7 +139,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                 $tenCongViec,
                 $theoDoiHangHoa->phuong_tien_nhan_hang,
                 $theoDoiHangHoa->so_container,
-                $theoDoiHangHoa->so_seal,
+                $theoDoiHangHoa->so_seal ?? '',
                 $theoDoiHangHoa->congChuc->ten_cong_chuc ?? '',
                 $theoDoiHangHoa->ghi_chu,
             ];
@@ -146,23 +149,25 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
     }
     public function drawings()
     {
-        // Generate barcode
+        // Generate barcode in memory
         $generator = new BarcodeGeneratorPNG();
         $barcodeData = $generator->getBarcode($this->nhapHang->so_to_khai_nhap, $generator::TYPE_CODE_128);
-        // Save barcode temporarily
-        $path = storage_path('app/temp-barcode.png');
-        file_put_contents($path, $barcodeData);
 
-        // Create drawing
-        $drawing = new Drawing();
+        // Create image from binary PNG data
+        $image = imagecreatefromstring($barcodeData);
+
+        // Create in-memory drawing
+        $drawing = new MemoryDrawing();
         $drawing->setName('Barcode');
         $drawing->setDescription('Barcode');
-        $drawing->setPath($path);
-        $drawing->setCoordinates('L1'); // Position at top right (adjust column as needed)
-        $drawing->setOffsetX(0); // Adjust horizontal position if needed
-        $drawing->setOffsetY(0);  // Adjust vertical position if needed
-        $drawing->setHeight(20);
-        $drawing->setWidth(180);
+        $drawing->setImageResource($image);
+        $drawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+        $drawing->setMimeType(MemoryDrawing::MIMETYPE_DEFAULT);
+        $drawing->setCoordinates('K1'); // Adjust as needed
+        $drawing->setOffsetX(210);
+        $drawing->setOffsetY(0);
+        $drawing->setHeight(30);
+        $drawing->setWidth(250);
 
         return $drawing;
     }
@@ -191,7 +196,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     ->setFooter(0.3);
 
                 $sheet->getParent()->getDefaultStyle()->getFont()->setName('Times New Roman');
-                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(18);
+                $sheet->getParent()->getDefaultStyle()->getFont()->setSize(22);
 
 
                 foreach (['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'] as $column) {
@@ -201,22 +206,24 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                 $sheet->getColumnDimension('A')->setWidth(width: 5);
                 $sheet->getColumnDimension('D')->setWidth(width: 10);
                 $sheet->getColumnDimension('C')->setWidth(width: 25);
-                $sheet->getColumnDimension('E')->setWidth(width: 10);
-                $sheet->getColumnDimension('J')->setWidth(width: 20);
+                $sheet->getColumnDimension('E')->setWidth(width: 7);
+                $sheet->getColumnDimension('J')->setWidth(width: 15);
                 $sheet->getColumnDimension('K')->setWidth(width: 20);
-                $sheet->getColumnDimension('L')->setWidth(width: 15);
+                $sheet->getColumnDimension('L')->setWidth(width: 13);
                 $sheet->getStyle('D')->getNumberFormat()->setFormatCode('0');
                 $sheet->getStyle('E')->getNumberFormat()->setFormatCode('0');
                 $sheet->getStyle('A11:L' . $sheet->getHighestRow())->getAlignment()->setWrapText(true);
-                $sheet->getStyle('L')->getNumberFormat()->setFormatCode('0');
+                $sheet->getStyle('K')->getNumberFormat()->setFormatCode('0');
 
                 $lastRow = $sheet->getHighestRow();
 
                 // Your existing cell merges
+                $sheet->mergeCells('K1:L1');
+                $sheet->mergeCells('K2:L2');
                 $sheet->mergeCells('A1:E1');
                 $sheet->mergeCells('A2:E2');
                 $sheet->mergeCells('A4:L4');
-                $sheet->setCellValue('L2', $this->nhapHang->so_to_khai_nhap);
+                $sheet->setCellValue('K2',  '                            ' . $this->nhapHang->so_to_khai_nhap);
                 // $sheet->setCellValue('K3', now()->format('d/m/Y'));
                 $this->centerCell($sheet, "L2:L3");
 
@@ -237,8 +244,8 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                 $this->applyRichText($sheet, 'A6', 'Tên doanh nghiệp: ', $this->nhapHang->doanhNghiep->ten_doanh_nghiep);
                 $this->applyRichText($sheet, 'A7', 'Số tờ khai: ', $this->nhapHang->so_to_khai_nhap, '; ngày đăng ký: ', date('d-m-Y', strtotime($this->nhapHang->ngay_dang_ky)),  ' tại ', $this->nhapHang->haiQuan->ten_hai_quan);
                 $this->applyRichText($sheet, 'A8', 'Tên hàng hóa: ', $hangHoaLonNhat->ten_hang ?? '');
-                $this->applyRichText($sheet, 'A9', 'Số lượng: ', (string)$tongSoLuongs, '; Đơn vị tính: ', $hangHoaLonNhat->don_vi_tinh, '; Xuất xứ: ', $hangHoaLonNhat->xuat_xu);
-                $this->applyRichText($sheet, 'A10', 'Số container: ', $hangHoaLonNhat->so_container, '; Số tàu: ', $this->nhapHang->phuong_tien_vt_nhap, '; Số seal: ', $hangHoaLonNhat->so_seal);
+                $this->applyRichText($sheet, 'A9', 'Số lượng: ', (string)$tongSoLuongs, '; Đơn vị tính: ', $hangHoaLonNhat->don_vi_tinh ?? '', '; Xuất xứ: ', $hangHoaLonNhat->xuat_xu ?? '');
+                $this->applyRichText($sheet, 'A10', 'Số container: ', $this->nhapHang->container_ban_dau, '; Số tàu: ', $this->nhapHang->phuong_tien_vt_nhap, '; Số seal: ', $hangHoaLonNhat->so_seal ?? '');
 
                 $sheet->getStyle('A1:L4')->applyFromArray([
                     'alignment' => [
@@ -289,7 +296,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                     $bold = $richText->createTextRun($part);
                     $bold->getFont()->setName('Times New Roman'); // Set font to Times New Roman
                     $bold->getFont()->setBold(true); // Set text to bold
-                    $bold->getFont()->setSize(18);
+                    $bold->getFont()->setSize(22);
                 }
             }
         }
@@ -298,12 +305,6 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
         $sheet->mergeCells("$cell:L$cell");
     }
 
-    public function __destruct()
-    {
-        if (file_exists(storage_path('app/temp-barcode.png'))) {
-            unlink(storage_path('app/temp-barcode.png'));
-        }
-    }
     function centerCell($sheet, string $range)
     {
         $sheet->getStyle($range)->applyFromArray([

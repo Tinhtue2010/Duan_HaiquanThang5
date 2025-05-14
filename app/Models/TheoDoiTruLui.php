@@ -16,10 +16,13 @@ class TheoDoiTruLui extends Model
     protected $fillable = [
         'so_to_khai_nhap',
         'so_ptvt_nuoc_ngoai',
-        'phuong_tien_vt_nhap',
         'ngay_them', 
         'ngay_duyet', 
         'cong_viec',
         'ma_yeu_cau',
     ];
+    public function theoDoiChiTiet()
+    {
+        return $this->hasMany(TheoDoiTruLuiChiTiet::class, 'ma_theo_doi', 'ma_theo_doi');
+    }
 }

@@ -13,6 +13,7 @@ class XuatCanhSua extends Model
 
     protected $fillable = [
         'ma_doanh_nghiep',
+        'ngay_dang_ky',
         'so_ptvt_xuat_canh',
         'ma_doanh_nghiep_chon',
         'ten_thuyen_truong',

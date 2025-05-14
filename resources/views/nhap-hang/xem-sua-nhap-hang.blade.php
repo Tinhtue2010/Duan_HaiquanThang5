@@ -73,41 +73,41 @@
                                     // Find corresponding row in modified table by ma_hang
                                     $modifiedRow = $hangHoaSuaRows->firstWhere('ma_hang', $hangHoa->ma_hang);
                                     // If no matching row is found, mark this row as removed.
-                                    $rowClass = $modifiedRow ? '' : 'text-danger';
+                                    $rowClass = $modifiedRow ? '' : 'text-danger fw-bold';
                                 @endphp
                                 <tr>
                                     <td class="{{ $rowClass }}">{{ $index + 1 }}</td>
                                     <td class="{{ $rowClass }}" hidden>{{ $hangHoa->ma_hang }}</td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->ten_hang !== $modifiedRow->ten_hang ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->ten_hang !== $modifiedRow->ten_hang ? 'text-warning fw-bold' : '' }}">
                                         {{ $hangHoa->ten_hang }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->loai_hang !== $modifiedRow->loai_hang ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->loai_hang !== $modifiedRow->loai_hang ? 'text-warning fw-bold' : '' }}">
                                         {{ $hangHoa->loai_hang }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->xuat_xu !== $modifiedRow->xuat_xu ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->xuat_xu !== $modifiedRow->xuat_xu ? 'text-warning fw-bold' : '' }}">
                                         {{ $hangHoa->xuat_xu }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_luong_khai_bao != $modifiedRow->so_luong_khai_bao ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_luong_khai_bao != $modifiedRow->so_luong_khai_bao ? 'text-warning fw-bold' : '' }}">
                                         {{ number_format($hangHoa->so_luong_khai_bao, 0) }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->don_vi_tinh !== $modifiedRow->don_vi_tinh ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->don_vi_tinh !== $modifiedRow->don_vi_tinh ? 'text-warning fw-bold' : '' }}">
                                         {{ $hangHoa->don_vi_tinh }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->don_gia != $modifiedRow->don_gia ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->don_gia != $modifiedRow->don_gia ? 'text-warning fw-bold' : '' }}">
                                         {{ number_format($hangHoa->don_gia, 2) }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->tri_gia != $modifiedRow->tri_gia ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->tri_gia != $modifiedRow->tri_gia ? 'text-warning fw-bold' : '' }}">
                                         {{ number_format($hangHoa->tri_gia, 2) }}
                                     </td>
                                     <td
-                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_container_khai_bao != $modifiedRow->so_container_khai_bao ? 'text-warning' : '' }}">
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_container_khai_bao != $modifiedRow->so_container_khai_bao ? 'text-warning fw-bold' : '' }}">
                                         {{ $hangHoa->so_container_khai_bao }}
                                     </td>
                                 </tr>
@@ -171,44 +171,42 @@
                         <tbody>
                             @foreach ($hangHoaSuaRows as $index => $hangHoa)
                                 @php
-                                    // Locate the corresponding row from the original data
                                     $originalRow = $hangHoaRows->firstWhere('ma_hang', $hangHoa->ma_hang);
-                                    // If ma_hang equals 0, mark the row as new (green). Otherwise, no row-level color.
-                                    $rowClass = $hangHoa->ma_hang == 0 ? 'text-success' : '';
+                                    $rowClass = $hangHoa->ma_hang == 0 ? 'text-success fw-bold' : '';
                                 @endphp
                                 <tr class="{{ $rowClass }}">
                                     <td class="{{ $rowClass }}">{{ $index + 1 }}</td>
                                     <td class="{{ $rowClass }}"hidden>{{ $hangHoa->ma_hang }}</td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->ten_hang !== $originalRow->ten_hang ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->ten_hang !== $originalRow->ten_hang ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ $hangHoa->ten_hang }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->loai_hang !== $originalRow->loai_hang ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->loai_hang !== $originalRow->loai_hang ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ $hangHoa->loai_hang }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->xuat_xu !== $originalRow->xuat_xu ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->xuat_xu !== $originalRow->xuat_xu ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ $hangHoa->xuat_xu }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->so_luong_khai_bao != $originalRow->so_luong_khai_bao ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->so_luong_khai_bao != $originalRow->so_luong_khai_bao ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ number_format($hangHoa->so_luong_khai_bao, 0) }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->don_vi_tinh !== $originalRow->don_vi_tinh ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->don_vi_tinh !== $originalRow->don_vi_tinh ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ $hangHoa->don_vi_tinh }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->don_gia != $originalRow->don_gia ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->don_gia != $originalRow->don_gia ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ number_format($hangHoa->don_gia, 2) }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->tri_gia != $originalRow->tri_gia ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->tri_gia != $originalRow->tri_gia ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ number_format($hangHoa->tri_gia, 2) }}
                                     </td>
                                     <td
-                                        class="{{ $originalRow && $hangHoa->so_container_khai_bao != $originalRow->so_container_khai_bao ? 'text-warning' : $rowClass }}">
+                                        class="{{ $originalRow && $hangHoa->so_container_khai_bao != $originalRow->so_container_khai_bao ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ $hangHoa->so_container_khai_bao }}
                                     </td>
                                 </tr>
@@ -221,52 +219,92 @@
                 <div class="col-3"></div>
                 <div class="col-6">
                     <div class="text-center">
-                        @if ($is_chi_xem == false)
-                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
-                                <hr />
-                                <div class="row mt-3">
-                                    <div class="col-6">
-                                        <a href="#">
-                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
-                                                class="btn btn-success ">
-                                                <img class="side-bar-icon" src="{{ asset('images/icons/approved2.png') }}">
-                                                Duyệt yêu cầu sửa</button>
-                                        </a>
+                        @if ($nhapHang->trang_thai == 3)
+                            @if ($is_chi_xem == false)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
+                                    <hr />
+                                    <div class="row mt-3">
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
+                                                    class="btn btn-success ">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/approved2.png') }}">
+                                                    Duyệt yêu cầu sửa</button>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                                    class="btn btn-danger px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
+                                                    Hủy yêu cầu sửa
+                                                </button>
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="col-6">
-                                        <a href="#">
-                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
-                                                class="btn btn-danger px-4">
-                                                <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
-                                                Hủy yêu cầu sửa
-                                            </button>
-                                        </a>
+                                @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
+                                        DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
+                                            $nhapHang->ma_doanh_nghiep)
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <a
+                                                href="{{ route('nhap-hang.sua-to-khai-nhap', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                                <button class="btn btn-warning px-4">
+                                                    <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                    Tiếp tục sửa
+                                                </button>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                                    class="btn btn-danger px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
+                                                    Hủy yêu cầu sửa
+                                                </button>
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
-                            @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
-                                    DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
-                                        $nhapHang->ma_doanh_nghiep)
-                                <div class="row">
-                                    <div class="col-6">
-                                        <a
-                                            href="{{ route('nhap-hang.sua-to-khai-nhap', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
-                                            <button class="btn btn-warning px-4">
-                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
-                                                Tiếp tục sửa
-                                            </button>
-                                        </a>
-                                    </div>
-                                    <div class="col-6">
-                                        <a href="#">
-                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
-                                                class="btn btn-danger px-4">
-                                                <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
-                                                Hủy yêu cầu sửa
-                                            </button>
-                                        </a>
-                                    </div>
-                                </div>
+                                @endif
                             @endif
+                        @elseif(Auth::user()->loai_tai_khoan == 'Lãnh đạo')
+                            <hr />
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <a href="#">
+                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanModal"
+                                            class="btn btn-success ">
+                                            <img class="side-bar-icon" src="{{ asset('images/icons/approved2.png') }}">
+                                            Duyệt yêu cầu sửa</button>
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="#">
+                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                            class="btn btn-danger px-4">
+                                            <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
+                                            Hủy yêu cầu sửa
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        @elseif (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
+                                DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
+                                    $nhapHang->ma_doanh_nghiep)
+                            <div class="row">
+                                <div class="col-6">
+                                    <a href="#">
+                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                            class="btn btn-danger px-4">
+                                            <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
+                                            Hủy yêu cầu sửa
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
                         @endif
                     </div>
                 </div>
