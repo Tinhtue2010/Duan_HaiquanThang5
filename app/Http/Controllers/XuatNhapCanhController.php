@@ -91,7 +91,6 @@ class XuatNhapCanhController extends Controller
             $xuatNhapCanh = XuatNhapCanh::find($request->ma_xnc);
             XuatNhapCanh::find($request->ma_xnc)->update([
                 'so_ptvt_xuat_canh' => $request->so_ptvt_xuat_canh,
-                'ngay_them' => now(),
                 'so_the' => $request->so_the,
                 'is_hang_lanh' => $request->is_hang_lanh,
                 'is_hang_nong' => $request->is_hang_nong,

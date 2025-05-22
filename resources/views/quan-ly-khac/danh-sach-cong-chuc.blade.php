@@ -358,6 +358,9 @@
                         <input class="mt-2" type="checkbox" name="22" id="22" value="1">
                         <label for="myCheckbox">Báo cáo phương tiện xuất cảnh</label>
                         <br>
+                        <input class="mt-2" type="checkbox" name="27" id="27" value="1">
+                        <label for="myCheckbox">Báo cáo phương tiện xuất cảnh sửa, hủy</label>
+                        <br>
                         <input class="mt-2" type="checkbox" name="23" id="23" value="1">
                         <label for="myCheckbox">Báo cáo phân công nhiệm vụ</label>
                         <br>
@@ -366,6 +369,10 @@
                         <br>
                         <input class="mt-2" type="checkbox" name="26" id="26" value="1">
                         <label for="myCheckbox">Theo dõi phương tiện xuất nhập cảnh tại khu vực đầu tán</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="28" id="28" value="1">
+                        <label for="myCheckbox">Báo cáo thời gian tờ khai lưu tại cảng</label>
+
 
 
                         <input type="hidden" name="ma_cong_chuc" id="modalInputMaCongChucBC">
@@ -483,7 +490,7 @@
                 button.addEventListener('click', function() {
                     const maCongChucBC = this.getAttribute('data-ma-cong-chuc');
                     const tenCongChucBC = this.getAttribute('data-ten-cong-chuc');
-                    for (let i = 1; i <= 26; i++) {
+                    for (let i = 1; i <= 28; i++) {
                         $(`#${i}`).prop("checked", false);
                     }
 

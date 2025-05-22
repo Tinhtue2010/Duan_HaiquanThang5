@@ -5,7 +5,7 @@ namespace App\Exports;
 
 use App\Models\NhapHang;
 use App\Models\HangHoa;
-use App\Models\PTVTXuatCanhCuaPhieu;
+use App\Models\NiemPhong;
 use App\Models\TheoDoiHangHoa;
 use App\Models\XuatHang;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -58,6 +58,12 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
         $hangHoa = HangHoa::find($this->ma_hang);
         $soLuongTon = $hangHoa->so_luong_khai_bao;
         $soLuongDaXuat = 0;
+        $theoDoiCuoiCung = TheoDoiHangHoa::where('so_to_khai_nhap', $hangHoa->so_to_khai_nhap)
+            ->orderBy('ma_theo_doi', 'desc')
+            ->where('cong_viec', '!=', '4')
+            ->get()
+            ->first();
+        $ngayCuoiCung = $theoDoiCuoiCung->thoi_gian ?? '2000-01-01';
 
         $seen = [];
         $stt = 1;
@@ -67,6 +73,13 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
             $minute = $datetime->format('i'); // Minute with leading zero
             $date = $datetime->format('d/m/Y'); // Day/Month/Year format
             $time = 'Hồi ' . $hour . ' giờ ' . $minute . ' Ngày ' . $date;
+
+            $is_xuat_het = false;
+            if ($nhapHang->trang_thai == 4 || $nhapHang->trang_thai == 7) {
+                if (Carbon::parse($nhapHang->ngay_xuat_het)->isSameDay(Carbon::parse($theoDoiHangHoa->thoi_gian))) {
+                    $is_xuat_het = true;
+                }
+            }
 
             $tenCongViec = "";
             if ($theoDoiHangHoa->cong_viec == 1) {
@@ -91,8 +104,16 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
                         continue;
                     }
                     $seen[$xuatHang->ma_xuat_hang_cont] = true;
-
                     $soLuongTon -= $xuatHang->so_luong_xuat;
+
+                    if ($is_xuat_het == true) {
+                        $seal = '';
+                    } elseif (\Carbon\Carbon::parse($theoDoiHangHoa->thoi_gian)->greaterThanOrEqualTo(Carbon::parse($ngayCuoiCung))) {
+                        $sealCuoiCung = NiemPhong::where('so_container', $xuatHang->so_container)->first()->so_seal ?? '';
+                        $seal = $sealCuoiCung;
+                    } else {
+                        $seal = $xuatHang->so_seal_cuoi_ngay;
+                    }
                     $result[] = [
                         $stt++,
                         $time,
@@ -102,7 +123,7 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
                         $tenCongViec,
                         $xuatHang->ten_phuong_tien_vt,
                         $xuatHang->so_container,
-                        $xuatHang->so_seal_cuoi_ngay,
+                        $seal,
                         $xuatHang->congChuc->ten_cong_chuc ?? '',
                         $xuatHang->ghi_chu,
                     ];
@@ -124,6 +145,16 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
             } else if ($theoDoiHangHoa->cong_viec == 8) {
                 $tenCongViec = "Niêm phong";
             }
+
+            if ($is_xuat_het == true) {
+                $seal = '';
+            } elseif (\Carbon\Carbon::parse($theoDoiHangHoa->thoi_gian)->greaterThanOrEqualTo(Carbon::parse($ngayCuoiCung))) {
+                $sealCuoiCung = NiemPhong::where('so_container', $theoDoiHangHoa->so_container)->first()->so_seal ?? '';
+                $seal = $sealCuoiCung;
+            } else {
+                $seal = $theoDoiHangHoa->so_seal;
+            }
+
             $result[] = [
                 $stt++,
                 $time,
@@ -133,7 +164,7 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
                 $tenCongViec,
                 $theoDoiHangHoa->phuong_tien_nhan_hang,
                 $theoDoiHangHoa->so_container,
-                $theoDoiHangHoa->so_seal,
+                $seal,
                 $theoDoiHangHoa->congChuc->ten_cong_chuc ?? '',
                 $theoDoiHangHoa->ghi_chu,
             ];
@@ -228,7 +259,7 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
                 $this->applyRichText($sheet, 'A7', 'Số tờ khai: ', $this->nhapHang->so_to_khai_nhap, '; ngày đăng ký: ', date('d-m-Y', strtotime($this->nhapHang->ngay_dang_ky)),  ' tại ', $this->nhapHang->haiQuan->ten_hai_quan);
                 $this->applyRichText($sheet, 'A8', 'Tên hàng hóa: ', $this->hangHoa->ten_hang);
                 $this->applyRichText($sheet, 'A9', 'Số lượng: ', $this->hangHoa->so_luong_khai_bao, '; Đơn vị tính: ', $this->hangHoa->don_vi_tinh ?? '', '; Xuất xứ: ', $this->hangHoa->xuat_xu ?? '');
-                $this->applyRichText($sheet, 'A10', 'Số container: ', $this->hangHoa->so_container, '; Số tàu: ', $this->nhapHang->phuong_tien_vt_nhap, '; Số seal: ', $this->hangHoa->so_seal);
+                $this->applyRichText($sheet, 'A10', 'Số container: ', $this->hangHoa->so_container, '; Số tàu: ', $this->nhapHang->ptvt_ban_dau, '; Số seal: ', $this->hangHoa->so_seal);
 
                 $sheet->getStyle('A1:K4')->applyFromArray([
                     'alignment' => [

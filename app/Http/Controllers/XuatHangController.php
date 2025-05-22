@@ -351,10 +351,27 @@ class XuatHangController extends Controller
             $ptvtSua =  PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $ma_yeu_cau)->pluck('so_ptvt_xuat_canh')->toArray();
             $ptvtNotInSua = array_diff($ptvt, $ptvtSua);
 
+            $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
+                ->select('so_to_khai_nhap')
+                ->distinct()
+                ->get();
+            foreach ($xuatHangConts as $xuatHangCont) {
+                $trang_thai = NhapHang::find($xuatHangCont->so_to_khai_nhap)->trang_thai;
+                if ($xuatHang->trang_thai != 14) {
+                    if ($trang_thai == '7') {
+                        $xuatHang->trang_thai = 14;
+                        $xuatHang->save();
+                        DB::commit();
+                        return redirect()->route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]);
+                    }
+                }
+            }
+
             $chiTietSuaXuatHangs = XuatHangChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)->get();
             $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $suaXuatHang->so_to_khai_xuat)->get();
 
             $kiemTra = $this->xuatHangService->kiemTraSoLuongCoTheXuat($suaXuatHang, $xuatHang, $chiTietSuaXuatHangs);
+
             if (!$kiemTra) {
                 return redirect()->back();
             }
@@ -383,10 +400,13 @@ class XuatHangController extends Controller
                 $xuatHang->ten_phuong_tien_vt = $this->xuatHangService->getPTVTXuatCanhCuaPhieu($xuatHang->so_to_khai_xuat);
                 $xuatHang->save();
             }
+
             $this->themTienTrinh($xuatHang, "duyệt yêu cầu sửa", true);
 
-
             DB::commit();
+            if (Auth::user()->loai_tai_khoan == 'Lãnh đạo') {
+                return redirect()->route('lanh-dao.quan-ly-duyet-xuat-hang');
+            }
             return redirect()->route('xuat-hang.thong-tin-xuat-hang', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]);
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
@@ -638,7 +658,8 @@ class XuatHangController extends Controller
         }
 
         $fileName = 'Phiếu xuất số ' . $request->so_to_khai_xuat . ' tàu ' . $xuatHang->ten_phuong_tien_vt . '.xlsx';
-        return Excel::download(new ToKhaiXuatExport($so_to_khai_xuat), $fileName);
+        
+        return Excel::download(new ToKhaiXuatExport($so_to_khai_xuat,$request->ma_yeu_cau), $fileName);
     }
 
     public function kiemTraQuaHan(Request $request)
@@ -745,6 +766,7 @@ class XuatHangController extends Controller
             '11',
             '12',
             '13',
+            '14',
         ];
 
         $user = Auth::user();
@@ -812,6 +834,7 @@ class XuatHangController extends Controller
                     '11' => ['text' => 'Đã chọn phương tiện xuất cảnh', 'class' => 'text-success'],
                     '12' => ['text' => 'Đã duyệt xuất hàng', 'class' => 'text-success'],
                     '13' => ['text' => 'Đã thực xuất hàng', 'class' => 'text-success'],
+                    '14' => ['text' => 'Đã duyệt sửa lần 1', 'class' => 'text-warning'],
                 ];
 
                 return isset($statusLabels[$status])
@@ -826,6 +849,7 @@ class XuatHangController extends Controller
     public function uploadFileXuatAjax(Request $request)
     {
         $file = $request->file('hys_file');
+
         $requiredColumns = ['số tờ khai', 'tên hàng', 'số lượng  đăng ký xuất'];
         $extension = $file->getClientOriginalExtension();
 
@@ -902,12 +926,19 @@ class XuatHangController extends Controller
                 ->where('nhap_hang.so_to_khai_nhap', $lastSoToKhaiNhap)
                 ->where('hang_hoa.ten_hang', trim($ten_hang))
                 ->first();
-
+            $soLuongKho = $nhapHang->so_luong;
+            if ($request->has('so_to_khai_xuat')) {
+                $soLuongDangXuat = XuatHangCont::where('so_to_khai_xuat', $request->so_to_khai_xuat)
+                    ->where('ma_hang_cont', $nhapHang->ma_hang_cont)
+                    ->first()
+                    ->so_luong_xuat ?? 0;
+                $soLuongKho = $soLuongKho + $soLuongDangXuat;
+            }
 
             if (!$nhapHang) {
                 return response("Không tìm thấy hàng hóa {$ten_hang} trong tờ khai {$lastSoToKhaiNhap}");
             }
-            if ($nhapHang->so_luong < $so_luong_xuat) {
+            if ($soLuongKho < $so_luong_xuat) {
                 return response("Số lượng xuất của {$ten_hang} là {$so_luong_xuat} lớn hơn số lượng tồn {$nhapHang->so_luong}");
             }
 
@@ -919,7 +950,7 @@ class XuatHangController extends Controller
                 'don_vi_tinh'   => $nhapHang->don_vi_tinh,
                 'don_gia'   => $nhapHang->don_gia,
                 'so_container'   => $nhapHang->so_container,
-                'so_luong_ton'   => $nhapHang->so_luong,
+                'so_luong_ton'   => $soLuongKho,
                 'so_luong_xuat'   => $so_luong_xuat,
             ];
         }

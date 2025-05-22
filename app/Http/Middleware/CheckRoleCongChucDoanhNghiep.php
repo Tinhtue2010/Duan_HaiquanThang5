@@ -11,7 +11,7 @@ class CheckRoleCongChucDoanhNghiep
     public function handle(Request $request, Closure $next)
     {
         if ($request->user()) {
-            if ($request->user()->loai_tai_khoan == "Cán bộ công chức" || $request->user()->loai_tai_khoan == "Doanh nghiệp") {
+            if ($request->user()->loai_tai_khoan == "Cán bộ công chức" || $request->user()->loai_tai_khoan == "Doanh nghiệp" || $request->user()->loai_tai_khoan == "Lãnh đạo") {
                 return $next($request);
                 
             }

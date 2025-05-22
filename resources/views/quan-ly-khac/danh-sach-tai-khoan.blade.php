@@ -55,17 +55,12 @@
                                         <td>{{ $taiKhoan->ten_dang_nhap }}</td>
                                         <td>{{ $taiKhoan->loai_tai_khoan }}</td>
                                         <td>{{ $taiKhoan->created_at }}</td>
-                                        @if ($taiKhoan->loai_tai_khoan == 'Doanh nghiệp')
-                                            <td></td>
-                                        @else
-                                            <td><button class="btn btn-danger" data-bs-toggle="modal"
-                                                    data-bs-target="#xoaModal"
-                                                    data-ma-tai-khoan="{{ $taiKhoan->ma_tai_khoan }}"
-                                                    data-ten-dang-nhap="{{ $taiKhoan->ten_dang_nhap }}"
-                                                    data-loai-tai-khoan="{{ $taiKhoan->loai_tai_khoan }}">
-                                                    Xóa
-                                                </button></td>
-                                        @endif
+                                        <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
+                                                data-ma-tai-khoan="{{ $taiKhoan->ma_tai_khoan }}"
+                                                data-ten-dang-nhap="{{ $taiKhoan->ten_dang_nhap }}"
+                                                data-loai-tai-khoan="{{ $taiKhoan->loai_tai_khoan }}">
+                                                Xóa
+                                            </button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -131,7 +126,7 @@
                             <option value="Admin">Admin</option>
                             <option value="Lãnh đạo">Lãnh đạo</option>
                             <option value="Công chức">Công chức</option>
-                            <option value="Thủ kho">Thủ kho</option> 
+                            <option value="Thủ kho">Thủ kho</option>
                         </select>
 
                     </div>
@@ -218,10 +213,9 @@
 
                     // Set data in the modal
                     modalTenDangNhap.textContent = tenDangNhap;
-                    if(loaiTaiKhoan == "Cán bộ công chức"){
+                    if (loaiTaiKhoan == "Cán bộ công chức") {
                         modalLoaiTaiKhoan.textContent = "Cán bộ";
-                    }
-                    else{
+                    } else {
                         modalLoaiTaiKhoan.textContent = loaiTaiKhoan;
                     }
                     modalInputMaTaiKhoan.value = maTaiKhoan;

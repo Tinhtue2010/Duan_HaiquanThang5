@@ -883,6 +883,10 @@ class YeuCauContainerController extends Controller
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 3)
                 ->delete();
+            TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 3)
+                ->delete();
         }
 
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {

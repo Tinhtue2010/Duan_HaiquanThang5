@@ -32,6 +32,7 @@ use App\Exports\BaoCaoSangContChuyenTau;
 use App\Exports\BaoCaoGiamSatXuatKhau;
 use App\Exports\BaoCaoSuDungSeal;
 use App\Exports\BaoCaoContainerLuuTaiCangTheoCont;
+use App\Exports\BaoCaoPhuongTienXuatCanhSuaHuy;
 use App\Exports\BaoCaoDangKyXuatKhauHangHoa2;
 use App\Exports\BaoCaoPhuongTienNhapCanh;
 use App\Exports\BaoCaoPhuongTienXuatCanh;
@@ -40,6 +41,7 @@ use App\Exports\BaoCaoToKhaiXuatHetDoanhNghiep;
 use App\Exports\BaoCaoTraCuuContainer;
 use App\Exports\PhanCongNhiemVuGiamSat;
 use App\Exports\TheoDoiXuatNhapCanh;
+use App\Exports\BaoCaoThoiGianToKhai;
 use App\Models\ChuHang;
 use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
@@ -71,7 +73,28 @@ class BaoCaoController extends Controller
         $phuongTienVTNhaps = NhapHang::all()->pluck('phuong_tien_vt_nhap')->unique()->toArray();
         return view('bao-cao/bao-cao-hang-ton', compact('doanhNghieps', 'chuHangs', 'ptvtXuatCanhs', 'congChucs', 'phuongTienVTNhaps')); // Pass the data to the view
     }
-
+    public function baoCaoTheoDoanhNghiep()
+    {
+        $ma_doanh_nghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
+        $maDoanhNghiepKhacs = DoanhNghiepQL::where('ma_doanh_nghiep_ql', $ma_doanh_nghiep)->pluck('ma_doanh_nghiep_khac');
+        $maDoanhNghiepKhacs->push($ma_doanh_nghiep);
+        $doanhNghieps = DoanhNghiep::whereIn('ma_doanh_nghiep', $maDoanhNghiepKhacs)->get();
+        $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->firstOrFail()->ma_doanh_nghiep;
+        $phuongTienVTNhaps = NhapHang::where('ma_doanh_nghiep', $maDoanhNghiep)
+            ->pluck('phuong_tien_vt_nhap')
+            ->unique()
+            ->toArray();
+        $containers = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
+            ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
+            ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
+            ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
+            ->select('container.*', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap')
+            ->groupBy('container.so_container', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap')
+            ->where('nhap_hang.ma_doanh_nghiep', $maDoanhNghiep)
+            ->get();
+        return view('bao-cao/bao-cao-hang-ton-doanh-nghiep', compact('doanhNghieps', 'phuongTienVTNhaps', 'containers')); // Pass the data to the view
+    }
     public function theoDoiTruLui(Request $request)
     {
         $fileName = 'Phiếu theo dõi từ lùi hàng hóa xuất khẩu.xlsx';
@@ -366,8 +389,12 @@ class BaoCaoController extends Controller
     }
     public function suDungSeal(Request $request)
     {
-        $fileName = 'Báo cáo sử dụng seal niêm phong.xlsx';
-        return Excel::download(new BaoCaoSuDungSeal(), $fileName);
+        $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
+        $den_ngay_name = $this->formatDateToDMY($request->den_ngay);
+        $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
+        $den_ngay = $this->formatDateToYMD($request->den_ngay);
+        $fileName = 'Báo cáo sử dụng seal niêm phong từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
+        return Excel::download(new BaoCaoSuDungSeal($tu_ngay, $den_ngay), $fileName);
     }
     public function suDungSealChiTiet(Request $request)
     {
@@ -455,22 +482,15 @@ class BaoCaoController extends Controller
         $fileName = 'Báo cáo hàng tồn tại cảng ngày ' . $date . '.xlsx';
         return Excel::download(new BaoCaoHangTonTaiCang(), $fileName);
     }
-
-
-    public function baoCaoTheoDoanhNghiep()
+    public function thoiGianToKhaiLuuTaiCang()
     {
-        $ma_doanh_nghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-        $maDoanhNghiepKhacs = DoanhNghiepQL::where('ma_doanh_nghiep_ql', $ma_doanh_nghiep)->pluck('ma_doanh_nghiep_khac');
-        $maDoanhNghiepKhacs->push($ma_doanh_nghiep);
-        $doanhNghieps = DoanhNghiep::whereIn('ma_doanh_nghiep', $maDoanhNghiepKhacs)->get();
-        $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->firstOrFail()->ma_doanh_nghiep;
-        $phuongTienVTNhaps = NhapHang::where('ma_doanh_nghiep', $maDoanhNghiep)
-            ->pluck('phuong_tien_vt_nhap')
-            ->unique()
-            ->toArray();
-
-        return view('bao-cao/bao-cao-hang-ton-doanh-nghiep', compact('doanhNghieps', 'phuongTienVTNhaps')); // Pass the data to the view
+        $date = $this->formatDateNow();
+        $fileName = 'Báo cáo thời gian tờ khai tại cảng ngày ' . $date . '.xlsx';
+        return Excel::download(new BaoCaoThoiGianToKhai(), $fileName);
     }
+
+
+
     public function chiTietXNKTheoDN(Request $request)
     {
         $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
@@ -525,6 +545,15 @@ class BaoCaoController extends Controller
         $den_ngay = $this->formatDateToYMD($request->den_ngay);
         $fileName = 'Báo cáo phương tiện xuất cảnh từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
         return Excel::download(new BaoCaoPhuongTienXuatCanh($tu_ngay, $den_ngay), $fileName);
+    }
+    public function baoCaoPhuongTienXuatCanhSuaHuy(Request $request)
+    {
+        $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
+        $den_ngay_name = $this->formatDateToDMY($request->den_ngay);
+        $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
+        $den_ngay = $this->formatDateToYMD($request->den_ngay);
+        $fileName = 'Báo cáo phương tiện xuất cảnh đã sửa, hủy từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
+        return Excel::download(new BaoCaoPhuongTienXuatCanhSuaHuy($tu_ngay, $den_ngay), $fileName);
     }
     public function bangKeCongViec(Request $request)
     {

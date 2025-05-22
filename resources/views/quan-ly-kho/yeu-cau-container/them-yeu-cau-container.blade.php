@@ -434,8 +434,6 @@
             }
 
             $("#doneButton").on("click", function() {
-
-
                 $("#displayTableHangHoa tbody tr").each(function() {
                     var $cells = $(this).find("td");
                     var soToKhai = $('#modal-so-to-khai').text();

@@ -57,7 +57,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/phieu-xuat-cua-to-khai/{so_to_khai_nhap}', [NhapHangController::class, 'phieuXuatCuaToKhai'])->name('phieu-xuat-cua-to-khai');
         Route::post('/duyet-to-khai-nhap', [NhapHangController::class, 'duyetToKhaiNhap'])->name('duyet-to-khai-nhap');
 
-        Route::get('/sua-to-khai-nhap-cong-chuc/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhapCongChuc'])->name('sua-to-khai-nhap-cong-chuc');
+        Route::get('/sua-to-khai-nhap-cong-chuc-2/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhapCongChuc'])->name('sua-to-khai-nhap-cong-chuc');
         Route::get('/sua-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhap'])->name('sua-to-khai-nhap');
         Route::post('/submit-sua-to-khai-nhap', [NhapHangController::class, 'suaToKhaiNhapSubmit'])->name('submit-sua-to-khai-nhap');
         Route::post('/huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'huyToKhai'])->name('huy-to-khai-nhap');
@@ -164,7 +164,6 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/sua-to-khai-nc/{ma_nhap_canh}', [NhapCanhController::class, 'suaNhapCanh'])->name('sua-to-khai-nc');
         Route::post('/sua-to-khai-nc-submit', [NhapCanhController::class, 'suaNhapCanhSubmit'])->name('sua-to-khai-nc-submit');
         Route::post('/duyet-yeu-cau-sua-nc/{ma_yeu_cau}', [NhapCanhController::class, 'duyetSuaNhapCanh'])->name('duyet-yeu-cau-sua-nc');
-
 
         Route::get('/getNhapCanhs', [NhapCanhController::class, 'getNhapCanhs'])->name('getNhapCanhs');
 
@@ -409,10 +408,12 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/bao-cao-su-dung-seal-chi-tiet', [BaoCaoController::class, 'suDungSealChiTiet'])->name('bao-cao-su-dung-seal-chi-tiet');
         Route::get('/bao-cao-phuong-tien-nhap-canh', [BaoCaoController::class, 'baoCaoPhuongTienNhapCanh'])->name('bao-cao-phuong-tien-nhap-canh');
         Route::get('/bao-cao-phuong-tien-xuat-canh', [BaoCaoController::class, 'baoCaoPhuongTienXuatCanh'])->name('bao-cao-phuong-tien-xuat-canh');
+        Route::get('/bao-cao-phuong-tien-xuat-canh-sua-huy', [BaoCaoController::class, 'baoCaoPhuongTienXuatCanhSuaHuy'])->name('bao-cao-phuong-tien-xuat-canh-sua-huy');
         Route::get('/phan-cong-nhiem-vu-giam-sat', [BaoCaoController::class, 'phanCongNhiemVuGiamSat'])->name('phan-cong-nhiem-vu-giam-sat');
         Route::get('/bang-ke-cong-viec', [BaoCaoController::class, 'bangKeCongViec'])->name('bang-ke-cong-viec');
         Route::get('/bao-cao-tra-cuu-container', [BaoCaoController::class, 'baoCaoTraCuuContainer'])->name('bao-cao-tra-cuu-container');
         Route::get('/bao-cao-theo-doi-xnc', [BaoCaoController::class, 'baoCaoTheoDoiXNC'])->name('bao-cao-theo-doi-xnc');
+        Route::get('/bao-cao-thoi-gian-to-khai', [BaoCaoController::class, 'thoiGianToKhaiLuuTaiCang'])->name('bao-cao-thoi-gian-to-khai');
 
         //DoanhNghiep
         Route::get('/theo-doi-tru-lui-tung-lan', [BaoCaoController::class, 'theoDoiTruLuiTungLan'])->name('theo-doi-tru-lui-tung-lan');
@@ -455,7 +456,6 @@ Route::name('lanh-dao.')->group(function () {
 });
 
 Route::middleware([\App\Http\Middleware\CheckRoleLanhDao::class])->group(function () {
-
     // Route::name('nhap-hang.')->group(function () {
     //     Route::get('/thong-tin-nhap-hang/{so_to_khai_nhap}', [NhapHangController::class, 'thongTinToKhai'])->name('show');
     //     Route::get('/lich-su-sua-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'lichSuSuaNhap'])->name('lich-su-sua-nhap');

@@ -291,8 +291,16 @@
                 document.getElementById('ma_doanh_nghiep_hidden').value = maDoanhNghiep.value.trim();
                 document.getElementById('is_khong_hang_hidden').value = toggle.checked ? 1 : 0;
 
-                if (!tenThuyenTruong) {
+                if (!tenThuyenTruong.value) {
                     alert('Vui lòng chọn tên thuyền trưởng');
+                    return false;
+                }
+                if (!dropdownValue.value) {
+                    alert('Vui lòng chọn phương tiện vận tải');
+                    return false;
+                }
+                if (!ngayDangKy.value) {
+                    alert('Vui lòng chọn ngày nhập cảnh');
                     return false;
                 }
 

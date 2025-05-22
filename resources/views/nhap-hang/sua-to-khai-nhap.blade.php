@@ -62,7 +62,7 @@
                                     class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="so_to_khai_nhap" maxlength="255"
                                     name="so_to_khai_nhap" placeholder="Nhập số tờ khai nhập"
-                                    value="{{ $nhapHang->so_to_khai_nhap }}" readonly required>
+                                    value="{{ $nhapHang->so_to_khai_nhap }}" required>
                             </div>
                             <div class="col-3">
                                 <div class="form-group">

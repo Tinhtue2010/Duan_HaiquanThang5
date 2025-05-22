@@ -607,6 +607,65 @@
                     <div class="row justify-content-center">
                         <div class="card p-3 me-3 col-5">
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 23)->first()?->phan_quyen == 1)
+                                <h4>Báo cáo phân công nhiệm vụ</h4>
+                                <div class="form-group">
+                                    <form action="{{ route('export.phan-cong-nhiem-vu-giam-sat') }}" method="GET">
+                                        <div class="row mx-1">
+                                            <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
+                                            <input type="text" class="form-control datepicker"
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                        </div>
+                                        <center>
+                                            <button type="submit" class="btn btn-primary mt-2">
+                                                Tải xuống báo cáo
+                                            </button>
+                                        </center>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="card p-3 ms-3 col-5">
+                            @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 24)->first()?->phan_quyen == 1)
+                                <h4>Bảng kê công việc</h4>
+                                <div class="form-group">
+                                    <form action="{{ route('export.bang-ke-cong-viec') }}" method="GET">
+                                        <div class="row">
+                                            <div class="mx-1">
+                                                <label class="label-text mb-2" for="ma_to_khai">Tháng</label>
+                                                <input type="text" class="form-control datepicker"
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                            </div>
+                                            <div class="mx-1">
+                                                <label class="label-text mb-1 mt-2" for="">Cán bộ công
+                                                    chức</label>
+                                                <select class="form-control" id="cong-chuc-dropdown-search-3"
+                                                    name="ma_cong_chuc">
+                                                    <option></option>
+                                                    @foreach ($congChucs as $congChuc)
+                                                        <option value="{{ $congChuc->ma_cong_chuc }}">
+                                                            {{ $congChuc->ten_cong_chuc }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                        </div>
+                                        <center>
+                                            <button type="submit" class="btn btn-primary mt-2">
+                                                Tải xuống báo cáo
+                                            </button>
+                                        </center>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="card p-3 me-3 col-5">
+                            @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 21)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo phương tiện nhập cảnh</h4>
                                 <div class="form-group">
@@ -663,14 +722,22 @@
                     <div class="row justify-content-center">
                         <div class="card p-3 me-3 col-5">
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
-                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 23)->first()?->phan_quyen == 1)
-                                <h4>Báo cáo phân công nhiệm vụ</h4>
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 27)->first()?->phan_quyen == 1)
+                                <h4>Báo cáo phương tiện xuất cảnh sửa, hủy</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.phan-cong-nhiem-vu-giam-sat') }}" method="GET">
-                                        <div class="row mx-1">
-                                            <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
-                                            <input type="text" class="form-control datepicker"
-                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                    <form action="{{ route('export.bao-cao-phuong-tien-xuat-canh-sua-huy') }}"
+                                        method="GET">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
+                                                <input type="text" class="form-control datepicker"
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
+                                                <input type="text" class="form-control datepicker"
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                            </div>
                                         </div>
                                         <center>
                                             <button type="submit" class="btn btn-primary mt-2">
@@ -683,31 +750,10 @@
                         </div>
                         <div class="card p-3 ms-3 col-5">
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
-                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 24)->first()?->phan_quyen == 1)
-                                <h4>Bảng kê công việc</h4>
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 28)->first()?->phan_quyen == 1)
+                                <h4>Báo cáo thời gian tờ khai lưu tại cảng</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bang-ke-cong-viec') }}" method="GET">
-                                        <div class="row">
-                                            <div class="mx-1">
-                                                <label class="label-text mb-2" for="ma_to_khai">Tháng</label>
-                                                <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
-                                            </div>
-                                            <div class="mx-1">
-                                                <label class="label-text mb-1 mt-2" for="">Cán bộ công
-                                                    chức</label>
-                                                <select class="form-control" id="cong-chuc-dropdown-search-3"
-                                                    name="ma_cong_chuc">
-                                                    <option></option>
-                                                    @foreach ($congChucs as $congChuc)
-                                                        <option value="{{ $congChuc->ma_cong_chuc }}">
-                                                            {{ $congChuc->ten_cong_chuc }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-                                        </div>
+                                    <form action="{{ route('export.bao-cao-thoi-gian-to-khai') }}" method="GET">
                                         <center>
                                             <button type="submit" class="btn btn-primary mt-2">
                                                 Tải xuống báo cáo

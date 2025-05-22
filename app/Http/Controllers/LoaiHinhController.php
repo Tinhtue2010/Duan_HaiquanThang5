@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BaoCao;
+use App\Models\Seal;
 use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
 use App\Models\HangHoa;
@@ -75,6 +75,7 @@ class LoaiHinhController extends Controller
         return redirect()->back();
     }
 
+
     public function xoaLoaiHinh(Request $request)
     {
         LoaiHinh::find($request->ma_loai_hinh)->delete();
@@ -104,9 +105,11 @@ class LoaiHinhController extends Controller
         //         ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $chiTietYeuCau->so_seal_moi]);
         // }
 
-        // $this->xuatHet();
+        // $stt = $this->xuatHet();
         // $this->fixNgayXuatHet();
         // $this->fixCCXuatHet();
+        // dd($stt);
+
         // $this->fixSoContKhaiBao();3086
         // $this->gap();
         // $this->fixSuaXuatHang();
@@ -126,25 +129,78 @@ class LoaiHinhController extends Controller
 
         // $this->khoiPhucXuatHang2('9713');
         // $this->kiemTraXuatHetHang('500522731850');
-
+        // 2516
+        // $this->checkNiemPhong("GLDU 0887940");
+        // NhapHang::find(500534471110)->update([
+        //     'trang_thai' => 2
+        // ]);
 
         // $this->fixTauTrenCont();
-        $this->fixPhanQuyenBaoCao();
+        // $this->fixNiemPhong();
+
+
+
         // $this->fixContainer();
-        // $this->fixPTVTXC();
-        // $this->fixTauTrenCont();
+        // $this->checkDupsNiemPhong();
         // $this->fixTauTheoDoiTruLui();
-        // $this->fixPhanQuyenBaoCao();
+        $this->checkNiemPhong();
         // $this->fixTienTrinh();
         // $this->fixTheoDoi();
         return redirect()->back();
     }
 
+    public function checkNiemPhong()
+    {
+        $arr = ['500461449102', '500473494920', '500476055520', '500476054120', '500483380800', '500484852200', '500492752030', '500493115920', '500495397220', '500502423450', '500505283210', '500504675350', '500504073130', '500503192050', '500510576940', '500508895320', '500508888910', '500507302930', '500507301900', '500506734310', '500506645521', '500505287040', '500512809350', '500512810860', '500512812150', '500514455530', '500515963221'];
+        foreach ($arr as $ar) {
+            $nhapHang = NhapHang::find($ar);
+            $nhapHang->update([
+                'ma_doanh_nghiep' => '5701856609L'
+            ]);
+
+            DB::table('xuat_hang')
+                ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                ->where('xuat_hang_cont.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
+                ->update([
+                    'xuat_hang.ma_doanh_nghiep' => '5701856609L'
+                ]);
+        }
+    }
+    public function fixTruLuiDaHuy()
+    {
+        $ycs = YeuCauTauCont::where('trang_thai', 0)
+            ->get();
+        foreach ($ycs as $yc) {
+            TheoDoiTruLui::where('ma_yeu_cau', $yc->ma_yeu_cau)
+                ->where('cong_viec', 2)
+                ->delete();
+        }
+    }
+    public function checkDupsNiemPhong()
+    {
+        $allNiemPhong = NiemPhong::all();
+        $grouped = $allNiemPhong->groupBy('so_container');
+
+        foreach ($grouped as $items) {
+            // Keep the first, delete the rest
+            $items->skip(1)->each(function ($item) {
+                $item->delete();
+            });
+        }
+    }
+    public function fixXuatSauHuyCont()
+    {
+        $ycs = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont.ma_yeu_cau', '=', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau')
+            ->where('ma_yeu_cau', 1334)
+            ->get();
+        foreach ($ycs as $yc) {
+        }
+    }
     public function kiemTraSealDung()
     {
         $ycs = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_niem_phong.ma_yeu_cau', '>=', 2000)
-            ->where('yeu_cau_niem_phong.trang_thai', '2')
+            ->where('yeu_cau_niem_phong.ma_yeu_cau', '>=', 2400)
+            ->where('yeu_cau_niem_phong.trang_thai', operator: '2')
             ->orderBy('yeu_cau_niem_phong.ma_yeu_cau', 'desc')
             ->get();
         $containerDaCheck = [];
@@ -154,7 +210,7 @@ class LoaiHinhController extends Controller
                 continue;
             }
             $seal = NiemPhong::where('so_container', $yc->so_container)->first()->so_seal ?? '';
-            if ($yc->so_seal_moi != $seal) {
+            if ($yc->so_seal_moi != $seal && Seal::find($seal)) {
                 $container[] = $yc->so_container;
             }
             $containerDaCheck[] = $yc->so_container;
@@ -164,21 +220,23 @@ class LoaiHinhController extends Controller
 
     public function fixNiemPhong()
     {
-        $ycs = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', 2251)->get();
+        $ycs = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
+            ->where('ngay_yeu_cau', today())
+            ->get();
+        $arr = [];
         foreach ($ycs as $yc) {
-            $so_container_no_space = str_replace(' ', '', $yc->so_container); // Remove spaces
-            $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-            $nhapHang = $nhapHang = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->where('nhap_hang.trang_thai', '2')
-                ->whereIn('hang_trong_cont.so_container', [$so_container_no_space, $so_container_with_space])
-                ->groupBy('nhap_hang.so_to_khai_nhap') // or any unique NhapHang column
-                ->havingRaw('SUM(hang_trong_cont.so_luong) != 0')
-                ->select('nhap_hang.*')
-                ->first();
-
-            $yc->phuong_tien_vt_nhap = $nhapHang->phuong_tien_vt_nhap;
-            $yc->save();
+            if ($yc->phuong_tien_vt_nhap == '') {
+                $arr[] = $yc->ma_yeu_cau;
+            }
+        }
+        $arr = array_unique($arr);
+        foreach ($arr as $ar) {
+            $ycs = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $ar)->get();
+            foreach ($ycs as $yc) {
+                $ptvt = NiemPhong::where('so_container', $yc->so_container)->first()->phuong_tien_vt_nhap;
+                $yc->phuong_tien_vt_nhap = $ptvt;
+                $yc->save();
+            }
         }
     }
     public function fixContainer()
@@ -775,17 +833,20 @@ class LoaiHinhController extends Controller
     {
         $allNhapHangs = NhapHang::where('trang_thai', '2')->get();
         $arr = [];
+        $stt = 0;
         foreach ($allNhapHangs as $nhapHang) {
             $soLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
                 ->sum('hang_trong_cont.so_luong');
             if ($soLuongTon == 0) {
+                $stt++;
                 array_push($arr, $soLuongTon, $nhapHang->so_to_khai_nhap);
                 $nhapHang->trang_thai = "4";
                 $nhapHang->save();
             }
         }
+        return $stt;
     }
 
     public function fixCCXuatHet()
@@ -914,7 +975,7 @@ class LoaiHinhController extends Controller
     {
         $congChucs = CongChuc::all();
         foreach ($congChucs as $congChuc) {
-            for ($i = 1; $i <= 26; $i++) {
+            for ($i = 1; $i <= 30; $i++) {
                 $check = PhanQuyenBaoCao::where('ma_cong_chuc', $congChuc->ma_cong_chuc)
                     ->where('ma_bao_cao', $i)
                     ->exists();

@@ -37,6 +37,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
     protected $theoDoi;
     protected $nhapHang;
     protected $ten_hai_quan;
+    protected $is_nhieu_tau;
 
     public function title(): string
     {
@@ -93,7 +94,6 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
         $theoDoiChiTiet = TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoi->ma_theo_doi)->get();
 
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $theoDoi->ngay_them);
-
         $day = $tu_ngay->format('d');  // Day of the month
         $month = $tu_ngay->format('m'); // Month number
         $year = $tu_ngay->format('Y');  // Year
@@ -101,6 +101,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
         $ten_doanh_nghiep = $nhapHang->doanhNghiep->ten_doanh_nghiep;
         $this->so_to_khai_nhap = $nhapHang->so_to_khai_nhap;
 
+        $soTaus = [];
         $hangHoaLonNhat = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
@@ -167,7 +168,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
         $sum = 0;
         $stt = 1;
         $is_xuat_het = false;
-        if ($nhapHang->trang_thai == 4) {
+        if ($nhapHang->trang_thai == 4 || $nhapHang->trang_thai == 7) {
             if (\Carbon\Carbon::parse($nhapHang->ngay_xuat_het)->isSameDay($tu_ngay)) {
                 $is_xuat_het = true;
             }
@@ -175,6 +176,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
 
         foreach ($theoDoiChiTiet as $item) {
             if ($item->so_luong_chua_xuat != 0) {
+                $soTaus[] = $item->phuong_tien_vt_nhap;
                 if ($is_xuat_het == true) {
                     $result[] = [
                         $stt++,
@@ -191,7 +193,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                         '',
                     ];
                 } elseif (\Carbon\Carbon::parse($item->ngay_dang_ky)->greaterThanOrEqualTo($ngayCuoiCung)) {
-                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal;
+                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal ?? '';
                     $result[] = [
                         $stt++,
                         '',
@@ -226,6 +228,10 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sum += $item->so_luong_chua_xuat;
             }
         }
+        if (count(array_unique($soTaus)) > 1) {
+            $this->is_nhieu_tau = true;
+        }
+        
         $result[] = ['', '', '', 'Tổng cộng', '', '', '', $sum, '', '', ''];
         $result[] = [
             [''],
@@ -383,9 +389,12 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->mergeCells('C' . $secondTableStart + 2 . ':C' . $lastStart - 4);
                 $sheet->setCellValue('C' . $secondTableStart + 2, $this->theoDoi->so_ptvt_nuoc_ngoai);
 
-                $tau = $this->theoDoi->theoDoiChiTiet->first()?->phuong_tien_vt_nhap;
-                $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 4);
-                $sheet->setCellValue('J' . $secondTableStart + 2, $tau == $this->nhapHang->ptvt_ban_dau ? '' : $tau);
+                if ($this->is_nhieu_tau == false) {
+                    $tau = $this->theoDoi->theoDoiChiTiet->first()?->phuong_tien_vt_nhap;
+                    $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 4);
+                    $sheet->setCellValue('J' . $secondTableStart + 2, $tau == $this->nhapHang->ptvt_ban_dau ? '' : $tau);
+                }
+
 
 
                 $sheet->getStyle('A' . $secondTableStart . ':L' . $lastStart - 3)->applyFromArray([

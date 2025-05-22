@@ -41,7 +41,7 @@ class YeuCauHangVeKhoController extends Controller
                         'yeu_cau_hang_ve_kho.trang_thai',
                         'yeu_cau_hang_ve_kho.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
-    
+
                     )
                     ->groupBy('yeu_cau_hang_ve_kho.ma_yeu_cau')
                     ->orderBy('ma_yeu_cau', 'desc')
@@ -57,7 +57,7 @@ class YeuCauHangVeKhoController extends Controller
                         'yeu_cau_hang_ve_kho.trang_thai',
                         'yeu_cau_hang_ve_kho.ngay_yeu_cau',
                         DB::raw('GROUP_CONCAT(DISTINCT yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ORDER BY yeu_cau_hang_ve_kho_chi_tiet.so_to_khai_nhap ASC SEPARATOR ", ") as so_to_khai_nhap_list')
-    
+
                     )
                     ->groupBy('yeu_cau_hang_ve_kho.ma_yeu_cau')
                     ->orderBy('ma_yeu_cau', 'desc')
@@ -576,6 +576,10 @@ class YeuCauHangVeKhoController extends Controller
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 5)
                 ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $soToKhai)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 5)
+                ->delete();
             NhapHang::where('so_to_khai_nhap', $soToKhai)->update([
                 'trang_thai' => "2",
             ]);
@@ -756,6 +760,4 @@ class YeuCauHangVeKhoController extends Controller
     {
         return CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
     }
-
-
 }

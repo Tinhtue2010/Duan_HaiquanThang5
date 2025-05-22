@@ -19,6 +19,6 @@ class CheckRoleLanhDao
             return redirect('dang-nhap');
         }
 
-        return $next($request);  // Proceed to the next middleware/route
+        return $next($request);
     }
 }

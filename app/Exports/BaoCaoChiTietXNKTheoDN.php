@@ -51,6 +51,7 @@ class BaoCaoChiTietXNKTheoDN implements FromArray, WithEvents
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
             ->whereBetween('xuat_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
+            ->where('xuat_hang.trang_thai', '!=', 0)
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',
@@ -73,8 +74,7 @@ class BaoCaoChiTietXNKTheoDN implements FromArray, WithEvents
                 'xuat_hang_cont.so_luong_ton',
             )
             ->groupBy(
-                'nhap_hang.so_to_khai_nhap',
-                'xuat_hang.so_to_khai_xuat',
+                'xuat_hang_cont.ma_xuat_hang_cont',
             )
             ->get();
 

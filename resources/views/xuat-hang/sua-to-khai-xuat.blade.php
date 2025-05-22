@@ -561,6 +561,7 @@
                 }
                 var formData = new FormData();
                 formData.append("hys_file", file);
+                formData.append("so_to_khai_xuat", {{ $xuatHang->so_to_khai_xuat }});
                 formData.append("_token", "{{ csrf_token() }}");
 
                 $.ajax({

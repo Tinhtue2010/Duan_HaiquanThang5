@@ -72,7 +72,8 @@
                                     @endphp
                                     <tr class="">
                                         <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">{{ $index + 1 }}</td>
-                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
+                                        <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
+                                            {{ $hangHoa->so_to_khai_nhap }}
                                         </td>
                                         <td class="{{ $isRemoved ? 'text-danger fw-bold' : '' }}">
                                             {{ $hangHoa->ten_hang }}
@@ -141,6 +142,10 @@
                         <center>
                             <div class="custom-line mb-2"></div>
                         </center>
+                        <a
+                            href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat,'ma_yeu_cau' => $suaXuatHang->ma_yeu_cau]) }}">
+                            <button class="btn btn-success float-end me-1">In phiếu xuất</button>
+                        </a>
                         <div class="row mt-4">
                             <h1 class="text-center">Phiếu xuất sau khi sửa</h1>
                             <h2
@@ -174,14 +179,18 @@
                                     @endphp
                                     <tr class="{{ $isNew ? 'text-success fw-bold' : '' }}">
                                         <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $index + 1 }}</td>
-                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->so_to_khai_nhap }}
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">
+                                            {{ $hangHoa->so_to_khai_nhap }}
                                         </td>
-                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->ten_hang }}</td>
-                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->xuat_xu }}</td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->ten_hang }}
+                                        </td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->xuat_xu }}
+                                        </td>
                                         <td
                                             class="{{ $isNew ? 'text-success fw-bold' : '' }} {{ $matched && $matched->so_luong_xuat != $hangHoa->so_luong_xuat ? 'text-warning fw-bold' : '' }}">
                                             {{ $hangHoa->so_luong_xuat }}</td>
-                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->don_vi_tinh }}</td>
+                                        <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">{{ $hangHoa->don_vi_tinh }}
+                                        </td>
                                         <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">
                                             {{ number_format($hangHoa->don_gia, 2) }}</td>
                                         <td class="{{ $isNew ? 'text-success fw-bold' : '' }}">
@@ -276,7 +285,9 @@
 
                                 </div>
                             @endif
-                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
+                            @if (
+                                (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1) ||
+                                    Auth::user()->loai_tai_khoan == 'Lãnh đạo')
                                 <div class="row mt-3">
                                     <div class="col-6">
                                         <a href="#">

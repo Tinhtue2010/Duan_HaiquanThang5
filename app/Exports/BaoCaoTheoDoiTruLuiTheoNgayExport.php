@@ -36,6 +36,8 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
     protected $sum;
     protected $array;
     protected $ten_hai_quan;
+    protected $is_nhieu_tau;
+
 
     public function title(): string
     {
@@ -126,6 +128,7 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
         $array = [];
         $hangHoas = HangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)->get();
         $hangHoaArr = [];
+        $soTaus = [];
 
         $soLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
@@ -180,15 +183,8 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
             $start = null;
             $end = null;
 
-            $lastOccurrences = [];
-            foreach ($lanXuats as $index => $item) {
-                if (\Carbon\Carbon::parse($item->ngay_dang_ky)->isSameDay($tu_ngay)) {
-                    $lastOccurrences[$item->ma_xuat_hang_cont] = $index; // Track the last occurrence
-                }
-            }
-
             $is_xuat_het = false;
-            if ($nhapHang->trang_thai == 4) {
+            if ($nhapHang->trang_thai == 4 || $nhapHang->trang_thai == 7) {
                 if (\Carbon\Carbon::parse($nhapHang->ngay_xuat_het)->isSameDay($tu_ngay)) {
                     $is_xuat_het = true;
                 }
@@ -208,59 +204,34 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
                     if ($start === null) {
                         $start = $stt + 12; // First occurrence
                     }
+                    $soTaus[] = $item->phuong_tien_vt_nhap;
 
                     if ($is_xuat_het == true) {
-                        $result[] = [
-                            $stt++,
-                            '',
-                            '',
-                            $item->ten_hang,
-                            '',
-                            '',
-                            $item->so_luong_xuat,
-                            $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
-                            '',
-                            $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                            $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
-                            '',
-                        ];
+                        $soSeal = '';
                     } elseif (\Carbon\Carbon::parse($item->ngay_dang_ky)->greaterThanOrEqualTo($ngayCuoiCung)) {
-                        $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal;
-
-                        $result[] = [
-                            $stt++,
-                            '',
-                            '',
-                            $item->ten_hang,
-                            '',
-                            '',
-                            $item->so_luong_xuat,
-                            $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
-                            $item->so_seal_cuoi_ngay ? $sealCuoiCung : '',
-                            $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                            $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
-                            '',
-                        ];
+                        $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal ?? '';
+                        $soSeal = $sealCuoiCung;
                     } else {
-                        $result[] = [
-                            $stt++,
-                            '',
-                            '',
-                            $item->ten_hang,
-                            '',
-                            '',
-                            $item->so_luong_xuat,
-                            $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
-                            $item->so_seal_cuoi_ngay ? $item->so_seal_cuoi_ngay : '',
-                            $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                            $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
-                            '',
-                        ];
+                        $soSeal = $item->so_seal_cuoi_ngay;
                     }
 
+                    $result[] = [
+                        $stt++,
+                        '',
+                        '',
+                        $item->ten_hang,
+                        '',
+                        '',
+                        $item->so_luong_xuat,
+                        $hangHoaArr[$item->ma_hang] == 0 ? '0' : $hangHoaArr[$item->ma_hang],
+                        $soSeal,
+                        $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                        $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                        '',
+                    ];
 
                     $sum += $item->so_luong_xuat;
-                    $end = $stt - 1 + 12; // Update end on each iteration
+                    $end = $stt - 1 + 12;
                     $soLuongTon = 0;
                     foreach ($hangHoaArr as $key => $value) {
                         $soLuongTon += $value;
@@ -273,7 +244,9 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
                 $array[] = [$start, $end, $ptvts];
             }
         }
-
+        if (count(array_unique($soTaus)) > 1) {
+            $this->is_nhieu_tau = true;
+        }
         // Remove duplicates from $array
         $array = array_map("unserialize", array_unique(array_map("serialize", $array)));
         $result[] = ['', '', '', 'Tổng cộng', '', '', $sum, $soLuongTon, '', '', ''];

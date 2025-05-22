@@ -64,7 +64,6 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
         $ngay_dang_ky = $nhapHang->ngay_dang_ky;
         $date = DateTime::createFromFormat('Y-m-d', $ngay_dang_ky);
 
-        $ngay_thong_quan = NhapHang::where('so_to_khai_nhap', $nhapHang->so_to_khai_nhap)->value('ngay_thong_quan');
         $this->ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
 
         $result = [

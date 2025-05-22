@@ -45,13 +45,14 @@
                         {{ $xuatCanh->doanhNghiep->ten_doanh_nghiep }}
                     </h2>
                     <h2 class="text-center text-dark">
-                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep ?? "Không" }}
+                        Chủ hàng: {{ $xuatCanh->doanhNghiepChon->ten_doanh_nghiep ?? 'Không' }}
                     </h2>
 
                     <h2 class="text-center text-dark">Tờ khai xuất cảnh số {{ $xuatCanh->ma_xuat_canh }} - Ngày
                         {{ \Carbon\Carbon::parse($xuatCanh->ngay_dang_ky)->format('d-m-Y') }}
                     </h2>
-                    <h2 class="text-center text-dark"> Phương tiện: {{ $xuatCanh->PTVTXuatCanh->ten_phuong_tien_vt }} - Thuyền trưởng: {{ $xuatCanh->ten_thuyen_truong }} </h2>
+                    <h2 class="text-center text-dark"> Phương tiện: {{ $xuatCanh->PTVTXuatCanh->ten_phuong_tien_vt }} -
+                        Thuyền trưởng: {{ $xuatCanh->ten_thuyen_truong }} </h2>
                     <hr />
                     <h3 class="text-center text-dark">Thông tin phiếu xuất</h3>
                     <table class="table table-bordered mt-2 fs-6" id="displayTable"
@@ -75,7 +76,7 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $chiTiet->xuatHang->so_to_khai_xuat }}</td>
                                     <td>{{ $chiTiet->xuatHang->doanhNghiep->ten_doanh_nghiep }}</td>
-                                    <td>{{ $chiTiet->xuatHang->doanhNghiep->chuHang->ten_chu_hang }}</td>
+                                    <td>{{ $chiTiet->xuatHang->doanhNghiep->chuHang->ten_chu_hang ?? '' }}</td>
                                     <td>{{ $chiTiet->xuatHang->ma_loai_hinh }}</td>
                                     <td>{{ $chiTiet->tong_so_luong_xuat }}</td>
                                     <td>{{ \Carbon\Carbon::parse($chiTiet->xuatHang->ngay_dang_ky)->format('d-m-Y') }}
@@ -182,7 +183,7 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                        <center>
+                                            <center>
                                     @endif
                                 @endif
                         </div>
@@ -340,9 +341,15 @@
                             <select class="form-control" id="cong-chuc-dropdown-search" name="ma_cong_chuc" required>
                                 <option></option>
                                 @foreach ($congChucs as $congChuc)
-                                    <option value="{{ $congChuc->ma_cong_chuc }}">
-                                        {{ $congChuc->ten_cong_chuc }}
-                                    </option>
+                                    @if ($congChuc->ma_cong_chuc == $maCongChuc)
+                                        <option value="{{ $congChuc->ma_cong_chuc }}" selected>
+                                            {{ $congChuc->ten_cong_chuc }}
+                                        </option>
+                                    @else
+                                        <option value="{{ $congChuc->ma_cong_chuc }}">
+                                            {{ $congChuc->ten_cong_chuc }}
+                                        </option>
+                                    @endif
                                 @endforeach
                             </select>
                         </div>

@@ -9,7 +9,8 @@ use App\Models\PTVTXuatCanh;
 use App\Models\XuatNhapCanh;
 use App\Models\XuatCanh;
 use App\Models\XuatCanhChiTiet;
-use App\Models\XuatHangCont;
+use App\Models\XuatHangSua;
+use App\Models\XuatCanhSua;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
@@ -19,7 +20,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
-class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
+class BaoCaoPhuongTienXuatCanhSuaHuy implements FromArray, WithEvents
 {
     protected $tu_ngay;
     protected $den_ngay;
@@ -38,7 +39,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Độc lập - Tự do - Hạnh phúc'],
             ['', '', '', '', '', ''],
-            ['BÁO CÁO PHƯƠNG TIỆN XUẤT CẢNH', '', '', '', '', ''],
+            ['BÁO CÁO PHƯƠNG TIỆN XUẤT CẢNH HỦY, SỬA', '', '', '', '', ''],
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['STT', 'Tên tàu', 'Quốc tịch tàu', 'Họ tên thuyền trưởng', 'Nhập cảnh', '', '', 'Xuất cảnh', '', '' . '', '', '', '', '', '', '', '', 'Công chức làm thủ tục', 'Tên công ty xuất hàng', 'Tên đại lý làm thủ tục', 'Khác', 'Ghi chú'],
@@ -58,7 +59,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             ->leftJoin('doanh_nghiep', 'xuat_canh.ma_doanh_nghiep_chon', 'doanh_nghiep.ma_doanh_nghiep')
             ->leftJoin('chu_hang', 'doanh_nghiep.ma_chu_hang', 'chu_hang.ma_chu_hang')
             ->whereBetween('xuat_canh.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
-            ->where('xuat_canh.trang_thai', '!=', 0)
+            ->where('xuat_canh.trang_thai', '!=', 1)
             ->where(function ($query) {
                 $query->whereNull('xuat_hang.trang_thai')
                     ->orWhere('xuat_hang.trang_thai', '!=', 0);
@@ -161,8 +162,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
 
             $thuocLa = $value['loai_hang_sums']['Thuốc lá'] ?? 0;
             $thuocLa2 = $value['loai_hang_sums']['THUỐC LÁ ESSE'] ?? 0;
-            $thuocLa3 = $value['loai_hang_sums']['Cigar'] ?? 0;
-            $totalThuocLa = $thuocLa + $thuocLa2 + $thuocLa3;
+            $totalThuocLa = $thuocLa + $thuocLa2;
             $totalKhac = $value['loai_hang_sums']['Khác'] ?? 0;
 
             $ngayDangKys = NhapCanh::where('so_ptvt_xuat_canh', $value['so_ptvt_xuat_canh'])
@@ -187,29 +187,48 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             $xnc = XuatNhapCanh::where('so_ptvt_xuat_canh', $value['so_ptvt_xuat_canh'])
                 ->where('ngay_them', $value['ngay_dang_ky_nearest'])
                 ->first();
+            $xuatCanh = XuatCanh::find($value['ma_xuat_canh']);
+            $isChiTietExist = XuatCanhChiTiet::where('ma_xuat_canh', $value['ma_xuat_canh'])->exists();
+            $isEdited = XuatHangSua::join('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.so_to_khai_xuat', 'xuat_hang_sua.so_to_khai_xuat')
+                ->where('trang_thai_phieu_xuat', 12)
+                ->where('ma_xuat_canh', $value['ma_xuat_canh'])
+                ->exists();
+            $xuatCanhSua = XuatCanhSua::where('ma_xuat_canh', $value['ma_xuat_canh'])->exists();
+            $content = null;
+            if ($xuatCanh->trang_thai == 0) {
+                $content = "Đã hủy";
+            } else if (($xuatCanh->ma_doanh_nghiep_chon != 0 && $isChiTietExist == false) || $isEdited) {
+                $content = 'Đã sửa phiếu xuất sau khi duyệt';
+            } else if ($xuatCanhSua) {
+                $content = 'Đã yêu cầu sửa nội dung TK';
+            }
+            if ($content != null) {
+                $result[] = [
+                    $key + 1,
+                    $ten_phuong_tien_vt,
+                    $quoc_tich_tau,
+                    $value['ten_thuyen_truong'],
+                    'Vạn Gia',
+                    !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d-m-Y') : null,
+                    $xnc->thoi_gian_nhap_canh ?? '',
+                    Carbon::createFromFormat('Y-m-d', $value['ngay_dang_ky'])->format('d-m-Y'),
+                    $xnc->thoi_gian_xuat_canh ?? '',
+                    $value['loai_hang'],
+                    $totalThuocLa == 0 ? '0' : $totalThuocLa,
+                    $value['loai_hang_sums']['Rượu'] ?? '0',
+                    $value['loai_hang_sums']['Đông lạnh'] ?? '0',
+                    ($value['loai_hang'] == 'Đông lạnh') ? $totalTrongLuong  : '0',
+                    $totalKhac == 0 ? '0' : $totalKhac,
+                    ($value['loai_hang'] == 'Khác') ? $totalTrongLuong : '0',
+                    $cang_den,
+                    $value['ten_cong_chuc'],
+                    $value['loai_hang'] ? $value['ten_doanh_nghiep'] : '',
+                    $value['loai_hang'] ? $value['ten_chu_hang'] : '',
+                    '',
+                    $content
+                ];
+            }
 
-            $result[] = [
-                $key + 1,
-                $ten_phuong_tien_vt,
-                $quoc_tich_tau,
-                $value['ten_thuyen_truong'],
-                'Vạn Gia',
-                !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d-m-Y') : null,
-                $xnc->thoi_gian_nhap_canh ?? '',
-                Carbon::createFromFormat('Y-m-d', $value['ngay_dang_ky'])->format('d-m-Y'),
-                $xnc->thoi_gian_xuat_canh ?? '',
-                $value['loai_hang'],
-                $totalThuocLa == 0 ? '0' : $totalThuocLa,
-                $value['loai_hang_sums']['Rượu'] ?? '0',
-                $value['loai_hang_sums']['Đông lạnh'] ?? '0',
-                ($value['loai_hang'] == 'Đông lạnh') ? $totalTrongLuong  : '0',
-                $totalKhac == 0 ? '0' : $totalKhac,
-                ($value['loai_hang'] == 'Khác') ? $totalTrongLuong : '0',
-                $cang_den,
-                $value['ten_cong_chuc'],
-                $value['loai_hang'] ? $value['ten_doanh_nghiep'] : '',
-                $value['loai_hang'] ? $value['ten_chu_hang'] : '',
-            ];
 
             $sumThuocLa += $totalThuocLa;
             $sumRuou += $value['loai_hang_sums']['Rượu'] ?? 0;
@@ -277,6 +296,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                 $sheet->getColumnDimension('Q')->setWidth(width: 10);
                 $sheet->getColumnDimension('S')->setWidth(width: 15);
                 $sheet->getColumnDimension('R')->setWidth(width: 10);
+                $sheet->getColumnDimension('V')->setWidth(width: 20);
 
                 $sheet->getStyle('N')->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getStyle('P')->getNumberFormat()->setFormatCode('#,##0');

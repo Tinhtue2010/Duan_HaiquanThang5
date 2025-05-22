@@ -127,12 +127,13 @@ class XuatCanhController extends Controller
                 ->get();
         }
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $maCongChuc = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_cong_chuc ?? '';
 
-        return view('xuat-canh.thong-tin-xuat-canh', compact('xuatCanh', 'chiTiets', 'congChucs')); // Pass data to the view
+        return view('xuat-canh.thong-tin-xuat-canh', compact('xuatCanh', 'chiTiets', 'congChucs','maCongChuc')); // Pass data to the view
     }
     public function xemYeuCauSuaXuatCanh($ma_xuat_canh)
     {
-        $xuatCanhSua = XuatCanhSua::where('ma_xuat_canh', $ma_xuat_canh)->first();
+        $xuatCanhSua = XuatCanhSua::where('ma_xuat_canh', $ma_xuat_canh)->orderBy('ma_yeu_cau', 'desc')->first();
         $chiTietSuas = XuatCanhChiTietSua::where('ma_yeu_cau', $xuatCanhSua->ma_yeu_cau)->get();
 
         $xuatCanh = XuatCanh::find($ma_xuat_canh);

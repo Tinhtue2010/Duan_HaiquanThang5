@@ -113,21 +113,12 @@ class XuatHangService
     public function getThongTinHangHoaHienTai()
     {
         $doanhNghiep = $this->getDoanhNghiepHienTai();
-        return NhapHang::with(['hangHoa' => function ($query) {
-            $query->select('so_to_khai_nhap', 'ma_hang', 'ten_hang', 'loai_hang', 'xuat_xu', 'don_vi_tinh', 'don_gia');
-        }, 'hangHoa.hangTrongCont' => function ($query) {
-            $query->select('ma_hang_cont', 'so_luong', 'so_container');
-        }, 'hangHoa.hangTrongCont.xuatHangCont' => function ($query) {
-            $query->select('so_to_khai_xuat', 'ma_hang_cont', 'so_luong_xuat', 'so_to_khai_nhap');
-        }, 'hangHoa.hangTrongCont.xuatHangCont.xuatHang' => function ($query) {
-            $query->select('so_to_khai_xuat', 'trang_thai');
-        }])
-            ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-            ->where('nhap_hang.trang_thai', '2')
-            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+        return NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->leftJoin('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->leftJoin('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
+            ->where('nhap_hang.trang_thai', '2')
             ->select(
                 'hang_hoa.ma_hang',
                 'hang_hoa.ten_hang',
@@ -603,12 +594,13 @@ class XuatHangService
             $trang_thai = "2";
         } elseif ($xuatHang->trang_thai == '5') {
             $trang_thai = "11";
-        } elseif ($xuatHang->trang_thai == '6') {
+        } elseif ($xuatHang->trang_thai == '6' || $xuatHang->trang_thai == '14') {
             $trang_thai = "12";
         } else {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
             return redirect()->back();
         }
+        
         $xuatHang->trang_thai = $trang_thai;
         $xuatHang->save();
 
@@ -864,23 +856,23 @@ class XuatHangService
                 ->get();
             foreach ($xuatHangConts as $xuatHangCont) {
                 $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt phiếu xuất hàng số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
-                $this->kiemTraXuatHetHang($xuatHangCont->so_to_khai_nhap,$maCongChuc);
+                $this->kiemTraXuatHetHang($xuatHangCont->so_to_khai_nhap, $maCongChuc);
             }
         }
         session()->flash('alert-success', 'Trạng thái đã được cập nhật thành công!');
 
         return $xuatHang;
     }
-    public function kiemTraXuatHetHang($so_to_khai_nhap,$maCongChuc)
+    public function kiemTraXuatHetHang($so_to_khai_nhap, $maCongChuc)
     {
         $allZero = !HangTrongCont::whereHas('hangHoa', function ($query) use ($so_to_khai_nhap) {
             $query->where('so_to_khai_nhap', $so_to_khai_nhap);
         })->where('so_luong', '!=', 0)->exists();
         if ($allZero) {
-            $this->capNhatXuatHetHang($so_to_khai_nhap,$maCongChuc);
+            $this->capNhatXuatHetHang($so_to_khai_nhap, $maCongChuc);
         }
     }
-    public function capNhatXuatHetHang($so_to_khai_nhap,$maCongChuc)
+    public function capNhatXuatHetHang($so_to_khai_nhap, $maCongChuc)
     {
         NhapHang::find($so_to_khai_nhap)
             ->update([

@@ -16,32 +16,74 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class BaoCaoSuDungSeal implements FromArray, WithEvents
 {
+    protected $tu_ngay;
+    protected $den_ngay;
+
+    public function __construct($tu_ngay, $den_ngay)
+    {
+        $this->tu_ngay = $tu_ngay;
+        $this->den_ngay = $den_ngay;
+    }
     public function array(): array
     {
         $data = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
-            ->groupBy('seal.loai_seal', 'seal.ma_cong_chuc')
+            ->whereBetween('ngay_su_dung', [$this->tu_ngay, $this->den_ngay])
+            ->groupBy('seal.loai_seal', 'seal.ma_cong_chuc', 'cong_chuc.ten_cong_chuc')
             ->select(
                 'seal.loai_seal',
                 'seal.ma_cong_chuc',
                 'cong_chuc.ten_cong_chuc',
-                DB::raw('COUNT(*) as total_seals'),
-                DB::raw('SUM(CASE WHEN seal.trang_thai = 0 THEN 1 ELSE 0 END) as trang_thai_0_count'),
                 DB::raw('SUM(CASE WHEN seal.trang_thai = 1 THEN 1 ELSE 0 END) as trang_thai_1_count')
             )
             ->get();
+
+
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
 
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO SỬ DỤNG SEAL NIÊM PHONG HẢI QUAN', '', '', '', '', ''],
+            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['', '', '', '', '', ''],
-            ['STT', 'TÊN CÔNG CHỨC', 'LOẠI SEAL', 'SỐ LƯỢNG (CÁI)', 'SỐ LƯỢNG SỬ DỤNG', 'SỐ LƯỢNG TỒN'],
+            ['STT', 'TÊN CÔNG CHỨC', 'LOẠI SEAL', 'SỐ LƯỢNG CẤP (CÁI)', 'SỐ LƯỢNG SỬ DỤNG', 'SỐ LƯỢNG TỒN'],
         ];
 
         $stt = 1;
         foreach ($data as $item) {
+            $trang_thai_0_count = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+                ->where('seal.ma_cong_chuc', $item->ma_cong_chuc)
+                ->where('seal.loai_seal', $item->loai_seal)
+                ->groupBy('seal.loai_seal', 'seal.ma_cong_chuc')
+                ->select(
+                    DB::raw('SUM(CASE WHEN seal.trang_thai = 0 THEN 1 ELSE 0 END) as trang_thai_0_count'),
+                )
+                ->first()
+                ->trang_thai_0_count;
+            $trang_thai_2_count = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+                ->whereBetween('ngay_cap', [$this->tu_ngay, $this->den_ngay])
+                ->where('seal.ma_cong_chuc', $item->ma_cong_chuc)
+                ->where('seal.loai_seal', $item->loai_seal)
+                ->groupBy('seal.loai_seal', 'seal.ma_cong_chuc')
+                ->select(
+                    DB::raw('SUM(CASE WHEN seal.trang_thai = 2 THEN 1 ELSE 0 END) as trang_thai_2_count'),
+                )
+                ->first()
+                ->trang_thai_2_count ?? 0;
+
+            $soLuongCap = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+                ->whereBetween('ngay_cap', [$this->tu_ngay, $this->den_ngay])
+                ->where('seal.ma_cong_chuc', $item->ma_cong_chuc)
+                ->where('seal.loai_seal', $item->loai_seal)
+                ->groupBy('seal.loai_seal', 'seal.ma_cong_chuc', 'cong_chuc.ten_cong_chuc')
+                ->select(DB::raw('COUNT(*) as total_seals'))
+                ->first();
+
+            $soLuongCap = $soLuongCap ? $soLuongCap->total_seals : 0;
+            $soLuongCap = $soLuongCap - $trang_thai_2_count;
+
             $loaiSeal = '';
             if ($item->loai_seal == 1) {
                 $loaiSeal = "Seal dây cáp đồng";
@@ -58,9 +100,9 @@ class BaoCaoSuDungSeal implements FromArray, WithEvents
                 $stt++,
                 $item->ten_cong_chuc,
                 $loaiSeal,
-                $item->total_seals,
+                $soLuongCap == 0 ? '0' : $soLuongCap,
                 $item->trang_thai_1_count,
-                $item->trang_thai_0_count,
+                $trang_thai_0_count,
             ];
         }
 
@@ -191,7 +233,6 @@ class BaoCaoSuDungSeal implements FromArray, WithEvents
                 $sheet->getStyle('A' . $chuKyStart . ':F' . $chuKyStart)->getFont()->setBold(true);
                 $sheet->mergeCells('A' . ($chuKyStart + 4) . ':F' . ($chuKyStart + 4));
                 $sheet->getStyle('A' . ($chuKyStart + 4) . ':F' . ($chuKyStart + 4))->getFont()->setBold(true);
-
             },
         ];
     }

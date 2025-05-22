@@ -31,11 +31,16 @@
                             <div class="form-group">
                                 <form action="{{ route('export.so-luong-container-theo-cont') }}" method="GET">
                                     <label class="label-text mb-2" for="ma_to_khai">Số container</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" name="so_container"
-                                            placeholder="Nhập số container" required>
-                                    </div>
-                                    <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo cáo</button>
+                                    <select class="form-control" id="container-dropdown-search" name="so_container">
+                                        <option></option>
+                                        @foreach ($containers as $container)
+                                            <option value="{{ $container->so_container }}">
+                                                {{ $container->so_container }} ({{ $container->phuong_tien_vt_nhap }} - {{ $container->so_seal }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
+                                            cáo</button>
                                     </center>
                                 </form>
                             </div>
@@ -382,10 +387,10 @@
                     </div>
                     <div class="row justify-content-center">
                         <div class="card p-3 me-3 col-5">
-                            
+
                         </div>
                         <div class="card p-3 me-3 col-5">
-                            
+
                         </div>
                     </div>
                     {{-- <div class="row justify-content-center">

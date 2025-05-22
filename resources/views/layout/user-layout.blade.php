@@ -383,12 +383,6 @@
                             </a>
                         @elseif (Auth::user()->loai_tai_khoan === 'Lãnh đạo')
                             <div class="sb-sidenav-menu-heading">Quản lý thông tin</div>
-
-                            <a class="nav-link" href="/quan-ly-duyet-nhap-hang">
-                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
-                                        src="{{ asset('images/icons/document.png') }}"></div>
-                                Danh sách yêu cầu sửa nhập hàng
-                            </a>
                             <a class="nav-link" href="/quan-ly-duyet-xuat-hang">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/document.png') }}"></div>
@@ -409,6 +403,7 @@
         @yield('content')
     </div>
 
+    <script src="{{ asset('js/idle-logout.js') }}"></script>
     <script src="{{ asset('js/script.js') }}"></script>
     <script src="{{ asset('js/temp-input-table.js') }}"></script>
     <script src="{{ asset('js/DataTables/datatables.min.js') }}"></script>

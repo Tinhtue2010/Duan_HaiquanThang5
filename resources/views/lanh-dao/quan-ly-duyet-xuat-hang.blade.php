@@ -56,6 +56,9 @@
                                 <th>
                                     Tên xuồng
                                 </th>
+                                <th>
+                                    Trạng thái
+                                </th>
                             </thead>
                             <tbody class="clickable-row">
                                 @foreach ($xuatHangs as $index => $xuatHang)
@@ -68,6 +71,7 @@
                                         <td>{{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}</td>
                                         <td>{{ $xuatHang->tong_so_luong }}</td>
                                         <td>{{ $xuatHang->ten_phuong_tien_vt }}</td>
+                                        <td class="text-warning">Đã duyệt lần 1</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -96,34 +100,9 @@
                         display: 'inline-block',
                         height: '40px'
                     });
-                    var column = this.api().column(7); // Status column index
-                    var select = $(
-                        '<select class="form-control"><option value="">TẤT CẢ</option></select>'
-                    )
-                    select.append(
-                        '<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>'
-                    );
-                    select.append(
-                        '<option class="text-warning" value="DOANH NGHIỆP YÊU CẦU SỬA PHIẾU">DOANH NGHIỆP YÊU CẦU SỬA PHIẾU</option>'
-                    );
-                    select.append(
-                        '<option class="text-danger" value="DOANH NGHIỆP YÊU CẦU HỦY PHIẾU">DOANH NGHIỆP YÊU CẦU HỦY PHIẾU</option>'
-                    );
 
                     var header = $(column.header());
                     header.append(select);
-
-                    select.on('change', function() {
-                        var val = $.fn.dataTable.util.escapeRegex($(this).val().trim());
-                        localStorage.setItem('xuatHang1', val);
-                        column.search(val ? val : '', false, true).draw();
-                    });
-
-                    var savedFilter = localStorage.getItem('xuatHang1');
-                    if (savedFilter) {
-                        select.val(savedFilter);
-                        column.search(savedFilter ? savedFilter : '', false, true).draw();
-                    }
 
                 },
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',

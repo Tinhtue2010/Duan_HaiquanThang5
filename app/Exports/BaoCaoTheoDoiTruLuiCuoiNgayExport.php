@@ -189,6 +189,13 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
         $start = null;
         $end = null;
 
+        $is_xuat_het = false;
+        if ($this->nhapHang->trang_thai == 4 || $this->nhapHang->trang_thai == 7) {
+            if (\Carbon\Carbon::parse($this->nhapHang->ngay_xuat_het)->isSameDay($this->tu_ngay)) {
+                $is_xuat_het = true;
+            }
+        }
+
         foreach ($lanXuats as $index => $item) {
             if (isset($seen[$item->ma_xuat_hang_cont])) {
                 continue;
@@ -199,13 +206,6 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
 
             $seen[$item->ma_xuat_hang_cont] = true;
 
-
-            $is_xuat_het = false;
-            if ($this->nhapHang->ngay_xuat_het != null) {
-                if (\Carbon\Carbon::parse($this->nhapHang->ngay_xuat_het)->isSameDay($this->tu_ngay)) {
-                    $is_xuat_het = true;
-                }
-            }
 
             if (\Carbon\Carbon::parse($item->ngay_dang_ky)->isSameDay($this->tu_ngay)) {
                 if ($start === null) {
@@ -228,7 +228,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         '',
                     ];
                 } elseif (\Carbon\Carbon::parse($item->ngay_dang_ky)->greaterThanOrEqualTo($ngayCuoiCung)) {
-                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal;
+                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal ?? '';
                     $this->result[] = [
                         $this->stt++,
                         '',
@@ -340,7 +340,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         '',
                     ];
                 } elseif (\Carbon\Carbon::parse($item->ngay_dang_ky)->greaterThanOrEqualTo($ngayCuoiCung)) {
-                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal;
+                    $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal ?? '';
                     $this->result[] = [
                         $this->stt++,
                         '',

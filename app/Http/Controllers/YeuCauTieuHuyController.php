@@ -575,9 +575,14 @@ class YeuCauTieuHuyController extends Controller
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->first();
             TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
-                ->where('ma_yeu_cau', $chiTiet->ma_yeu_cau)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 6)
                 ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $soToKhai)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 6)
+                ->delete();
+
             NhapHang::where('so_to_khai_nhap', $chiTiet->so_to_khai_nhap)->update([
                 'trang_thai' => '2',
             ]);

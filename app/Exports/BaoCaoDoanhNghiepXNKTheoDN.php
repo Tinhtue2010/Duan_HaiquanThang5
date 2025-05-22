@@ -20,7 +20,7 @@ class BaoCaoDoanhNghiepXNKTheoDN implements FromArray, WithEvents
     protected $tu_ngay;
     protected $den_ngay;
 
-    public function __construct($tu_ngay,$den_ngay,$ma_doanh_nghiep)
+    public function __construct($tu_ngay, $den_ngay, $ma_doanh_nghiep)
     {
         $this->tu_ngay = $tu_ngay;
         $this->den_ngay = $den_ngay;
@@ -35,7 +35,7 @@ class BaoCaoDoanhNghiepXNKTheoDN implements FromArray, WithEvents
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['BÁO CÁO CHI TIẾT HÀNG HÓA XUẤT NHẬP KHẨU', '', '', '', '', ''],
-            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''], 
+            ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['STT', 'Số tờ khai', 'Ngày đăng ký tờ khai', 'Chi cục HQ đăng ký tờ khai', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', 'Số lượng tồn', 'Số tàu hiện tại', 'Số cont hiện tại'],
             ['', '', '', '', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Chủng loại tên hàng hóa', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Đã xuất', '', '', ''],
@@ -50,6 +50,7 @@ class BaoCaoDoanhNghiepXNKTheoDN implements FromArray, WithEvents
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
             ->where('nhap_hang.ma_doanh_nghiep', $this->ma_doanh_nghiep)
             ->whereBetween('xuat_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
+            ->where('xuat_hang.trang_thai', '!=', 0)
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',

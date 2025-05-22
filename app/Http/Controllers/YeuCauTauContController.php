@@ -393,6 +393,7 @@ class YeuCauTauContController extends Controller
             ->get();
         $nhapHang = NhapHang::find(id: $so_to_khai_nhap);
 
+
         $theoDoi = TheoDoiTruLui::create([
             'so_to_khai_nhap' => $so_to_khai_nhap,
             'so_ptvt_nuoc_ngoai' => '',
@@ -412,6 +413,21 @@ class YeuCauTauContController extends Controller
                     'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ''
                 ]
             );
+            $ptvtChoHang = NiemPhong::where('so_container',  $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? '';
+            TheoDoiHangHoa::insert([
+                'so_to_khai_nhap' => $hangHoa->so_to_khai_nhap,
+                'ma_hang'  => $hangHoa->ma_hang,
+                'thoi_gian'  => now(),
+                'so_luong_xuat'  => $hangHoa->so_luong,
+                'so_luong_ton'  => $hangHoa->so_luong,
+                'phuong_tien_cho_hang' => $ptvtChoHang,
+                'cong_viec' => 2,
+                'phuong_tien_nhan_hang' => '',
+                'so_container' => $hangHoa->so_container,
+                'so_seal' => '',
+                'ma_cong_chuc' => $yeuCau->ma_cong_chuc,
+                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+            ]);
         }
     }
     public function xoaTheoDoiTruLui($yeuCau)
@@ -424,6 +440,9 @@ class YeuCauTauContController extends Controller
         })->delete();
 
         TheoDoiTruLui::where('cong_viec', 2)
+            ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+            ->delete();
+        TheoDoiHangHoa::where('cong_viec', 2)
             ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
             ->delete();
     }
@@ -1192,6 +1211,10 @@ class YeuCauTauContController extends Controller
         $this->quayNguocYeuCau($yeuCau);
         foreach ($soToKhaiNhaps as $soToKhai) {
             TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 2)
+                ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $soToKhai)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 2)
                 ->delete();

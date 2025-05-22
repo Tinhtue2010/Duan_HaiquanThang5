@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\NhapHang;
-use App\Models\HangHoa;
+use App\Models\XuatNhapCanh;
 use App\Models\NhapCanh;
 use App\Models\PTVTXuatCanhCuaPhieu;
 use App\Models\XuatCanh;
@@ -72,6 +72,9 @@ class BaoCaoPhuongTienNhapCanh implements FromArray, WithEvents
                 $nearestDate = null;
             }
 
+            $xnc = XuatNhapCanh::where('so_ptvt_xuat_canh', $nhapCanh->so_ptvt_xuat_canh)
+                ->where('ngay_them', $nearestDate)
+                ->first();
 
             $result[] = [
                 $key + 1,
@@ -80,13 +83,13 @@ class BaoCaoPhuongTienNhapCanh implements FromArray, WithEvents
                 $nhapCanh->ten_thuyen_truong,
                 'Vạn Gia',
                 Carbon::parse($nhapCanh->ngay_duyet)->format('d-m-Y'),
-                '',
+                $xnc->thoi_gian_nhap_canh ?? '',
                 $nhapCanh->loai_hang ?? '',
                 $nhapCanh->so_luong ?? '',
                 $nhapCanh->don_vi_tinh ?? '',
                 $nhapCanh->cang_den ?? '',
                 !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d-m-Y') : null,
-                '',
+                $xnc->thoi_gian_xuat_canh ?? '',
                 $nhapCanh->ten_cong_chuc,
                 $nhapCanh->ten_doanh_nghiep,
                 $nhapCanh->ten_chu_hang,

@@ -106,7 +106,7 @@
             const tableBody = document.querySelector('#displayTableYeuCau tbody');
             const rowsDataInput = document.getElementById('rowsDataInput'); // Ensure this exists in your HTML form
 
-            let rowIndex = 0;
+            let rowIndex = 1;
 
             // Add a new row
             addRowButton.addEventListener('click', function() {

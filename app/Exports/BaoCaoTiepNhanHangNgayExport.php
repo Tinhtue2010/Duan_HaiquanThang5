@@ -40,7 +40,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
             ['BÁO CÁO TIẾP NHẬN HẰNG NGÀY', '', '', '', '', ''],
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
-            ['STT', 'Tên HQ', 'Tên hàng', 'Số lượng tờ khai', 'Số lượng cont', 'Số lượng', 'Trị giá (USD)'],
+            ['STT', 'Tên HQ', 'Tên hàng', 'Số lượng tờ khai', 'Số lượng cont', 'Số lượng', 'Đơn vị tính', 'Trị giá (USD)'],
         ];
         $from = Carbon::parse($this->tu_ngay)->startOfDay();
         $to = Carbon::parse($this->den_ngay)->endOfDay();
@@ -51,6 +51,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
             ->whereBetween('nhap_hang.created_at', [$from, $to])
             ->select(
                 'nhap_hang.ma_hai_quan',
+                'hang_hoa.don_vi_tinh',
                 'hang_hoa.loai_hang',
                 DB::raw('COUNT(DISTINCT nhap_hang.so_to_khai_nhap) as count_so_to_khai'),
                 DB::raw('SUM(hang_hoa.so_luong_khai_bao) as total_so_luong'),
@@ -67,9 +68,10 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                 $stt++,
                 $haiQuanName,
                 $loaiHangName,
-                $data->count_so_to_khai, // Unique count of so_to_khai_nhap
-                $data->count_so_to_khai, // Same as totalSoContainer
+                $data->count_so_to_khai, 
+                $data->count_so_to_khai, 
                 $data->total_so_luong,
+                $data->don_vi_tinh,
                 $data->total_tri_gia,
             ];
             $totalSoLuong += $data->count_so_to_khai;
@@ -107,7 +109,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:G' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:H' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -126,10 +128,11 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                 $sheet->getColumnDimension('A')->setWidth(width: 7);
                 $sheet->getColumnDimension('B')->setWidth(width: 30);
                 $sheet->getColumnDimension('C')->setWidth(width: 30);
+                $sheet->getColumnDimension('H')->setWidth(width: 15);
                 $sheet->getStyle('D')->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getStyle('E')->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getStyle('F')->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle('G')->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle('H')->getNumberFormat()->setFormatCode('#,##0');
 
                 $lastRow = $sheet->getHighestRow();
                 $highestColumn = $sheet->getHighestColumn();
@@ -139,9 +142,9 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                 $sheet->mergeCells('A1:C1'); // CỤC HẢI QUAN
                 $sheet->mergeCells('D1:G1'); // CỘNG HÒA
                 $sheet->mergeCells('A2:C2'); // CHI CỤC
-                $sheet->mergeCells('D2:G2'); // ĐỘC LẬP
-                $sheet->mergeCells('A4:G4'); // BÁO CÁO
-                $sheet->mergeCells('A5:G5'); // Tính đến ngày
+                $sheet->mergeCells('D2:H2'); // ĐỘC LẬP
+                $sheet->mergeCells('A4:H4'); // BÁO CÁO
+                $sheet->mergeCells('A5:H5'); // Tính đến ngày
 
 
                 // Bold and center align for headers
@@ -165,12 +168,12 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:G5')->applyFromArray([
+                $sheet->getStyle('A5:H5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A7:G7')->applyFromArray([
+                $sheet->getStyle('A7:H7')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -185,7 +188,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A7:G' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A7:H' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -204,7 +207,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                     }
                 }
 
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':G' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':H' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -212,10 +215,10 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->mergeCells('A' . $chuKyStart . ':G' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':G' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':G' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':G' . ($chuKyStart + 4))->getFont()->setBold(true);
+                $sheet->mergeCells('A' . $chuKyStart . ':H' . $chuKyStart);
+                $sheet->getStyle('A' . $chuKyStart . ':H' . $chuKyStart)->getFont()->setBold(true);
+                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':H' . ($chuKyStart + 4));
+                $sheet->getStyle('A' . ($chuKyStart + 4) . ':H' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

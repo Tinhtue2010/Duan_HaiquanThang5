@@ -202,23 +202,23 @@
                     alert("Vui lòng chọn loại hàng");
                 }
 
-                if (!ptvtXuatCanh) {
+                if (!ptvtXuatCanh.value) {
                     alert('Vui lòng chọn phương tiện xuất cảnh');
                     return false;
                 }
-                if (!soThe) {
+                if (!soThe.value) {
                     alert('Vui lòng nhập số thẻ');
                     return false;
                 }
-                if (!maChuHang) {
+                if (!maChuHang.value) {
                     alert('Vui lòng chọn đại lý');
                     return false;
                 }
-                if (!soLuongMay) {
+                if (!soLuongMay.value) {
                     alert('Vui lòng nhập số lượng máy');
                     return false;
                 }
-                if (!tongTrongTai) {
+                if (!tongTrongTai.value) {
                     alert('Vui lòng nhập tổng trọng tải');
                     return false;
                 }

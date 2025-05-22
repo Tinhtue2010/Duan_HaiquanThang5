@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\CongChuc;
 use App\Models\Seal;
+use App\Models\YeuCauNiemPhongChiTiet;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
@@ -34,11 +35,14 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
             $tenCongChuc = CongChuc::find($this->ma_cong_chuc)->ten_cong_chuc;
         }
         $data = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->leftJoin('yeu_cau_niem_phong_chi_tiet', 'seal.so_seal', '=', 'yeu_cau_niem_phong_chi_tiet.so_seal_moi')
             ->whereBetween('ngay_su_dung', [$this->tu_ngay, $this->den_ngay])
             ->where('trang_thai', 1)
             ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
                 return $query->where('seal.ma_cong_chuc', $this->ma_cong_chuc);
             })
+            ->groupBy('seal.so_seal')
+            ->select('seal.so_seal', 'seal.loai_seal', 'seal.ngay_cap', 'seal.ngay_su_dung', 'seal.so_container', 'yeu_cau_niem_phong_chi_tiet.phuong_tien_vt_nhap', 'cong_chuc.ten_cong_chuc')
             ->get();
 
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
@@ -52,11 +56,12 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['Công chức: ' . $tenCongChuc, '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['STT', 'SỐ SEAL', 'LOẠI SEAL', 'NGÀY CẤP', 'NGÀY SỬ DỤNG', 'SỐ CONTAINER','CÔNG CHỨC'],
+            ['STT', 'LOẠI SEAL', 'SỐ SEAL', 'SỐ CONTAINER', 'SỐ TÀU', 'NGÀY CẤP', 'NGÀY SỬ DỤNG', 'CÔNG CHỨC'],
         ];
 
         $stt = 1;
         foreach ($data as $item) {
+            // $ptvt = YeuCauNiemPhongChiTiet::where('so_seal_moi', $item->so_seal)->first()->phuong_tien_vt_nhap ?? "";
             $loaiSeal = '';
             if ($item->loai_seal == 1) {
                 $loaiSeal = "Seal dây cáp đồng";
@@ -71,11 +76,12 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
             }
             $result[] = [
                 $stt++,
-                $item->so_seal,
                 $loaiSeal,
+                $item->so_seal,
+                $item->so_container,
+                $item->phuong_tien_vt_nhap,
                 Carbon::parse($item->ngay_cap)->format('d-m-Y'),
                 Carbon::parse($item->ngay_su_dung)->format('d-m-Y'),
-                $item->so_container,
                 $item->ten_cong_chuc,
             ];
         }
@@ -122,40 +128,41 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
                 }
                 $sheet->getColumnDimension('B')->setWidth(width: 25);
                 $sheet->getColumnDimension('C')->setWidth(width: 25);
-                $sheet->getColumnDimension('G')->setWidth(width: 25);
+                $sheet->getColumnDimension('G')->setWidth(width: 15);
+                $sheet->getColumnDimension('H')->setWidth(width: 25);
 
                 $lastRow = $sheet->getHighestRow();
                 $sheet->mergeCells('A1:C1'); // CỤC HẢI QUAN
                 $sheet->mergeCells('D1:F1'); // CỘNG HÒA
                 $sheet->mergeCells('A2:C2'); // CHI CỤC
-                $sheet->mergeCells('D2:G2'); // ĐỘC LẬP
-                $sheet->mergeCells('A4:G4'); // BÁO CÁO
-                $sheet->mergeCells('A5:G5'); // Tính đến ngày
-                $sheet->mergeCells('A6:G6'); // Tính đến ngày
+                $sheet->mergeCells('D2:H2'); // ĐỘC LẬP
+                $sheet->mergeCells('A4:H4'); // BÁO CÁO
+                $sheet->mergeCells('A5:H5'); // Tính đến ngày
+                $sheet->mergeCells('A6:H6'); // Tính đến ngày
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:G8')->applyFromArray([
+                $sheet->getStyle('A1:H8')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:G8')->applyFromArray([
+                $sheet->getStyle('A2:H8')->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
-                $sheet->getStyle('A8:G' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:H' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:G5')->applyFromArray([
+                $sheet->getStyle('A5:H5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A8:G8')->applyFromArray([
+                $sheet->getStyle('A8:H8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -170,7 +177,7 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A8:G' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:H' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -190,7 +197,7 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
                     }
                 }
 
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':G' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':H' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -198,10 +205,10 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->mergeCells('A' . $chuKyStart . ':G' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':G' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':G' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':G' . ($chuKyStart + 4))->getFont()->setBold(true);
+                $sheet->mergeCells('A' . $chuKyStart . ':H' . $chuKyStart);
+                $sheet->getStyle('A' . $chuKyStart . ':H' . $chuKyStart)->getFont()->setBold(true);
+                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':H' . ($chuKyStart + 4));
+                $sheet->getStyle('A' . ($chuKyStart + 4) . ':H' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

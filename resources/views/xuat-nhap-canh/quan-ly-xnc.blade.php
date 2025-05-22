@@ -38,6 +38,9 @@
                                     Số thẻ
                                 </th>
                                 <th>
+                                    Tên phương tiện
+                                </th>
+                                <th>
                                     Loại hàng
                                 </th>
                                 <th>
@@ -104,6 +107,10 @@
                     {
                         data: 'so_the',
                         name: 'so_the'
+                    },
+                    {
+                        data: 'ten_phuong_tien_vt',
+                        name: 'ten_phuong_tien_vt'
                     },
                     {
                         data: 'loai_hang',

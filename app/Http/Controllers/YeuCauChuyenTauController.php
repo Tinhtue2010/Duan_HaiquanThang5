@@ -259,7 +259,7 @@ class YeuCauChuyenTauController extends Controller
     public function quayNguocYeuCau($soToKhaiCanQuayNguoc, $yeuCau)
     {
         foreach ($soToKhaiCanQuayNguoc as $soToKhai) {
-            $chiTiet = YeuCauChuyenTauChiTiet::where( 'so_to_khai_nhap', $soToKhai)
+            $chiTiet = YeuCauChuyenTauChiTiet::where('so_to_khai_nhap', $soToKhai)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->first();
             TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
@@ -506,7 +506,16 @@ class YeuCauChuyenTauController extends Controller
         $soToKhaiNhaps = YeuCauChuyenTauChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_to_khai_nhap');
 
         $this->quayNguocYeuCau($soToKhaiNhaps, $yeuCau);
-
+        foreach ($soToKhaiNhaps as $soToKhaiNhap) {
+            TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhaiNhap)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 2)
+                ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $soToKhaiNhap)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 2)
+                ->delete();
+        }
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
             $congChuc = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
             foreach ($soToKhaiNhaps as $soToKhaiNhap) {

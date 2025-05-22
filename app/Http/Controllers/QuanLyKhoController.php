@@ -181,7 +181,12 @@ class QuanLyKhoController extends Controller
                     ->implode(';');
 
                 $nhapHang->so_container = $containers;
-                return response()->json(['data' => $nhapHang]);
+                $containers = $nhapHang->hangHoa
+                    ->flatMap(fn($hangHoa) => $hangHoa->hangTrongCont->where('so_luong', '>', 0)
+                    ->pluck('so_container'))
+                    ->unique()
+                    ->toArray();
+                return response()->json(['data' => $nhapHang,'containers'=> $containers]);
             }
 
             Log::warning('No data found for so_to_khai_nhap: ' . $so_to_khai_nhap);

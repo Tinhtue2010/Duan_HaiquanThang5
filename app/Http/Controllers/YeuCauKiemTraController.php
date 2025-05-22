@@ -321,6 +321,17 @@ class YeuCauKiemTraController extends Controller
                 $this->themTienTrinh($soToKhaiNhap, "Doanh nghiệp đã hủy đề nghị hủy yêu cầu kiểm tra hàng số " . $request->ma_yeu_cau, '');
             }
         }
+        foreach ($soToKhaiNhaps as $soToKhaiNhap) {
+            TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhaiNhap)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 7)
+                ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $soToKhaiNhap)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 7)
+                ->delete();
+        }
+
         $yeuCau->trang_thai = '0';
         $yeuCau->ghi_chu = "Công chức duyệt đề nghị hủy: " . $request->ghi_chu;
         $yeuCau->save();

@@ -50,7 +50,7 @@
                         Thuyền trưởng: {{ $nhapCanh->ten_thuyen_truong }} </h2>
 
                     <h2 class="text-center text-dark">
-                        Chủ hàng: {{ $nhapCanh->doanhNghiepChon->ten_doanh_nghiep ?? ''}}
+                        Chủ hàng: {{ $nhapCanh->doanhNghiepChon->ten_doanh_nghiep ?? '' }}
                     </h2>
 
                     <hr />
@@ -320,9 +320,15 @@
                             <select class="form-control" id="cong-chuc-dropdown-search" name="ma_cong_chuc" required>
                                 <option></option>
                                 @foreach ($congChucs as $congChuc)
-                                    <option value="{{ $congChuc->ma_cong_chuc }}">
-                                        {{ $congChuc->ten_cong_chuc }}
-                                    </option>
+                                    @if ($congChuc->ma_cong_chuc == $maCongChuc)
+                                        <option value="{{ $congChuc->ma_cong_chuc }}" selected>
+                                            {{ $congChuc->ten_cong_chuc }}
+                                        </option>
+                                    @else
+                                        <option value="{{ $congChuc->ma_cong_chuc }}">
+                                            {{ $congChuc->ten_cong_chuc }}
+                                        </option>
+                                    @endif
                                 @endforeach
                             </select>
                         </div>
