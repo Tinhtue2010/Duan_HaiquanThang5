@@ -465,6 +465,9 @@
                                             <select class="form-control" id="cong-chuc-dropdown-search"
                                                 name="ma_cong_chuc">
                                                 <option></option>
+                                                <option value="Tất cả">
+                                                    Toàn thể công chức
+                                                </option>
                                                 @foreach ($congChucs as $congChuc)
                                                     <option value="{{ $congChuc->ma_cong_chuc }}">
                                                         {{ $congChuc->ten_cong_chuc }}

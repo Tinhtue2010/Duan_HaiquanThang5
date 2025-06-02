@@ -367,8 +367,6 @@
                                 `;
                                     tableBody.append(row);
                                 }
-
-
                             });
 
 

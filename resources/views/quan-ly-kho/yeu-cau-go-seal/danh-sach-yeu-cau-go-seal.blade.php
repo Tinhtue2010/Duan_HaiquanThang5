@@ -1,6 +1,6 @@
 @extends('layout.user-layout')
 
-@section('title', 'Quản lý xuất nhập cảnh')
+@section('title', 'Quản lý yêu cầu gỡ seal')
 
 @section('content')
     <div id="layoutSidenav_content">
@@ -17,13 +17,14 @@
                         </div>
                     @endif
                     <div class="row">
-                        <div class="col-6">
-                            <h4 class="font-weight-bold text-primary">Danh sách theo dõi xuất nhập cảnh</h4>
+                        <div class="col-9">
+                            <h4 class="font-weight-bold text-primary">Danh sách yêu cầu gỡ seal</h4>
                         </div>
-                        <div class="col-6">
-                            <a href="/them-xnc">
-                                <button class="btn btn-success float-end">Thêm xuất nhập cảnh</button>
-                            </a>
+                        <div class="col-3">
+                            @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp')
+                                <a href="{{ route('quan-ly-kho.them-yeu-cau-go-seal') }}"><button
+                                        class="btn btn-success float-end">Nhập yêu cầu</button></a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -35,25 +36,16 @@
                                     STT
                                 </th>
                                 <th>
-                                    Số thẻ
+                                    Số
                                 </th>
                                 <th>
-                                    Tên phương tiện
+                                    Doanh nghiệp
                                 </th>
                                 <th>
-                                    Loại hàng
+                                    Ngày yêu cầu
                                 </th>
                                 <th>
-                                    Ngày
-                                </th>
-                                <th>
-                                    Giờ nhập cảnh
-                                </th>
-                                <th>
-                                    Giờ xuất cảnh
-                                </th>
-                                <th>
-                                    Tên công chức
+                                    Trạng thái
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
@@ -70,7 +62,7 @@
                 processing: true,
                 serverSide: true,
                 stateSave: true,
-                ajax: "{{ route('xuat-nhap-canh.getXNCs') }}",
+                ajax: "{{ route('quan-ly-kho.getYeuCauGoSeal') }}",
 
                 language: {
                     searchPlaceholder: "Tìm kiếm",
@@ -102,39 +94,72 @@
                         name: 'DT_RowIndex'
                     },
                     {
-                        data: 'so_the',
-                        name: 'so_the'
+                        data: 'ma_yeu_cau',
+                        name: 'ma_yeu_cau'
                     },
                     {
-                        data: 'ten_phuong_tien_vt',
-                        name: 'ten_phuong_tien_vt'
+                        data: 'ten_doanh_nghiep',
+                        name: 'ten_doanh_nghiep'
                     },
                     {
-                        data: 'loai_hang',
-                        name: 'loai_hang'
+                        data: 'ngay_yeu_cau',
+                        name: 'ngay_yeu_cau'
                     },
                     {
-                        data: 'ngay_them',
-                        name: 'ngay_them'
-                    },
-                    {
-                        data: 'thoi_gian_nhap_canh',
-                        name: 'thoi_gian_nhap_canh'
-                    },
-                    {
-                        data: 'thoi_gian_xuat_canh',
-                        name: 'thoi_gian_xuat_canh',
-                    },
-                    {
-                        data: 'ten_cong_chuc',
-                        name: 'ten_cong_chuc',
+                        data: 'trang_thai',
+                        name: 'trang_thai',
+                        orderable: false
                     }
 
                 ],
+                columnDefs: [{
+                    orderable: false,
+                    targets: -1
+                }],
                 createdRow: function(row, data, dataIndex) {
                     $(row).addClass('clickable-row').attr('onclick',
-                        `window.location='{{ url('/thong-tin-xnc') }}/${data.ma_xnc}'`
+                        `window.location='{{ url('/thong-tin-yeu-cau-go-seal') }}/${data.ma_yeu_cau}'`
                     );
+                },
+                initComplete: function() {
+                    $('.dataTables_filter input[type="search"]').css({
+                        width: '350px',
+                        display: 'inline-block',
+                        height: '40px'
+                    });
+                    var column = this.api().column(4); // Status column index
+                    var select = $(
+                        '<select class="form-control"><option value="">TẤT CẢ</option></select>'
+                    )
+
+                    select.append(
+                        '<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>'
+                    );
+                    select.append('<option class="text-success" value="ĐÃ DUYỆT">ĐÃ DUYỆT</option>');
+                    select.append(
+                        '<option class="text-warning" value="DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ SỬA YÊU CẦU</option>'
+                    );
+                    select.append(
+                        '<option class="text-danger" value="DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU">DOANH NGHIỆP ĐỀ NGHỊ HỦY YÊU CẦU</option>'
+                    );
+                    select.append('<option class="text-danger" value="ĐÃ HỦY">ĐÃ HỦY</option>');
+
+                    $(column.header()).empty().append(select);
+
+                    select.on('change', function() {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val().trim());
+                        localStorage.setItem('niemPhong', val);
+                        column.search(val ? val : '', false, true).draw();
+                    });
+
+                    var savedFilter = localStorage.getItem('niemPhong');
+                    if (savedFilter) {
+                        select.val(savedFilter);
+                        column.search(savedFilter ? savedFilter : '', false, true).draw();
+                    } else {
+                        select.val("");
+                    }
+
                 },
             });
         });

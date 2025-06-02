@@ -18,6 +18,7 @@ class NiemPhong extends Model
         'ngay_niem_phong',
         'so_container',
         'ma_cong_chuc',
+        'is_go_seal',
     ];
     public function seal()
     {

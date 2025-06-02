@@ -25,7 +25,7 @@ use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\XuatCanh;
 use App\Models\XuatHang;
 use App\Models\XuatHangCont;
-use App\Models\YCContainerMaHangContMoi;
+use App\Models\YeuCauGoSeal;
 use App\Models\YeuCauChuyenContainer;
 use App\Models\YeuCauChuyenTau;
 use App\Models\YeuCauChuyenTauChiTiet;
@@ -105,17 +105,20 @@ class LoaiHinhController extends Controller
         //         ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $chiTietYeuCau->so_seal_moi]);
         // }
 
-        // $stt = $this->xuatHet();
-        // $this->fixNgayXuatHet();
-        // $this->fixCCXuatHet();
-        // dd($stt);
+        $stt = $this->xuatHet();
+        $this->fixNgayXuatHet();
+        $this->fixCCXuatHet();
+        dd($stt);
+        // $this->fixKiemTra();
 
         // $this->fixSoContKhaiBao();3086
         // $this->gap();
-        // $this->fixSuaXuatHang();
+        // $this->khoiPhucXuatHang2(18546);
 
+        // $yeuCau = YeuCauGoSeal::find(2);
+        // $this->themGoSeal('TCLU 9408800',$yeuCau);
 
-
+        // $this->fixYeuCauTau();
         // $this->khoiPhucXuatHang(5846, 6317);
 
         // $this->capNhatSealTruLui();
@@ -143,10 +146,63 @@ class LoaiHinhController extends Controller
         // $this->fixContainer();
         // $this->checkDupsNiemPhong();
         // $this->fixTauTheoDoiTruLui();
-        $this->checkNiemPhong();
+        // $this->checkNiemPhong();
         // $this->fixTienTrinh();
         // $this->fixTheoDoi();
         return redirect()->back();
+    }
+    public function themGoSeal($so_container, $yeuCau)
+    {
+        $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_container', $so_container)
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()->pluck('so_to_khai_nhap')->toArray();
+
+        foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+            $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
+                ->get();
+
+            $theoDoi = TheoDoiTruLui::create([
+                'so_to_khai_nhap' => $so_to_khai_nhap,
+                'so_ptvt_nuoc_ngoai' => '',
+                'ngay_them' => now(),
+                'cong_viec' => 9,
+                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+            ]);
+            foreach ($hangHoas as $hangHoa) {
+                TheoDoiTruLuiChiTiet::insert(
+                    [
+                        'ten_hang' => $hangHoa->ten_hang,
+                        'so_luong_xuat' => 0,
+                        'so_luong_chua_xuat' => $hangHoa->so_luong,
+                        'ma_theo_doi' => $theoDoi->ma_theo_doi,
+                        'so_container' => $hangHoa->so_container,
+                        'so_seal' => '',
+                        'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ''
+                    ]
+                );
+                $ptvtChoHang = NiemPhong::where('so_container',  $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? '';
+                TheoDoiHangHoa::insert([
+                    'so_to_khai_nhap' => $hangHoa->so_to_khai_nhap,
+                    'ma_hang'  => $hangHoa->ma_hang,
+                    'thoi_gian'  => now(),
+                    'so_luong_xuat'  => $hangHoa->so_luong,
+                    'so_luong_ton'  => $hangHoa->so_luong,
+                    'phuong_tien_cho_hang' => $ptvtChoHang,
+                    'cong_viec' => 9,
+                    'phuong_tien_nhan_hang' => '',
+                    'so_container' => $hangHoa->so_container,
+                    'so_seal' => '',
+                    'ma_cong_chuc' => $yeuCau->ma_cong_chuc,
+                    'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+                ]);
+            }
+        }
     }
 
     public function checkNiemPhong()
@@ -165,6 +221,52 @@ class LoaiHinhController extends Controller
                     'xuat_hang.ma_doanh_nghiep' => '5701856609L'
                 ]);
         }
+    }
+    public function fixKiemTra()
+    {
+        $ma_yeu_cau = 511;
+        $so_container = "CCLU 6643705";
+        $so_tau = "ND 2338";
+        YeuCauKiemTraChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->update([
+            'so_container' => $so_container,
+            'so_tau' => $so_tau,
+        ]);
+        TheoDoiHangHoa::where('ma_yeu_cau', $ma_yeu_cau)
+            ->where('cong_viec', 7)
+            ->update([
+                'so_container' => $so_container,
+                'phuong_tien_cho_hang' => $so_tau,
+            ]);
+        TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
+            ->where('theo_doi_tru_lui.ma_yeu_cau', $ma_yeu_cau)
+            ->where('theo_doi_tru_lui.cong_viec', 7)
+            ->update([
+                'theo_doi_tru_lui_chi_tiet.so_container' => $so_container,
+                'theo_doi_tru_lui_chi_tiet.phuong_tien_vt_nhap' => $so_tau,
+            ]);
+    }
+    public function fixYeuCauTau()
+    {
+        $ma_yeu_cau = 511;
+        // $so_container = "CCLU 6643705";
+        $so_tau = "HP4643";
+        YeuCauChuyenTauChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->update([
+            // 'so_container' => $so_container,
+            'tau_dich' => $so_tau,
+        ]);
+        TheoDoiHangHoa::where('ma_yeu_cau', $ma_yeu_cau)
+            ->where('cong_viec', 4)
+            ->update([
+                // 'so_container' => $so_container,
+                'phuong_tien_cho_hang' => $so_tau,
+            ]);
+        TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
+            ->where('theo_doi_tru_lui.ma_yeu_cau', $ma_yeu_cau)
+            ->where('theo_doi_tru_lui.cong_viec', 4)
+            ->update([
+                // 'theo_doi_tru_lui_chi_tiet.so_container' => $so_container,
+                'theo_doi_tru_lui_chi_tiet.phuong_tien_vt_nhap' => $so_tau,
+            ]);
     }
     public function fixTruLuiDaHuy()
     {

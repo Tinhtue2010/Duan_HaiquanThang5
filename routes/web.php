@@ -31,6 +31,7 @@ use App\Http\Controllers\DeviceLoginController;
 use App\Http\Controllers\DuyetLanHaiController;
 use App\Http\Controllers\NhapCanhController;
 use App\Http\Controllers\XuatNhapCanhController;
+use App\Http\Controllers\YeuCauGoSealController;
 
 Route::view('/', 'home-page');
 Route::view('/huong-dan-bang', view: 'huong-dan.huong-dan-bang');
@@ -310,6 +311,23 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/duyet-sua-yeu-cau-niem-phong', [YeuCauNiemPhongController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-niem-phong');
         Route::post('/huy-sua-yeu-cau-niem-phong', [YeuCauNiemPhongController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-niem-phong');
 
+        Route::get('/danh-sach-yeu-cau-go-seal', [YeuCauGoSealController::class, 'danhSachYeuCauGoSeal'])->name('danh-sach-yeu-cau-go-seal');
+        Route::get('/them-yeu-cau-go-seal', [YeuCauGoSealController::class, 'themYeuCauGoSeal'])->name('them-yeu-cau-go-seal');
+        Route::post('/them-yeu-cau-go-seal-submit', [YeuCauGoSealController::class, 'themYeuCauGoSealSubmit'])->name('them-yeu-cau-go-seal-submit');
+        Route::get('/thong-tin-yeu-cau-go-seal/{ma_yeu_cau}', [YeuCauGoSealController::class, 'thongTinYeuCauGoSeal'])->name('thong-tin-yeu-cau-go-seal');
+        Route::post('/duyet-yeu-cau-go-seal', [YeuCauGoSealController::class, 'duyetYeuCauGoSeal'])->name('duyet-yeu-cau-go-seal');
+        Route::post('/huy-yeu-cau-go-seal', [YeuCauGoSealController::class, 'huyYeuCauGoSeal'])->name(name: 'huy-yeu-cau-go-seal');
+        Route::get('/sua-yeu-cau-go-seal/{ma_yeu_cau}', [YeuCauGoSealController::class, 'suaYeuCauGoSeal'])->name('sua-yeu-cau-go-seal');
+        Route::post('/sua-yeu-cau-go-seal-submit', [YeuCauGoSealController::class, 'suaYeuCauGoSealSubmit'])->name('sua-yeu-cau-go-seal-submit');
+        Route::post('/sua-seal-go-seal', [YeuCauGoSealController::class, 'suaSealGoSeal'])->name(name: 'sua-seal-go-seal');
+        Route::post('/huy-huy-yeu-cau-go-seal', [YeuCauGoSealController::class, 'huyHuyYeuCau'])->name('huy-huy-yeu-cau-go-seal');
+        Route::get('/get-tau-cua-cont/{soContainer}', [YeuCauGoSealController::class, 'getTauCuaContainer'])->name('get-tau-cua-cont');
+        Route::get('/getYeuCauGoSeal', [YeuCauGoSealController::class, 'getYeuCauGoSeal'])->name('getYeuCauGoSeal');
+        Route::get('/xem-sua-yeu-cau-go-seal/{ma_yeu_cau}', [YeuCauGoSealController::class, 'xemSuaYeuCau'])->name('xem-sua-yeu-cau-go-seal');
+        Route::post('/duyet-sua-yeu-cau-go-seal', [YeuCauGoSealController::class, 'duyetSuaYeuCau'])->name('duyet-sua-yeu-cau-go-seal');
+        Route::post('/huy-sua-yeu-cau-go-seal', [YeuCauGoSealController::class, 'huySuaYeuCau'])->name('huy-sua-yeu-cau-go-seal');
+
+
 
         Route::get('/danh-sach-yeu-cau-tieu-huy', [YeuCauTieuHuyController::class, 'danhSachYeuCauTieuHuy'])->name('danh-sach-yeu-cau-tieu-huy');
         Route::get('/them-yeu-cau-tieu-huy', [YeuCauTieuHuyController::class, 'themYeuCauTieuHuy'])->name('them-yeu-cau-tieu-huy');
@@ -445,6 +463,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleThuKho::class])->group(function
         Route::post('/xoa-seal', [SealNiemPhongController::class, 'xoaSeal'])->name('xoa-seal');
         Route::get('/xoa-nhanh-chi-niem-phong', [SealNiemPhongController::class, 'xoaNhanhSeal'])->name('xoa-nhanh-chi-niem-phong');
         Route::post('/xoa-nhanh-chi-niem-phong-submit', [SealNiemPhongController::class, 'xoaNhanhSealSubmit'])->name('xoa-nhanh-chi-niem-phong-submit');
+        Route::get('/sua-nhanh-chi-niem-phong', [SealNiemPhongController::class, 'suaNhanhSeal'])->name('sua-nhanh-chi-niem-phong');
+        Route::post('/sua-nhanh-chi-niem-phong-submit', [SealNiemPhongController::class, 'suaNhanhSealSubmit'])->name('sua-nhanh-chi-niem-phong-submit');
         Route::post('/them-chi-niem-phong', [SealNiemPhongController::class, 'themChiNiemPhong'])->name('them-chi-niem-phong');
         Route::get('/get-thong-tin-xoa-nhanh-seal', [SealNiemPhongController::class, 'getThongTinXoaNhanhSeal'])->name('get-thong-tin-xoa-nhanh-seal');
         Route::get('/get-seal-items', [SealNiemPhongController::class, 'getSealItems']);

@@ -4,8 +4,9 @@ namespace App\Exports;
 
 use App\Models\HangHoa;
 use App\Models\NhapHang;
-use App\Models\PTVTXuatCanh;
-use App\Models\PTVTXuatCanhCuaPhieu;
+use App\Models\HangTrongCont;
+use App\Models\PTVTXuatCanhCuaPhieuSua;
+use App\Models\XuatHangSua;
 use App\Models\XuatHang;
 use App\Models\XuatHangCont;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -29,26 +30,47 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
     protected $xuatHang;
     protected $ptvts;
     protected $data = [];
+    protected $ma_yeu_cau;
 
-    public function __construct($so_to_khai_xuat)
+    public function __construct($so_to_khai_xuat, $ma_yeu_cau = null)
     {
         $this->so_to_khai_xuat = $so_to_khai_xuat;
+        $this->ma_yeu_cau = $ma_yeu_cau;
     }
 
     public function collection()
     {
         // Get the XuatHang record
         $xuatHang = XuatHang::find($this->so_to_khai_xuat);
-        $this->xuatHang = $xuatHang;
         $this->ptvts = $xuatHang->ten_phuong_tien_vt;
+
+        if ($this->ma_yeu_cau) {
+            $xuatHangSua = XuatHangSua::find($this->ma_yeu_cau);
+            $xuatHang->ma_loai_hinh = $xuatHangSua->ma_loai_hinh;
+            $xuatHang->ten_doan_tau = $xuatHangSua->ten_doan_tau;
+            // $this->ptvts = PTVTXuatCanhCuaPhieuSua::where('xuat_canh_sua.ma_yeu_cau', $this->ma_yeu_cau)
+            //     ->join('xuat_canh_sua', 'ptvt_xuat_canh_cua_phieu_sua.ma_yeu_cau', '=', 'xuat_canh_sua.ma_yeu_cau')
+            //     ->first()
+            //     ->ten_phuong_tien_vt;
+        }
+        $this->xuatHang = $xuatHang;
         $sumSoLuongXuat = 0;
         $data = [];
 
-        // First, get all XuatHangConts with their related hang_hoa and hang_trong_cont data
-        $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $this->so_to_khai_xuat)
-            ->join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->get();
+        if ($this->ma_yeu_cau) {
+            $xuatHangConts = XuatHangSua::join('xuat_hang_chi_tiet_sua', 'xuat_hang_sua.ma_yeu_cau', '=', 'xuat_hang_chi_tiet_sua.ma_yeu_cau')
+                ->where('xuat_hang_sua.ma_yeu_cau', $this->ma_yeu_cau)
+                ->join('hang_trong_cont', 'xuat_hang_chi_tiet_sua.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
+                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->get();
+        } else {
+            // First, get all XuatHangConts with their related hang_hoa and hang_trong_cont data
+            $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $this->so_to_khai_xuat)
+                ->join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
+                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->get();
+        }
+
 
         // Build arrays for declared quantity, exported quantity, and remaining quantity keyed by ma_hang.
         // Use distinct ma_hang values from $xuatHangConts.
@@ -65,83 +87,186 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
             $soLuongDaXuatArr[$ma_hang]  = 0;
             $soLuongTonArr[$ma_hang]     = $firstRecord->so_luong_khai_bao;
         }
-
         // Get all detailed XuatHangCont records for these ma_hang values in one query.
         // This avoids running a query for each ma_hang.
-        $allXHCCuaHang = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
-            ->join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->whereIn('hang_hoa.ma_hang', $maHangList)
-            ->where('xuat_hang.trang_thai', '!=', '0')
-            ->select(
-                'xuat_hang_cont.ma_xuat_hang_cont',
-                'xuat_hang_cont.ma_hang_cont',
-                'xuat_hang_cont.so_to_khai_nhap',
-                'xuat_hang_cont.so_luong_xuat',
-                'nhap_hang.ngay_thong_quan',
-                'nhap_hang.phuong_tien_vt_nhap',
-                'hang_hoa.ma_hang',
-                'hang_hoa.ten_hang',
-                'hang_hoa.don_vi_tinh',
-                'hang_hoa.so_luong_khai_bao',
-                'hang_trong_cont.so_luong',
-                'hang_trong_cont.so_container',
-                'xuat_hang.so_to_khai_xuat',
-                'xuat_hang.trang_thai',
-                'xuat_hang.ten_phuong_tien_vt'
-            )
-            ->get();
 
-        // Group the detailed records by ma_hang
-        $groupedXHCCuaHang = $allXHCCuaHang->groupBy('ma_hang');
 
-        $seen = [];
-        $stt = 1;
 
-        // Iterate over each group (each ma_hang)
-        foreach ($groupedXHCCuaHang as $ma_hang => $group) {
-            foreach ($group as $record) {
-                // Skip if this export detail has already been processed
-                if (isset($seen[$record->ma_xuat_hang_cont])) {
-                    continue;
+        if ($this->ma_yeu_cau) {
+            $seen = [];
+            $stt = 1;
+            // Iterate over each group (each ma_hang)
+            foreach ($maHangList as $ma_hang) {
+                $xuatHangs = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                    ->join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
+                    ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                    ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                    ->where('hang_hoa.ma_hang', $ma_hang)
+                    ->where('xuat_hang.trang_thai', '!=', '0')
+                    ->select(
+                        'xuat_hang_cont.ma_xuat_hang_cont',
+                        'xuat_hang_cont.ma_hang_cont',
+                        'xuat_hang_cont.so_to_khai_nhap',
+                        'xuat_hang_cont.so_luong_xuat',
+                        'nhap_hang.ngay_thong_quan',
+                        'nhap_hang.phuong_tien_vt_nhap',
+                        'hang_hoa.ma_hang',
+                        'hang_hoa.ten_hang',
+                        'hang_hoa.don_vi_tinh',
+                        'hang_hoa.so_luong_khai_bao',
+                        'hang_trong_cont.so_luong',
+                        'hang_trong_cont.so_container',
+                        'xuat_hang.so_to_khai_xuat',
+                        'xuat_hang.trang_thai',
+                        'xuat_hang.ten_phuong_tien_vt'
+                    )
+                    ->get();
+
+                foreach ($xuatHangs as $xuatHang2) {
+                    if (isset($soLuongTonArr[$ma_hang])) {
+                        $soLuongTonArr[$ma_hang] -= $xuatHang2->so_luong_xuat;
+                        $soLuongDaXuatArr[$ma_hang] += $xuatHang2->so_luong_xuat;
+                    }
+                    if ($xuatHang->so_to_khai_xuat == $xuatHang2->so_to_khai_xuat) {
+                        $seen[$ma_hang] = true;
+                        $xuatHangSua = XuatHangSua::join('xuat_hang_chi_tiet_sua', 'xuat_hang_sua.ma_yeu_cau', '=', 'xuat_hang_chi_tiet_sua.ma_yeu_cau')
+                            ->join('hang_trong_cont', 'xuat_hang_chi_tiet_sua.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
+                            ->join('ptvt_xuat_canh_cua_phieu_sua', 'xuat_hang_sua.ma_yeu_cau', '=', 'ptvt_xuat_canh_cua_phieu_sua.ma_yeu_cau')
+                            ->join('ptvt_xuat_canh', 'ptvt_xuat_canh_cua_phieu_sua.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+                            ->where('xuat_hang_sua.ma_yeu_cau', $this->ma_yeu_cau)
+                            ->where('hang_trong_cont.ma_hang', $ma_hang)
+                            ->first();
+
+                        $soLuongXuatSua = $xuatHangSua->so_luong_xuat;
+                        $soLuongTon   = $soLuongTonArr[$ma_hang] + $xuatHang2->so_luong_xuat - $soLuongXuatSua;
+                        $soLuongDaXuat = $soLuongDaXuatArr[$ma_hang] - $xuatHang2->so_luong_xuat;
+                        $soLuongKhaiBao = $soLuongKhaiBaoArr[$ma_hang];
+
+                        $data[] = [
+                            $stt++,
+                            $xuatHang2->so_to_khai_nhap,
+                            Carbon::parse($xuatHang2->ngay_thong_quan)->format('d-m-Y'),
+                            $xuatHang2->ten_hang,
+                            $soLuongKhaiBao,
+                            $xuatHang2->don_vi_tinh,
+                            ($soLuongDaXuat == 0 ? '0' : $soLuongDaXuat),
+                            $soLuongXuatSua,
+                            ($soLuongTon == 0 ? '0' : $soLuongTon),
+                            $xuatHang2->phuong_tien_vt_nhap,
+                            $xuatHangSua->so_container,
+                            $xuatHangSua->ten_phuong_tien_vt ?? '',
+                        ];
+
+                        $sumSoLuongXuat += $soLuongXuatSua;
+                    }
                 }
-                $seen[$record->ma_xuat_hang_cont] = true;
-
-                // Deduct the exported quantity from the remaining quantity for this ma_hang
-                if (isset($soLuongTonArr[$ma_hang])) {
-                    $soLuongTonArr[$ma_hang] -= $record->so_luong_xuat;
-                }
-
-                // Only include records that belong to the current XuatHang (by so_to_khai_xuat)
-                if ($xuatHang->so_to_khai_xuat == $record->so_to_khai_xuat) {
-                    $soLuongTon   = $soLuongTonArr[$ma_hang];
+            }
+            foreach ($maHangList as $maHang) {
+                if (!isset($seen[$maHang])) {
+                    $xuatHangSua = XuatHangSua::join('xuat_hang_chi_tiet_sua', 'xuat_hang_sua.ma_yeu_cau', '=', 'xuat_hang_chi_tiet_sua.ma_yeu_cau')
+                        ->join('hang_trong_cont', 'xuat_hang_chi_tiet_sua.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
+                        ->where('hang_trong_cont.ma_hang', $maHang)
+                        ->where('xuat_hang_sua.ma_yeu_cau', $this->ma_yeu_cau)
+                        ->first();
+                    $soLuongXuatSua = $xuatHangSua->so_luong_xuat;
+                    $soLuongTon   = $soLuongTonArr[$ma_hang] - $soLuongXuatSua;
                     $soLuongDaXuat = $soLuongDaXuatArr[$ma_hang];
                     $soLuongKhaiBao = $soLuongKhaiBaoArr[$ma_hang];
-
+                    $hangHoa = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                        ->where('ma_hang', $maHang)
+                        ->first();
                     $data[] = [
                         $stt++,
-                        $record->so_to_khai_nhap,
-                        Carbon::parse($record->ngay_thong_quan)->format('d-m-Y'),
-                        $record->ten_hang,
+                        $hangHoa->so_to_khai_nhap,
+                        Carbon::parse($hangHoa->ngay_thong_quan)->format('d-m-Y'),
+                        $hangHoa->ten_hang,
                         $soLuongKhaiBao,
-                        $record->don_vi_tinh,
+                        $hangHoa->don_vi_tinh,
                         ($soLuongDaXuat == 0 ? '0' : $soLuongDaXuat),
-                        $record->so_luong_xuat,
+                        $soLuongXuatSua,
                         ($soLuongTon == 0 ? '0' : $soLuongTon),
-                        $record->phuong_tien_vt_nhap,
-                        $record->so_container,
-                        $record->ten_phuong_tien_vt,
+                        $hangHoa->phuong_tien_vt_nhap,
+                        $xuatHangSua->so_container,
+                        $xuatHangSua->ten_phuong_tien_vt ?? '',
                     ];
-                    $sumSoLuongXuat += $record->so_luong_xuat;
+                    $sumSoLuongXuat += $soLuongXuatSua;
                 }
+            }
+        } else {
+            $allXHCCuaHang = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                ->join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
+                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                ->whereIn('hang_hoa.ma_hang', $maHangList)
+                ->where('xuat_hang.trang_thai', '!=', '0')
+                ->select(
+                    'xuat_hang_cont.ma_xuat_hang_cont',
+                    'xuat_hang_cont.ma_hang_cont',
+                    'xuat_hang_cont.so_to_khai_nhap',
+                    'xuat_hang_cont.so_luong_xuat',
+                    'nhap_hang.ngay_thong_quan',
+                    'nhap_hang.phuong_tien_vt_nhap',
+                    'hang_hoa.ma_hang',
+                    'hang_hoa.ten_hang',
+                    'hang_hoa.don_vi_tinh',
+                    'hang_hoa.so_luong_khai_bao',
+                    'hang_trong_cont.so_luong',
+                    'hang_trong_cont.so_container',
+                    'xuat_hang.so_to_khai_xuat',
+                    'xuat_hang.trang_thai',
+                    'xuat_hang.ten_phuong_tien_vt'
+                )
+                ->get();
+            // Group the detailed records by ma_hang
+            $groupedXHCCuaHang = $allXHCCuaHang->groupBy('ma_hang');
+            $seen = [];
+            $stt = 1;
+            // Iterate over each group (each ma_hang)
+            foreach ($groupedXHCCuaHang as $ma_hang => $group) {
+                foreach ($group as $record) {
+                    // Skip if this export detail has already been processed
+                    if (isset($seen[$record->ma_xuat_hang_cont])) {
+                        continue;
+                    }
+                    $seen[$record->ma_xuat_hang_cont] = true;
 
-                // Update exported quantity for this ma_hang
-                if (isset($soLuongTonArr[$ma_hang])) {
-                    $soLuongDaXuatArr[$ma_hang] += $record->so_luong_xuat;
+                    // Deduct the exported quantity from the remaining quantity for this ma_hang
+                    if (isset($soLuongTonArr[$ma_hang])) {
+                        $soLuongTonArr[$ma_hang] -= $record->so_luong_xuat;
+                    }
+
+                    // Only include records that belong to the current XuatHang (by so_to_khai_xuat)
+                    if ($xuatHang->so_to_khai_xuat == $record->so_to_khai_xuat) {
+                        $soLuongTon   = $soLuongTonArr[$ma_hang];
+                        $soLuongDaXuat = $soLuongDaXuatArr[$ma_hang];
+                        $soLuongKhaiBao = $soLuongKhaiBaoArr[$ma_hang];
+                        $data[] = [
+                            $stt++,
+                            $record->so_to_khai_nhap,
+                            Carbon::parse($record->ngay_thong_quan)->format('d-m-Y'),
+                            $record->ten_hang,
+                            $soLuongKhaiBao,
+                            $record->don_vi_tinh,
+                            ($soLuongDaXuat == 0 ? '0' : $soLuongDaXuat),
+                            $record->so_luong_xuat,
+                            ($soLuongTon == 0 ? '0' : $soLuongTon),
+                            $record->phuong_tien_vt_nhap,
+                            $record->so_container,
+                            $record->ten_phuong_tien_vt ?? '',
+                        ];
+
+                        $sumSoLuongXuat += $record->so_luong_xuat;
+                    }
+
+                    // Update exported quantity for this ma_hang
+                    if (isset($soLuongTonArr[$ma_hang])) {
+                        $soLuongDaXuatArr[$ma_hang] += $record->so_luong_xuat;
+                    }
                 }
             }
         }
+
+
 
 
 
@@ -384,5 +509,3 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
         ]);
     }
 }
-
-

@@ -28,7 +28,6 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
     {
         $data = XuatNhapCanh::join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
             ->join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
-            ->join('chu_hang', 'xuat_nhap_canh.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
             ->whereBetween('ngay_them', [$this->tu_ngay, $this->den_ngay])
             ->get();
 
@@ -45,7 +44,7 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['', '', '', '', '', ''],
             ['', 'Người trực: ' . $congChucs, '', '', '', ''],
-            ['STT', 'SỐ THẺ', 'SỐ PTVT XNC', '', 'ĐẠI LÝ', 'TỔNG TRỌNG TẢI (Tấn)', 'SỐ LƯỢNG MÁY', 'THỜI GIAN NHẬP CẢNH', 'THỜI GIAN XUẤT CẢNH', 'GHI CHÚ'],
+            ['STT', 'SỐ THẺ', 'SỐ PTVT XNC', '', 'TỔNG TRỌNG TẢI (Tấn)', 'SỐ LƯỢNG MÁY', 'THỜI GIAN NHẬP CẢNH', 'THỜI GIAN XUẤT CẢNH', 'GHI CHÚ'],
             ['', '', 'HÀNG LẠNH', 'HÀNG NÓNG'],
         ];
 
@@ -56,7 +55,6 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
                 $item->so_the,
                 $item->is_hang_lanh == 1 ? $item->ten_phuong_tien_vt : '',
                 $item->is_hang_nong == 1 ? $item->ten_phuong_tien_vt : '',
-                $item->ten_chu_hang,
                 $item->tong_trong_tai,
                 $item->so_luong_may,
                 $item->thoi_gian_nhap_canh,
@@ -86,7 +84,7 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:J' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:I' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -103,22 +101,21 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
                 $sheet->getColumnDimension('B')->setWidth(width: 7);
                 $sheet->getColumnDimension('C')->setWidth(width: 15);
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
-                $sheet->getColumnDimension('E')->setWidth(width: 20);
+                $sheet->getColumnDimension('E')->setWidth(width: 10);
                 $sheet->getColumnDimension('F')->setWidth(width: 10);
                 $sheet->getColumnDimension('G')->setWidth(width: 10);
-                $sheet->getColumnDimension('H')->setWidth(width: 15);
-                $sheet->getColumnDimension('I')->setWidth(width: 16);
-                $sheet->getColumnDimension('J')->setWidth(width: 20);
+                $sheet->getColumnDimension('H')->setWidth(width: 10);
+                $sheet->getColumnDimension('I')->setWidth(width: 15);
                 $lastRow = $sheet->getHighestRow();
 
                 $sheet->getStyle('E1:C' . $lastRow)->getAlignment()->setWrapText(true);
-                $sheet->getStyle('A2:J' . $lastRow)->getAlignment()->setWrapText(true);
+                $sheet->getStyle('A2:I' . $lastRow)->getAlignment()->setWrapText(true);
 
                 $sheet->mergeCells('A1:D1');
                 $sheet->mergeCells('A2:D2');
-                $sheet->mergeCells('A4:J4');
-                $sheet->mergeCells('A5:J5');
-                $sheet->mergeCells('A6:J6');
+                $sheet->mergeCells('A4:I4');
+                $sheet->mergeCells('A5:I5');
+                $sheet->mergeCells('A6:I6');
 
                 $sheet->mergeCells('C8:D8');
                 $sheet->mergeCells('B7:I7');
@@ -130,31 +127,30 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
                 $sheet->mergeCells('G8:G9');
                 $sheet->mergeCells('H8:H9');
                 $sheet->mergeCells('I8:I9');
-                $sheet->mergeCells('J8:J9');
 
                 $event->sheet->getDelegate()->getRowDimension(8)->setRowHeight(30);
                 $event->sheet->getDelegate()->getRowDimension(9)->setRowHeight(30);
 
-                $sheet->getStyle('A1:J9')->applyFromArray([
+                $sheet->getStyle('A1:I9')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:J9')->applyFromArray([
+                $sheet->getStyle('A2:I9')->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
                 $sheet->getStyle('B2:B' . $lastRow)->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
-                $sheet->getStyle('A8:J' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:I' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
 
-                $sheet->getStyle('A8:J8')->applyFromArray([
+                $sheet->getStyle('A8:I8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -174,7 +170,7 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
                 ]);
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A8:J' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:I' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -193,7 +189,7 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
                         break;
                     }
                 }
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':J' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':I' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -203,9 +199,9 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
 
                 $sheet->mergeCells('A' . $chuKyStart . ':E' . $chuKyStart);
                 $sheet->mergeCells('A' . ($chuKyStart + 1) . ':E' . ($chuKyStart + 1));
-                $sheet->mergeCells('F' . $chuKyStart . ':J' . $chuKyStart);
-                $sheet->mergeCells('F' . ($chuKyStart + 1) . ':J' . ($chuKyStart + 1));
-                $sheet->getStyle('A' . ($chuKyStart) . ':J' . ($chuKyStart + 1))->getFont()->setBold(true);
+                $sheet->mergeCells('F' . $chuKyStart . ':I' . $chuKyStart);
+                $sheet->mergeCells('F' . ($chuKyStart + 1) . ':I' . ($chuKyStart + 1));
+                $sheet->getStyle('A' . ($chuKyStart) . ':I' . ($chuKyStart + 1))->getFont()->setBold(true);
             },
         ];
     }

@@ -36,13 +36,14 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
         }
         $data = Seal::join('cong_chuc', 'seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
             ->leftJoin('yeu_cau_niem_phong_chi_tiet', 'seal.so_seal', '=', 'yeu_cau_niem_phong_chi_tiet.so_seal_moi')
+            ->leftJoin('yeu_cau_go_seal_chi_tiet', 'seal.so_seal', '=', 'yeu_cau_go_seal_chi_tiet.so_seal_moi')
             ->whereBetween('ngay_su_dung', [$this->tu_ngay, $this->den_ngay])
             ->where('trang_thai', 1)
             ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
                 return $query->where('seal.ma_cong_chuc', $this->ma_cong_chuc);
             })
             ->groupBy('seal.so_seal')
-            ->select('seal.so_seal', 'seal.loai_seal', 'seal.ngay_cap', 'seal.ngay_su_dung', 'seal.so_container', 'yeu_cau_niem_phong_chi_tiet.phuong_tien_vt_nhap', 'cong_chuc.ten_cong_chuc')
+            ->select('seal.so_seal', 'seal.loai_seal', 'seal.ngay_cap', 'seal.ngay_su_dung', 'seal.so_container', 'yeu_cau_niem_phong_chi_tiet.phuong_tien_vt_nhap', 'yeu_cau_go_seal_chi_tiet.phuong_tien_vt_nhap as ptvt_go_seal', 'cong_chuc.ten_cong_chuc')
             ->get();
 
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
@@ -79,7 +80,7 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
                 $loaiSeal,
                 $item->so_seal,
                 $item->so_container,
-                $item->phuong_tien_vt_nhap,
+                $item->phuong_tien_vt_nhap ?? $item->ptvt_go_seal,
                 Carbon::parse($item->ngay_cap)->format('d-m-Y'),
                 Carbon::parse($item->ngay_su_dung)->format('d-m-Y'),
                 $item->ten_cong_chuc,

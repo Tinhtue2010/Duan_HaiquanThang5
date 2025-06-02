@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\YeuCauNiemPhongExport;
+use App\Models\TheoDoiTruLuiChiTiet;
 use App\Models\CongChuc;
 use App\Models\Container;
 use App\Models\DoanhNghiep;
@@ -10,85 +10,27 @@ use App\Models\NiemPhong;
 use App\Models\Seal;
 use App\Models\TheoDoiHangHoa;
 use App\Models\TheoDoiTruLui;
-use App\Models\TheoDoiTruLuiChiTiet;
-use App\Models\YeuCauNiemPhong;
-use App\Models\YeuCauNiemPhongChiTiet;
-use App\Models\HangTrongCont;
-use App\Models\NhapHang;
+use App\Models\YeuCauGoSeal;
+use App\Models\YeuCauGoSealChiTiet;
 use App\Models\XuatHang;
-use App\Models\YeuCauChuyenContainer;
-use App\Models\YeuCauKiemTra;
-use App\Models\YeuCauNiemPhongChiTietSua;
-use App\Models\YeuCauTauCont;
+use App\Models\NhapHang;
+use App\Models\TienTrinh;
+use App\Models\YeuCauGoSealChiTietSua;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 
-class YeuCauNiemPhongController extends Controller
+class YeuCauGoSealController extends Controller
 {
-    public function danhSachYeuCauNiemPhong()
+    public function danhSachYeuCauGoSeal()
     {
-        return view('quan-ly-kho.yeu-cau-niem-phong.danh-sach-yeu-cau-niem-phong');
+        return view('quan-ly-kho.yeu-cau-go-seal.danh-sach-yeu-cau-go-seal');
     }
 
-    public function themYeuCauNiemPhong()
-    {
-        $soContainers = Container::with(['niemPhong', 'hangTrongCont.hangHoa'])
-            ->get()
-            ->map(function ($container) {
-                return [
-                    'so_container' => $container->so_container,
-                    'phuong_tien_vt_nhap' => optional($container->niemPhong)->phuong_tien_vt_nhap,
-                ];
-            });
-
-
-        if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-            $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
-            return view('quan-ly-kho.yeu-cau-niem-phong.them-yeu-cau-niem-phong', data: compact('doanhNghiep', 'soContainers'));
-        }
-        return redirect()->back();
-    }
-
-    public function themYeuCauNiemPhongSubmit(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-            $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
-
-            $yeuCau = YeuCauNiemPhong::create([
-                'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
-                'trang_thai' => '1',
-                'ngay_yeu_cau' => now()
-            ]);
-
-            // Decode the JSON data from the form
-            $rowsData = json_decode($request->rows_data, true);
-            foreach ($rowsData as $row) {
-                $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
-                YeuCauNiemPhongChiTiet::insert([
-                    'so_container' => $row['so_container'],
-                    'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
-                    'so_seal_cu' => $niemPhong->so_seal ?? '',
-                    'so_seal_moi' => '',
-                    'ma_yeu_cau' => $yeuCau->ma_yeu_cau
-                ]);
-            }
-
-            DB::commit();
-            session()->flash('alert-success', 'Thêm yêu cầu niêm phong thành công');
-            return redirect('/danh-sach-yeu-cau-niem-phong');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('alert-danger', 'Có lỗi xảy ra, có thể là số container không tồn tại trong hệ thống');
-            return redirect()->back();
-        }
-    }
     public function themYeuCauGoSeal()
     {
         $soContainers = Container::with(['niemPhong', 'hangTrongCont.hangHoa'])
@@ -103,7 +45,7 @@ class YeuCauNiemPhongController extends Controller
 
         if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
-            return view('quan-ly-kho.yeu-cau-niem-phong.them-yeu-cau-go-seal', data: compact('doanhNghiep', 'soContainers'));
+            return view('quan-ly-kho.yeu-cau-go-seal.them-yeu-cau-go-seal', data: compact('doanhNghiep', 'soContainers'));
         }
         return redirect()->back();
     }
@@ -114,7 +56,7 @@ class YeuCauNiemPhongController extends Controller
             DB::beginTransaction();
             $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
 
-            $yeuCau = YeuCauNiemPhong::create([
+            $yeuCau = YeuCauGoSeal::create([
                 'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
                 'trang_thai' => '1',
                 'ngay_yeu_cau' => now(),
@@ -125,18 +67,19 @@ class YeuCauNiemPhongController extends Controller
             $rowsData = json_decode($request->rows_data, true);
             foreach ($rowsData as $row) {
                 $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
-                YeuCauNiemPhongChiTiet::insert([
+                YeuCauGoSealChiTiet::insert([
                     'so_container' => $row['so_container'],
                     'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                     'so_seal_cu' => $niemPhong->so_seal ?? '',
                     'so_seal_moi' => '',
                     'ma_yeu_cau' => $yeuCau->ma_yeu_cau
                 ]);
+                $this->themTienTrinh($row['so_container'], 'đã thêm', $yeuCau->ma_yeu_cau);
             }
 
             DB::commit();
             session()->flash('alert-success', 'Thêm yêu cầu niêm phong thành công');
-            return redirect('/danh-sach-yeu-cau-niem-phong');
+            return redirect('/danh-sach-yeu-cau-go-seal');
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('alert-danger', 'Có lỗi xảy ra, có thể là số container không tồn tại trong hệ thống');
@@ -144,13 +87,13 @@ class YeuCauNiemPhongController extends Controller
         }
     }
 
-    public function thongTinYeuCauNiemPhong($ma_yeu_cau)
+    public function thongTinYeuCauGoSeal($ma_yeu_cau)
     {
-        $yeuCau = YeuCauNiemPhong::where('ma_yeu_cau', $ma_yeu_cau)
-            ->leftJoin('cong_chuc', 'yeu_cau_niem_phong.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+        $yeuCau = YeuCauGoSeal::where('ma_yeu_cau', $ma_yeu_cau)
+            ->leftJoin('cong_chuc', 'yeu_cau_go_seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
             ->first();
         $doanhNghiep = DoanhNghiep::find($yeuCau->ma_doanh_nghiep);
-        $chiTiets = YeuCauNiemPhongChiTiet::where('yeu_cau_niem_phong_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
+        $chiTiets = YeuCauGoSealChiTiet::where('yeu_cau_go_seal_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
             ->get();
 
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
@@ -164,16 +107,16 @@ class YeuCauNiemPhongController extends Controller
         }
 
         $congChucs = CongChuc::where('is_chi_xem', 0)->get();
-        return view('quan-ly-kho.yeu-cau-niem-phong.thong-tin-yeu-cau-niem-phong', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs', 'congChucHienTai', 'seals')); // Pass data to the view
+        return view('quan-ly-kho.yeu-cau-go-seal.thong-tin-yeu-cau-go-seal', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs', 'congChucHienTai', 'seals')); // Pass data to the view
     }
 
-    public function suaYeuCauNiemPhong($ma_yeu_cau)
+    public function suaYeuCauGoSeal($ma_yeu_cau)
     {
-        $yeuCau = YeuCauNiemPhong::where('ma_yeu_cau', $ma_yeu_cau)
-            ->leftJoin('cong_chuc', 'yeu_cau_niem_phong.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+        $yeuCau = YeuCauGoSeal::where('ma_yeu_cau', $ma_yeu_cau)
+            ->leftJoin('cong_chuc', 'yeu_cau_go_seal.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
             ->first();
         $doanhNghiep = DoanhNghiep::find($yeuCau->ma_doanh_nghiep);
-        $chiTiets = YeuCauNiemPhongChiTiet::where('yeu_cau_niem_phong_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
+        $chiTiets = YeuCauGoSealChiTiet::where('yeu_cau_go_seal_chi_tiet.ma_yeu_cau', $ma_yeu_cau)
             ->get();
 
         $soContainers = Container::with(['niemPhong', 'hangTrongCont.hangHoa'])
@@ -184,21 +127,21 @@ class YeuCauNiemPhongController extends Controller
                     'phuong_tien_vt_nhap' => optional($container->niemPhong)->phuong_tien_vt_nhap,
                 ];
             });
-        return view('quan-ly-kho.yeu-cau-niem-phong.sua-yeu-cau-niem-phong', compact('yeuCau', 'chiTiets', 'soContainers')); // Pass data to the view
+        return view('quan-ly-kho.yeu-cau-go-seal.sua-yeu-cau-go-seal', compact('yeuCau', 'chiTiets', 'soContainers')); // Pass data to the view
     }
 
-    public function suaYeuCauNiemPhongSubmit(Request $request)
+    public function suaYeuCauGoSealSubmit(Request $request)
     {
         try {
             DB::beginTransaction();
-            $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
+            $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
             $rowsData = json_decode($request->rows_data, true);
 
             if ($yeuCau->trang_thai == 1) {
-                YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
+                YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
                 foreach ($rowsData as $row) {
                     $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
-                    YeuCauNiemPhongChiTiet::insert([
+                    YeuCauGoSealChiTiet::insert([
                         'so_container' => $row['so_container'],
                         'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                         'so_seal_cu' => $niemPhong->so_seal ?? '',
@@ -211,7 +154,7 @@ class YeuCauNiemPhongController extends Controller
                 $yeuCau->save();
                 foreach ($rowsData as $row) {
                     $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
-                    YeuCauNiemPhongChiTietSua::insert([
+                    YeuCauGoSealChiTietSua::insert([
                         'so_container' => $row['so_container'],
                         'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                         'so_seal_cu' => $niemPhong->so_seal ?? '',
@@ -223,20 +166,20 @@ class YeuCauNiemPhongController extends Controller
 
             DB::commit();
             session()->flash('alert-success', 'Sửa yêu cầu niêm phong thành công');
-            return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', ['ma_yeu_cau' => $request->ma_yeu_cau]);
+            return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-go-seal', ['ma_yeu_cau' => $request->ma_yeu_cau]);
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('alert-danger', 'Có lỗi xảy ra, có thể là số container không tồn tại trong hệ thống');
-            Log::error('Error in suaYeuCauNiemPhong: ' . $e->getMessage());
+            Log::error('Error in suaYeuCauGoSeal: ' . $e->getMessage());
             return redirect()->back();
         }
     }
 
     public function xemSuaYeuCau(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-        $chiTiets = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
-        $chiTietSuas = YeuCauNiemPhongChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+        $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
+        $chiTiets = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+        $chiTietSuas = YeuCauGoSealChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
 
         $containersChiTiet = $chiTiets->pluck('so_container');
         $containersChiTietSua = $chiTietSuas->pluck('so_container');
@@ -250,7 +193,7 @@ class YeuCauNiemPhongController extends Controller
 
 
         $doanhNghiep = DoanhNghiep::find($yeuCau->ma_doanh_nghiep);
-        return view('quan-ly-kho.yeu-cau-niem-phong.xem-sua-yeu-cau-niem-phong', compact('yeuCau', 'chiTiets', 'chiTietSuas', 'doanhNghiep', 'chiTietThemVao'));
+        return view('quan-ly-kho.yeu-cau-go-seal.xem-sua-yeu-cau-go-seal', compact('yeuCau', 'chiTiets', 'chiTietSuas', 'doanhNghiep', 'chiTietThemVao'));
     }
 
 
@@ -258,9 +201,9 @@ class YeuCauNiemPhongController extends Controller
     {
         try {
             DB::beginTransaction();
-            $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-            $chiTiets = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
-            $chiTietSuas = YeuCauNiemPhongChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+            $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
+            $chiTiets = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+            $chiTietSuas = YeuCauGoSealChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
 
             $containersChiTiet = $chiTiets->pluck('so_container');
             $containersChiTietSua = $chiTietSuas->pluck('so_container');
@@ -277,7 +220,7 @@ class YeuCauNiemPhongController extends Controller
             }
             if (!empty($containerBiXoa)) {
                 $this->quayNguocYeuCau($containerBiXoa, $yeuCau);
-                YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
+                YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
                     ->whereIn('so_container', $containerBiXoa)
                     ->delete();
             }
@@ -317,7 +260,7 @@ class YeuCauNiemPhongController extends Controller
                     $soContainer = $chiTietThem->so_container;
                     $row = $rowMap->get($soContainer);
                     if ($row) {
-                        $chiTiet = YeuCauNiemPhongChiTiet::create($chiTietThem->toArray());
+                        $chiTiet = YeuCauGoSealChiTiet::create($chiTietThem->toArray());
                         if ($row['so_container'] === $chiTiet->so_container) {
                             if ($row['loai_seal'] == "5") {
                                 $so_seal_moi = $row['so_seal'];
@@ -339,6 +282,7 @@ class YeuCauNiemPhongController extends Controller
                         $this->capNhatSealXuatHang($chiTiet->so_container, $so_seal_moi);
                         $this->capNhatSealTruLui($chiTiet->so_container, $so_seal_moi);
                         $this->capNhatSealTheoDoi($chiTiet->so_container, $so_seal_moi);
+                        $this->themTienTrinh($chiTiet->so_container, 'đã duyệt đề nghị sửa', $request->ma_yeu_cau);
                     } else {
                         session()->flash('alert-danger', 'Có lỗi xảy ra');
                         return redirect()->back();
@@ -346,15 +290,15 @@ class YeuCauNiemPhongController extends Controller
                 }
             }
 
-            YeuCauNiemPhongChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
+            YeuCauGoSealChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
             $yeuCau->trang_thai = '2';
             $yeuCau->save();
 
             DB::commit();
-            return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]);
+            return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-go-seal', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]);
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
-            Log::error('Error in duyetSuaYeuCauNiemPhong: ' . $e->getMessage());
+            Log::error('Error in duyetSuaYeuCauGoSeal: ' . $e->getMessage());
             return redirect()->back();
         }
     }
@@ -363,12 +307,12 @@ class YeuCauNiemPhongController extends Controller
 
     public function huySuaYeuCau(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
+        $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
         $yeuCau->trang_thai = '2';
         $yeuCau->save();
-        YeuCauNiemPhongChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
+        YeuCauGoSealChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
         session()->flash('alert-success', 'Hủy yêu cầu sửa thành công!');
-        return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', ['ma_yeu_cau' => $request->ma_yeu_cau]);
+        return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-go-seal', ['ma_yeu_cau' => $request->ma_yeu_cau]);
     }
     public function kiemTraSubmit($rowsData, $ma_cong_chuc)
     {
@@ -402,9 +346,9 @@ class YeuCauNiemPhongController extends Controller
     }
 
 
-    public function duyetYeuCauNiemPhong(Request $request)
+    public function duyetYeuCauGoSeal(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
+        $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
 
         $rowsData = json_decode($request->rows_data, true);
         // $this->kiemTraSubmit($rowsData, $request->ma_cong_chuc);
@@ -437,7 +381,7 @@ class YeuCauNiemPhongController extends Controller
             $soSealUsed = collect();
             DB::beginTransaction();
             if ($yeuCau && $yeuCau->trang_thai == '1') {
-                $chiTietYeuCaus = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+                $chiTietYeuCaus = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
                 $rowMap = collect($rowsData)->keyBy('so_container');
                 foreach ($chiTietYeuCaus as $chiTietYeuCau) {
                     $soContainer = $chiTietYeuCau->so_container;
@@ -452,7 +396,7 @@ class YeuCauNiemPhongController extends Controller
 
                         while (true) {
                             if ($soSealUsed->contains($so_seal_moi)) {
-                                $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
+                                $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $yeuCau->ma_cong_chuc);
                                 $availableSeals = $this->getSealNhoNhat($row['loai_seal'], $request->ma_cong_chuc);
                                 $so_seal_moi = $availableSeals->shift();
                             } else {
@@ -465,7 +409,7 @@ class YeuCauNiemPhongController extends Controller
 
                         $this->themContainerMoi($chiTietYeuCau->so_container);
                         $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
-
+                        
                         $this->updateNiemPhong($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
                         $this->capNhatSealXuatHang($chiTietYeuCau->so_container, $so_seal_moi);
                         $this->capNhatSealTruLui($chiTietYeuCau->so_container, $so_seal_moi);
@@ -474,6 +418,8 @@ class YeuCauNiemPhongController extends Controller
                         session()->flash('alert-danger', 'Có lỗi xảy ra');
                         return redirect()->back();
                     }
+                    $this->themTienTrinh($chiTietYeuCau->so_container, 'đã duyệt', $chiTietYeuCau->ma_yeu_cau);
+                    $this->themTheoDoiTruLui($chiTietYeuCau->so_container, $yeuCau, $yeuCau->ma_cong_chuc);
                 }
 
                 $so_seals = $chiTietYeuCaus->pluck('so_seal_moi');
@@ -491,8 +437,8 @@ class YeuCauNiemPhongController extends Controller
 
             DB::commit();
 
-            $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-                ->where('yeu_cau_niem_phong.ma_yeu_cau', $request->ma_yeu_cau)
+            $chiTietYeuCaus = YeuCauGoSeal::join('yeu_cau_go_seal_chi_tiet', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
+                ->where('yeu_cau_go_seal.ma_yeu_cau', $request->ma_yeu_cau)
                 ->get();
 
             foreach ($chiTietYeuCaus as $chiTietYeuCau) {
@@ -501,15 +447,46 @@ class YeuCauNiemPhongController extends Controller
             }
 
 
-            return redirect()->route('quan-ly-kho.danh-sach-yeu-cau-niem-phong');
+            return redirect()->route('quan-ly-kho.danh-sach-yeu-cau-go-seal');
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
-            Log::error('Error in duyetYeuCauNiemPhong: ' . $e->getMessage());
+            Log::error('Error in duyetYeuCauGoSeal: ' . $e->getMessage());
             return redirect()->back();
         }
     }
+    private function getCongChucHienTai()
+    {
+        return CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
+    }
 
+    public function themTienTrinh($so_container, $noi_dung, $ma_yeu_cau)
+    {
+        $ma_cong_chuc = $this->getCongChucHienTai()->ma_cong_chuc ?? '';
+        $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_container', $so_container)
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()->pluck('so_to_khai_nhap')->toArray();
 
+        foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+            if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+                $this->taoTienTrinh($so_to_khai_nhap,  "Công chức " . $noi_dung . " yêu cầu gỡ seal điện tử số " . $ma_yeu_cau, $ma_cong_chuc);
+            } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+                $this->taoTienTrinh($so_to_khai_nhap, "Doanh nghiệp " . $noi_dung . " yêu cầu gỡ seal điện tử số " . $ma_yeu_cau, '');
+            }
+        }
+    }
+    public function taoTienTrinh($so_to_khai_nhap, $ten_cong_viec, $ma_cong_chuc)
+    {
+        TienTrinh::insert([
+            'so_to_khai_nhap' => $so_to_khai_nhap,
+            'ten_cong_viec' => $ten_cong_viec,
+            'ngay_thuc_hien' => now(),
+            'ma_cong_chuc' => $ma_cong_chuc
+        ]);
+    }
 
 
     public function capNhatSealXuatHang($so_container, $so_seal)
@@ -566,11 +543,11 @@ class YeuCauNiemPhongController extends Controller
             ->update(['so_seal' => $so_seal]);
     }
 
-    public function huyYeuCauNiemPhong(Request $request)
+    public function huyYeuCauGoSeal(Request $request)
     {
         try {
             DB::beginTransaction();
-            $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
+            $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
             if ($yeuCau->trang_thai == "1") {
                 $yeuCau->trang_thai = '0';
                 $yeuCau->ghi_chu = $request->ghi_chu;
@@ -585,21 +562,25 @@ class YeuCauNiemPhongController extends Controller
             return redirect()->back();
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
-            Log::error('Error in huyYeuCauNiemPhong: ' . $e->getMessage());
+            Log::error('Error in huyYeuCauGoSeal: ' . $e->getMessage());
             return redirect()->back();
         }
     }
 
     public function huyYeuCauDaDuyet(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
+        $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
         $yeuCau->trang_thai = '4';
         $yeuCau->ghi_chu = $request->ghi_chu;
         $yeuCau->save();
+        $so_containers = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_container');
+        foreach ($so_containers as $so_container) {
+            $this->huyTienTrinh($so_container, $yeuCau);
+        }
     }
     public function huyHuyYeuCau(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find(id: $request->ma_yeu_cau);
+        $yeuCau = YeuCauGoSeal::find(id: $request->ma_yeu_cau);
         $yeuCau->trang_thai = '2';
 
         if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
@@ -610,12 +591,12 @@ class YeuCauNiemPhongController extends Controller
 
         $yeuCau->save();
         session()->flash('alert-success', 'Hủy đề nghị hủy thành công');
-        return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', ['ma_yeu_cau' => $request->ma_yeu_cau]);
+        return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-go-seal', ['ma_yeu_cau' => $request->ma_yeu_cau]);
     }
     public function quayNguocYeuCau($soContainerCanQuayNguoc, $yeuCau)
     {
         foreach ($soContainerCanQuayNguoc as $soContainer) {
-            $chiTiet = YeuCauNiemPhongChiTiet::where('so_container', $soContainer)
+            $chiTiet = YeuCauGoSealChiTiet::where('so_container', $soContainer)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->first();
             if ($chiTiet->so_seal_cu == null) {
@@ -627,15 +608,16 @@ class YeuCauNiemPhongController extends Controller
             $this->capNhatSealTruLui($soContainer, $soSealCu);
             $this->capNhatSealTheoDoi($soContainer,  $soSealCu);
             $this->updateNiemPhong($soSealCu, $soContainer, $yeuCau->ma_cong_chuc);
+            $this->themTienTrinh($soContainer, 'đã duyệt đề nghị hủy', $yeuCau->ma_yeu_cau);
         }
     }
 
     public function duyetHuyYeuCau(Request $request)
     {
-        $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-        $seals = YeuCauNiemPhongChiTiet::join('yeu_cau_niem_phong', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_niem_phong.ma_yeu_cau', $request->ma_yeu_cau)
-            ->pluck('yeu_cau_niem_phong_chi_tiet.so_seal_moi');
+        $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
+        $seals = YeuCauGoSealChiTiet::join('yeu_cau_go_seal', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
+            ->where('yeu_cau_go_seal.ma_yeu_cau', $request->ma_yeu_cau)
+            ->pluck('yeu_cau_go_seal_chi_tiet.so_seal_moi');
         foreach ($seals as $seal) {
             if ($seal) {
                 $sealModel = Seal::find($seal);
@@ -644,7 +626,7 @@ class YeuCauNiemPhongController extends Controller
                 }
             }
         }
-        $soContainers = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_container');
+        $soContainers = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_container');
         $this->quayNguocYeuCau($soContainers, $yeuCau);
 
         $yeuCau->trang_thai = '0';
@@ -652,13 +634,13 @@ class YeuCauNiemPhongController extends Controller
         $yeuCau->save();
     }
 
-    public function suaSealNiemPhong(Request $request)
+    public function suaSealGoSeal(Request $request)
     {
         try {
             DB::beginTransaction();
 
-            $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
-            $sealMoi = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
+            $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
+            $sealMoi = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
                 ->where('so_container', $request->so_container)
                 ->first();
 
@@ -694,7 +676,7 @@ class YeuCauNiemPhongController extends Controller
             return redirect()->back();
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
-            Log::error('Error in suaSealNiemPhong: ' . $e->getMessage());
+            Log::error('Error in suaSealGoSeal: ' . $e->getMessage());
             return redirect()->back();
         }
     }
@@ -746,7 +728,6 @@ class YeuCauNiemPhongController extends Controller
     }
     public function updateNiemPhong($so_seal, $so_container, $ma_cong_chuc)
     {
-
         $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
         $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
 
@@ -756,122 +737,28 @@ class YeuCauNiemPhongController extends Controller
                 'ngay_niem_phong' => now(),
                 'ma_cong_chuc' => $ma_cong_chuc,
             ]);
-
-        // if ($count === 0) {
-        //     NiemPhong::insert([
-        //         'so_container' => $so_container,
-        //         'so_seal' => $so_seal,
-        //         'ngay_niem_phong' => now(),
-        //         'ma_cong_chuc' => $ma_cong_chuc,
-        //     ]);
-        // }
     }
-
-    public function inYeuCauNiemPhong(Request $request)
+    public function huyTienTrinh($so_container, $yeuCau)
     {
-        if ($request->is_go_seal) {
-            $is_go_seal = true;
-            $fileName = 'Yêu cầu gỡ seal điện tử số ' . $request->ma_yeu_cau . '.xlsx';
-        } else {
-            $is_go_seal = false;
-            $fileName = 'Yêu cầu niêm phong số ' . $request->ma_yeu_cau . '.xlsx';
+        $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_container', $so_container)
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()->pluck('so_to_khai_nhap')->toArray();
+
+
+        foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+            TheoDoiHangHoa::where('so_to_khai_nhap', $so_to_khai_nhap)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 9)
+                ->delete();
+            TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 9)
+                ->delete();
         }
-        return Excel::download(new YeuCauNiemPhongExport($request->ma_yeu_cau, $is_go_seal), $fileName);
-    }
-
-    public function getSoContainer(Request $request)
-    {
-        $ma_doanh_nghiep = Auth::user()->doanhNghiep->ma_doanh_nghiep;
-        $xuatHangs = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', 'xuat_hang_cont.so_to_khai_xuat')
-            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
-            ->where('trang_thai', '!=', 0)
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('ngay_dang_ky', today())
-                        ->orWhereDate('ngay_dang_ky', today()->subDay());
-                } else {
-                    $query->whereDate('ngay_dang_ky', today());
-                }
-            })
-            ->pluck('xuat_hang_cont.so_container')
-            ->unique();
-
-        $tauConts = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
-            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
-            ->where('trang_thai', '!=', 0)
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('ngay_yeu_cau', today())
-                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
-                } else {
-                    $query->whereDate('ngay_yeu_cau', today());
-                }
-            })->pluck('yeu_cau_tau_cont_chi_tiet.so_container_dich')
-            ->unique();
-
-        $containers = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_container_chi_tiet.ma_yeu_cau', 'yeu_cau_chuyen_container.ma_yeu_cau')
-            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
-            ->where('trang_thai', '!=', 0)
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('ngay_yeu_cau', today())
-                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
-                } else {
-                    $query->whereDate('ngay_yeu_cau', today());
-                }
-            })->pluck('yeu_cau_container_chi_tiet.so_container_dich')
-            ->unique();
-
-        $kiemTra = YeuCauKiemTra::join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau', 'yeu_cau_kiem_tra.ma_yeu_cau')
-            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
-            ->where('trang_thai', '!=', 0)
-            ->where(function ($query) {
-                if (now()->hour < 9) {
-                    $query->whereDate('ngay_yeu_cau', today())
-                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
-                } else {
-                    $query->whereDate('ngay_yeu_cau', today());
-                }
-            })->pluck('yeu_cau_kiem_tra_chi_tiet.so_container')
-            ->unique();
-
-        $containers = $xuatHangs
-            ->merge($tauConts)
-            ->merge($containers)
-            ->merge($kiemTra)
-            ->unique();
-        $containersChuaHetHang = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->where('nhap_hang.trang_thai', 2)
-            ->whereIn('container.so_container', $containers)
-            ->select('container.so_container')
-            ->get()
-            ->toArray();
-        $containersChuaHetHang = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->where('nhap_hang.trang_thai', 2)
-            ->whereIn('container.so_container', $containers)
-            ->select('container.so_container', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
-            ->groupBy('container.so_container')
-            ->having('total_so_luong', '>', 0)
-            ->pluck('container.so_container');
-
-        $soContainers = Container::leftJoin('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
-            ->leftJoin('niem_phong', 'niem_phong.so_container', '=', 'hang_trong_cont.so_container')
-            ->whereIn('container.so_container', $containersChuaHetHang)
-            ->groupBy('container.so_container')
-            ->orderBy(DB::raw('MAX(niem_phong.phuong_tien_vt_nhap)'))
-            ->orderBy('container.so_container')
-            ->select(
-                'container.so_container',
-                DB::raw('MAX(niem_phong.phuong_tien_vt_nhap) as phuong_tien_vt_nhap')
-            )
-            ->get()
-            ->toArray();
-
-        return response()->json(['containers' => $soContainers]);
     }
 
     public function getTauCuaContainer($soContainer)
@@ -881,25 +768,25 @@ class YeuCauNiemPhongController extends Controller
             ->toArray();
         return $containers;
     }
-    public function getYeuCauNiemPhong(Request $request)
+    public function getYeuCauGoSeal(Request $request)
     {
         if ($request->ajax()) {
             if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-                $data = YeuCauNiemPhong::join('doanh_nghiep', 'yeu_cau_niem_phong.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                $data = YeuCauGoSeal::join('doanh_nghiep', 'yeu_cau_go_seal.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
                     ->select(
                         'doanh_nghiep.*',
-                        'yeu_cau_niem_phong.*',
+                        'yeu_cau_go_seal.*',
                     )
                     ->distinct()  // Ensure unique rows
                     ->orderBy('ma_yeu_cau', 'desc')
                     ->get();
             } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
                 $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
-                $data = YeuCauNiemPhong::join('doanh_nghiep', 'yeu_cau_niem_phong.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-                    ->where('yeu_cau_niem_phong.ma_doanh_nghiep', $maDoanhNghiep)
+                $data = YeuCauGoSeal::join('doanh_nghiep', 'yeu_cau_go_seal.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                    ->where('yeu_cau_go_seal.ma_doanh_nghiep', $maDoanhNghiep)
                     ->select(
                         'doanh_nghiep.*',
-                        'yeu_cau_niem_phong.*',
+                        'yeu_cau_go_seal.*',
                     )
                     ->distinct()  // Ensure unique rows
                     ->orderBy('ma_yeu_cau', 'desc')
@@ -915,7 +802,7 @@ class YeuCauNiemPhongController extends Controller
                     return $yeuCau->ten_doanh_nghiep ?? 'N/A';
                 })
                 ->addColumn('action', function ($yeuCau) {
-                    return '<a href="' . route('quan-ly-kho.thong-tin-yeu-cau-niem-phong', $yeuCau->ma_yeu_cau) . '" class="btn btn-primary btn-sm">Xem</a>';
+                    return '<a href="' . route('quan-ly-kho.thong-tin-yeu-cau-go-seal', $yeuCau->ma_yeu_cau) . '" class="btn btn-primary btn-sm">Xem</a>';
                 })
                 ->editColumn('trang_thai', function ($yeuCau) {
                     $status = trim($yeuCau->trang_thai);
@@ -933,6 +820,59 @@ class YeuCauNiemPhongController extends Controller
                 })
                 ->rawColumns(['trang_thai', 'action']) // Allows HTML in status & action columns
                 ->make(true);
+        }
+    }
+    public function themTheoDoiTruLui($so_container, $yeuCau, $ma_cong_chuc)
+    {
+        $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_container', $so_container)
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()->pluck('so_to_khai_nhap')->toArray();
+
+        foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+            $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
+                ->get();
+
+            $theoDoi = TheoDoiTruLui::create([
+                'so_to_khai_nhap' => $so_to_khai_nhap,
+                'so_ptvt_nuoc_ngoai' => '',
+                'ngay_them' => now(),
+                'cong_viec' => 9,
+                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+            ]);
+            foreach ($hangHoas as $hangHoa) {
+                TheoDoiTruLuiChiTiet::insert(
+                    [
+                        'ten_hang' => $hangHoa->ten_hang,
+                        'so_luong_xuat' => 0,
+                        'so_luong_chua_xuat' => $hangHoa->so_luong,
+                        'ma_theo_doi' => $theoDoi->ma_theo_doi,
+                        'so_container' => $hangHoa->so_container,
+                        'so_seal' => '',
+                        'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ''
+                    ]
+                );
+                $ptvtChoHang = NiemPhong::where('so_container',  $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? '';
+                TheoDoiHangHoa::insert([
+                    'so_to_khai_nhap' => $hangHoa->so_to_khai_nhap,
+                    'ma_hang'  => $hangHoa->ma_hang,
+                    'thoi_gian'  => now(),
+                    'so_luong_xuat'  => $hangHoa->so_luong,
+                    'so_luong_ton'  => $hangHoa->so_luong,
+                    'phuong_tien_cho_hang' => $ptvtChoHang,
+                    'cong_viec' => 9,
+                    'phuong_tien_nhan_hang' => '',
+                    'so_container' => $hangHoa->so_container,
+                    'so_seal' => '',
+                    'ma_cong_chuc' => $ma_cong_chuc ?? '',
+                    'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+                ]);
+            }
         }
     }
 }

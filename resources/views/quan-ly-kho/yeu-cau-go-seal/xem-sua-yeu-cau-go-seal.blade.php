@@ -1,6 +1,6 @@
 @extends('layout.user-layout')
 
-@section('title', 'Thông tin yêu cầu niêm phong')
+@section('title', 'Thông tin yêu cầu gỡ seal')
 
 @section('content')
     @php
@@ -19,9 +19,9 @@
                     </div>
                 @endif
                 <div class="col-6">
-                    <a class="return-link" href="/danh-sach-yeu-cau-niem-phong">
+                    <a class="return-link" href="/danh-sach-yeu-cau-go-seal">
                         <p>
-                            < Quay lại danh sách yêu cầu niêm phong </p>
+                            < Quay lại danh sách yêu cầu gỡ seal </p>
                     </a>
                 </div>
                 <div class="col-6">
@@ -155,7 +155,7 @@
                     <h4 class="modal-title" id="exampleModalLabel">Xác nhận duyệt yêu cầu sửa</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('quan-ly-kho.duyet-sua-yeu-cau-niem-phong') }}" method="POST">
+                <form action="{{ route('quan-ly-kho.duyet-sua-yeu-cau-go-seal') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <h5>Xác nhận duyệt yêu cầu sửa này ?</h5>
@@ -173,6 +173,7 @@
                             <option value="4">Seal dây nhựa dẹt</option>
                             <option value="5">Seal định vị điện tử</option>
                         </select>
+
                         <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
                             id="displayTableYeuCau">
                             <thead class="align-middle">
@@ -229,7 +230,7 @@
                     <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy tờ khai</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('quan-ly-kho.huy-sua-yeu-cau-niem-phong') }}" method="POST">
+                <form action="{{ route('quan-ly-kho.huy-sua-yeu-cau-go-seal') }}" method="POST">
                     @csrf
                     <div class="modal-body text-danger">
                         <p class="text-danger">Xác nhận hủy yêu cầu sửa này?</p>
@@ -380,6 +381,7 @@
                     });
                 }
             });
+
             $('#xacNhanModal ').on('shown.bs.modal', function() {
                 $('select[name="so_seal"]').select2({
                     placeholder: "Chọn seal",

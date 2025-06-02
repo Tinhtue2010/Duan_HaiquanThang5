@@ -31,7 +31,11 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
     }
     public function array(): array
     {
-        $ten_cong_chuc = CongChuc::find($this->ma_cong_chuc)->ten_cong_chuc;
+        if ($this->ma_cong_chuc == "Tất cả") {
+            $ten_cong_chuc = "Toàn thể công chức";
+        } else {
+            $ten_cong_chuc = CongChuc::find($this->ma_cong_chuc)->ten_cong_chuc;
+        }
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
         $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
         $result = [
@@ -60,7 +64,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
             ->join('xuat_canh', 'xuat_canh.ma_xuat_canh', '=', 'xuat_canh_chi_tiet.ma_xuat_canh')
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('chu_hang', 'doanh_nghiep.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
-            ->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc)
+            ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
+                return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
+            })
             ->where('xuat_hang.trang_thai', '!=', '0')
             ->whereBetween('xuat_hang.ngay_xuat_canh', [$this->tu_ngay, $this->den_ngay])
             ->select(
@@ -133,7 +139,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                         ->where('xuat_hang.trang_thai', '!=', '0')
                         ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
                         ->where('xuat_hang.so_to_khai_xuat', $nhapHang->so_to_khai_xuat)
-                        ->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc)
+                        ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
+                            return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
+                        })
                         ->whereIn('hang_hoa.loai_hang', ['Khác', ''])
                         ->select(
                             DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_xuat), 0) as total_so_luong_xuat'),
@@ -147,7 +155,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                         ->where('xuat_hang.trang_thai', '!=', '0')
                         ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
                         ->where('xuat_hang.so_to_khai_xuat', $nhapHang->so_to_khai_xuat)
-                        ->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc)
+                        ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
+                            return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
+                        })
                         ->where('hang_hoa.loai_hang', $loaiHang)
                         ->select(
                             DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_xuat), 0) as total_so_luong_xuat'),
@@ -191,7 +201,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
         $nhapHangXuatHets = NhapHang::whereIn('nhap_hang.trang_thai', ['7', '4'])
             ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
-            ->where('nhap_hang.ma_cong_chuc_ban_giao', $this->ma_cong_chuc)
+            ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
+                return $query->where('nhap_hang.ma_cong_chuc_ban_giao', $this->ma_cong_chuc);
+            })
             ->whereBetween('nhap_hang.ngay_xuat_het', [$this->tu_ngay, $this->den_ngay])
 
             ->select(
@@ -238,7 +250,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:S' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:T' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -273,6 +285,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $sheet->getColumnDimension('Q')->setWidth(width: 15);
                 $sheet->getColumnDimension('R')->setWidth(width: 15);
                 $sheet->getColumnDimension('S')->setWidth(width: 15);
+                $sheet->getColumnDimension('T')->setWidth(width: 15);
 
                 $sheet->getStyle('D')->getNumberFormat()->setFormatCode('0'); // Apply format
                 $sheet->getStyle('P')->getNumberFormat()->setFormatCode('0'); // Apply format
@@ -309,31 +322,32 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $sheet->mergeCells('Q8:Q9');
                 $sheet->mergeCells('R8:R9');
                 $sheet->mergeCells('S8:S9');
+                $sheet->mergeCells('T8:T9');
 
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:S6')->applyFromArray([
+                $sheet->getStyle('A1:T6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:S6')->applyFromArray([
+                $sheet->getStyle('A2:T6')->applyFromArray([
                     'font' => ['bold' => true],
                 ]);
-                $sheet->getStyle('A9:S' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A9:T' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:S5')->applyFromArray([
+                $sheet->getStyle('A5:T5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A8:S8')->applyFromArray([
+                $sheet->getStyle('A8:T8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -348,7 +362,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A8:S' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:T' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -366,7 +380,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                     }
                 }
 
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':S' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':T' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -374,10 +388,10 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->mergeCells('A' . $chuKyStart . ':S' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':S' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':S' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':S' . ($chuKyStart + 4))->getFont()->setBold(true);
+                $sheet->mergeCells('A' . $chuKyStart . ':T' . $chuKyStart);
+                $sheet->getStyle('A' . $chuKyStart . ':T' . $chuKyStart)->getFont()->setBold(true);
+                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':T' . ($chuKyStart + 4));
+                $sheet->getStyle('A' . ($chuKyStart + 4) . ':T' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use App\Models\YeuCauNiemPhong;
 use App\Models\YeuCauNiemPhongChiTiet;
+use App\Models\YeuCauGoSeal;
+use App\Models\YeuCauGoSealChiTiet;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
@@ -16,25 +18,35 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 class YeuCauNiemPhongExport implements FromArray, WithEvents
 {
     protected $ma_yeu_cau;
+    protected $is_go_seal;
 
-    public function __construct($ma_yeu_cau)
+    public function __construct($ma_yeu_cau, $is_go_seal)
     {
         $this->ma_yeu_cau = $ma_yeu_cau;
+        $this->is_go_seal = $is_go_seal;
     }
     public function array(): array
     {
-        $yeuCau = YeuCauNiemPhong::find($this->ma_yeu_cau);
-        $chiTiets = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $this->ma_yeu_cau)->get();
+        if ($this->is_go_seal == true) {
+            $yeuCau = YeuCauGoSeal::find($this->ma_yeu_cau);
+            $chiTiets = YeuCauGoSealChiTiet::where('ma_yeu_cau', $this->ma_yeu_cau)->get();
+            $tenyeuCau = 'YÊU CẦU GỠ SEAL ĐIỆN TỬ';
+        } else {
+            $yeuCau = YeuCauNiemPhong::find($this->ma_yeu_cau);
+            $chiTiets = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $this->ma_yeu_cau)->get();
+            $tenyeuCau = 'YÊU CẦU NIÊM PHONG';
+        }
+
         $date = Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('d-m-Y');
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', ''],
             ['HẢI QUAN CỬA KHẨU CẢNG VẠN GIA', '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['YÊU CẦU NIÊM PHONG', '', '', '', '', '', ''],
+            [$tenyeuCau, '', '', '', '', '', ''],
             ["Số {$yeuCau->ma_yeu_cau}, ngày: {$date}", '', '', '', '', ''],
             ["Công chức phụ trách: " . $yeuCau->congChuc->ten_cong_chuc, '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['STT', 'Số container','Tàu', 'Số seal niêm phong cũ', 'Số seal niêm phong mới'],
+            ['STT', 'Số container', 'Tàu', 'Số seal niêm phong cũ', 'Số seal niêm phong mới'],
         ];
         $stt = 1;
         foreach ($chiTiets as $chiTiet) {

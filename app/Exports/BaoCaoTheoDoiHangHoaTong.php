@@ -150,6 +150,8 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                 $tenCongViec = "Kiểm tra hàng";
             } else if ($theoDoiHangHoa->cong_viec == 8) {
                 $tenCongViec = "Niêm phong";
+            } else if ($theoDoiHangHoa->cong_viec == 9) {
+                $tenCongViec = "Gỡ seal điện tử";
             }
             $hangHoa = HangHoa::find($theoDoiHangHoa->ma_hang);
 

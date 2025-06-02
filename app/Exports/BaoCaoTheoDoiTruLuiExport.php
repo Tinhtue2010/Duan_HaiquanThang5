@@ -64,6 +64,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
             $this->tenCongViec = "Tiêu hủy hàng";
         } else if ($cong_viec == 7) {
             $this->tenCongViec = "Kiểm tra hàng";
+        } else if ($cong_viec == 9) {
+            $this->tenCongViec = "Gỡ seal điện tử";
         }
     }
 
@@ -178,20 +180,37 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
             if ($item->so_luong_chua_xuat != 0) {
                 $soTaus[] = $item->phuong_tien_vt_nhap;
                 if ($is_xuat_het == true) {
-                    $result[] = [
-                        $stt++,
-                        '',
-                        '',
-                        $item->ten_hang,
-                        '',
-                        '',
-                        $item->so_luong_xuat,
-                        $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
-                        '',
-                        $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
-                        $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
-                        '',
-                    ];
+                    if ($item->cong_viec != 1) {
+                        $result[] = [
+                            $stt++,
+                            '',
+                            '',
+                            $item->ten_hang,
+                            '',
+                            '',
+                            $item->so_luong_xuat,
+                            $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                            $item->so_seal ?? '',
+                            $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                            $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                            '',
+                        ];
+                    } else {
+                        $result[] = [
+                            $stt++,
+                            '',
+                            '',
+                            $item->ten_hang,
+                            '',
+                            '',
+                            $item->so_luong_xuat,
+                            $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                            '',
+                            $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
+                            $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
+                            '',
+                        ];
+                    }
                 } elseif (\Carbon\Carbon::parse($item->ngay_dang_ky)->greaterThanOrEqualTo($ngayCuoiCung)) {
                     $sealCuoiCung = NiemPhong::where('so_container', $item->so_container)->first()->so_seal ?? '';
                     $result[] = [
@@ -231,7 +250,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
         if (count(array_unique($soTaus)) > 1) {
             $this->is_nhieu_tau = true;
         }
-        
+
         $result[] = ['', '', '', 'Tổng cộng', '', '', '', $sum, '', '', ''];
         $result[] = [
             [''],

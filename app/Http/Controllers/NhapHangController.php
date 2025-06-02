@@ -190,7 +190,6 @@ class NhapHangController extends Controller
             $hangHoa = HangHoa::where('so_to_khai_nhap', $so_to_khai_nhap)->get();
         }
         $doanhNghiep = $this->getDoanhNghiepHienTai();
-
         return view('nhap-hang.sua-to-khai-nhap', [
             'nhapHang' => $nhapHang,
             'hangHoaRows' => $hangHoa,
@@ -201,6 +200,7 @@ class NhapHangController extends Controller
             'loaiHinhs' => LoaiHinh::all(),
             'loaiHangs' => LoaiHang::all(),
             'chuHangs' => ChuHang::all(),
+            'xuatXu' => $hangHoa->first()->xuat_xu ?? '',
         ]);
     }
     public function suaToKhaiNhapCongChuc($so_to_khai_nhap)
@@ -302,9 +302,9 @@ class NhapHangController extends Controller
         foreach ($rowsData as $row) {
             $hangHoa = HangHoa::find($row['ma_hang']);
 
-            if ($hangHoa->so_container_khai_bao != $row['so_container'] || $nhapHang->phuong_tien_vt_nhap != $request->phuong_tien_vt_nhap) {
-                $this->suaXuatHangCont($request, $nhapHang, $row);
-            }
+            // if ($hangHoa->so_container_khai_bao != $row['so_container'] || $nhapHang->phuong_tien_vt_nhap != $request->phuong_tien_vt_nhap) {
+            //     $this->suaXuatHangCont($request, $nhapHang, $row);
+            // }
             $this->suaSoContainerSoLuong($hangHoa, $row);
 
             HangHoa::find($row['ma_hang'])->update([
@@ -315,7 +315,7 @@ class NhapHangController extends Controller
                 'don_vi_tinh' => $row['don_vi_tinh'],
                 'don_gia' => $row['don_gia'],
                 'tri_gia' => $row['tri_gia'],
-                'so_container_khai_bao' => $row['so_container'],
+                // 'so_container_khai_bao' => $row['so_container'],
             ]);
 
             NhapHang::find($request->so_to_khai_nhap)->update([
@@ -324,11 +324,11 @@ class NhapHangController extends Controller
                 'ma_hai_quan' => $request->ma_hai_quan,
                 'ngay_dang_ky' => $formattedDate,
                 'ngay_thong_quan' => $formattedDate,
-                'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
-                'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
+                // 'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
+                // 'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
                 'trong_luong' => $request->trong_luong,
-                'container_ban_dau' => $so_containers,
-                'created_at' => now(),
+                // 'container_ban_dau' => $so_containers,
+                // 'created_at' => now(),
             ]);
         }
 
@@ -358,14 +358,14 @@ class NhapHangController extends Controller
                 ->where('is_da_chuyen_cont', 0)
                 ->update([
                     'ma_hang' => $hangHoa->ma_hang,
-                    'so_container' => $row['so_container'],
+                    // 'so_container' => $row['so_container'],
                     'so_luong' => DB::raw('so_luong + ' . (int) $so_luong_thay_doi),
                 ]);
         } else {
             HangTrongCont::where('ma_hang', $row['ma_hang'])
                 ->update([
                     'ma_hang' => $hangHoa->ma_hang,
-                    'so_container' => $row['so_container'],
+                    // 'so_container' => $row['so_container'],
                 ]);
         }
     }
@@ -816,13 +816,9 @@ class NhapHangController extends Controller
         } else {
             return response("Không hỗ trợ định dạng file này, hệ thống chỉ hỗ trợ định dạng .xls và .csv");
         }
-        $xuat_xu = '';
         $loai_hang = '';
         $so_container = '';
 
-        if ($request->xuat_xu) {
-            $xuat_xu = $request->xuat_xu;
-        }
         if ($request->loai_hang) {
             $loai_hang = $request->loai_hang;
         }
@@ -891,7 +887,6 @@ class NhapHangController extends Controller
             $data[] = [
                 'ten_hang'   => $row[$mappedColumns['tên hàng']] ?? '',
                 'loai_hang'  => $loai_hang,
-                'xuat_xu'    => $xuat_xu,
                 'so_luong_khai_bao'   => $so_luong,
                 'don_vi_tinh' => $row[$mappedColumns['đvt']] ?? '',
                 'don_gia'    => $donGia ?? ($so_luong > 0 ? $triGia / $so_luong : 0), // Calculate if missing
@@ -968,7 +963,7 @@ class NhapHangController extends Controller
         return HangHoa::create([
             'ten_hang' => $row['ten_hang'],
             'loai_hang' => $row['loai_hang'],
-            'xuat_xu' => $row['xuat_xu'],
+            'xuat_xu' => $request->xuat_xu ?? '',
             'so_luong_khai_bao' => $row['so_luong'],
             'don_vi_tinh' => $row['don_vi_tinh'],
             'don_gia' => $row['don_gia'],

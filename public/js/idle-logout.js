@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const logoutTime = 10 * 60 * 1000; // 10 minutes in milliseconds
+    const logoutTime = 30 * 60 * 1000; // 10 minutes in milliseconds
     const logoutForm = document.getElementById('logout-form');
     const storageKey = 'lastActivityTime';
     const checkInterval = 5000; // Check every 5 seconds

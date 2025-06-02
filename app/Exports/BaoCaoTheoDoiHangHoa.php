@@ -144,6 +144,8 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
                 $tenCongViec = "Kiểm tra hàng";
             } else if ($theoDoiHangHoa->cong_viec == 8) {
                 $tenCongViec = "Niêm phong";
+            } else if ($theoDoiHangHoa->cong_viec == 9) {
+                $tenCongViec = "Gỡ seal điện tử";
             }
 
             if ($is_xuat_het == true) {

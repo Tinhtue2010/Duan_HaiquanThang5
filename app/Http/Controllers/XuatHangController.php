@@ -732,6 +732,7 @@ class XuatHangController extends Controller
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', 'xuat_hang.so_to_khai_xuat')
             ->where('xuat_hang.trang_thai', '12')
             ->where('xuat_hang.ma_cong_chuc', $congChuc->ma_cong_chuc)
+            ->where('xuat_hang.so_to_khai_xuat', '>', 18000)
             ->select('xuat_hang.*', 'doanh_nghiep.ten_doanh_nghiep', DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as tong_so_luong_xuat'))
             ->groupBy(
                 'doanh_nghiep.ten_doanh_nghiep',

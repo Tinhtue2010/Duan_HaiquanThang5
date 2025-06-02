@@ -26,7 +26,6 @@ class XuatNhapCanhController extends Controller
     {
         return view('xuat-nhap-canh.them-xnc', [
             'PTVTXuatCanhs' => PTVTXuatCanh::where('trang_thai', '2')->get(),
-            'chuHangs' => ChuHang::all(),
         ]);
     }
 
@@ -40,7 +39,6 @@ class XuatNhapCanhController extends Controller
                     'so_the' => $request->so_the,
                     'is_hang_lanh' => $request->is_hang_lanh,
                     'is_hang_nong' => $request->is_hang_nong,
-                    'ma_chu_hang' => $request->ma_chu_hang,
                     'so_luong_may' => $request->so_luong_may,
                     'tong_trong_tai' => $request->tong_trong_tai,
                     'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
@@ -80,7 +78,6 @@ class XuatNhapCanhController extends Controller
         $xuatNhapCanh = XuatNhapCanh::find($ma_xnc);
         return view('xuat-nhap-canh.sua-xnc', [
             'PTVTXuatCanhs' => PTVTXuatCanh::where('trang_thai', '2')->get(),
-            'chuHangs' => ChuHang::all(),
             'xuatNhapCanh' => $xuatNhapCanh,
         ]);
     }
@@ -94,7 +91,6 @@ class XuatNhapCanhController extends Controller
                 'so_the' => $request->so_the,
                 'is_hang_lanh' => $request->is_hang_lanh,
                 'is_hang_nong' => $request->is_hang_nong,
-                'ma_chu_hang' => $request->ma_chu_hang,
                 'so_luong_may' => $request->so_luong_may,
                 'tong_trong_tai' => $request->tong_trong_tai,
                 'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
@@ -131,13 +127,11 @@ class XuatNhapCanhController extends Controller
         if ($request->ajax()) {
             $query = XuatNhapCanh::query()->select(
                 'xuat_nhap_canh.*',
-                'chu_hang.ten_chu_hang',
                 'ptvt_xuat_canh.ten_phuong_tien_vt',
                 'cong_chuc.ten_cong_chuc'
             )
                 ->orderBy('ma_xnc', 'desc')
                 ->join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
-                ->join('chu_hang', 'xuat_nhap_canh.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
                 ->join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc');
 
             return DataTables::eloquent($query)
@@ -148,7 +142,6 @@ class XuatNhapCanhController extends Controller
                         $query->where(function ($q) use ($search) {
                             $q->orWhere('xuat_nhap_canh.ma_xnc', 'LIKE', "%{$search}%")
                                 ->orWhereRaw("DATE_FORMAT(xuat_nhap_canh.ngay_them, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
-                                ->orWhere('chu_hang.ten_chu_hang', 'LIKE', "%{$search}%")
                                 ->orWhere('ptvt_xuat_canh.ten_phuong_tien_vt', 'LIKE', "%{$search}%");
                         });
                     }
@@ -159,9 +152,6 @@ class XuatNhapCanhController extends Controller
                 })
                 ->editColumn('ngay_them', function ($xuatNhapCanh) {
                     return Carbon::parse($xuatNhapCanh->ngay_them)->format('d-m-Y');
-                })
-                ->addColumn('ten_chu_hang', function ($xuatNhapCanh) {
-                    return $xuatNhapCanh->ten_chu_hang ?? 'N/A';
                 })
                 ->addColumn('ten_phuong_tien_vt', function ($xuatNhapCanh) {
                     return $xuatNhapCanh->ten_phuong_tien_vt ?? 'N/A';

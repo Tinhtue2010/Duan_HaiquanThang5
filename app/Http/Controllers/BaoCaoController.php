@@ -682,6 +682,8 @@ class BaoCaoController extends Controller
                 $item->ten_cong_viec = "Tiêu hủy hàng";
             } elseif ($item->cong_viec == "7") {
                 $item->ten_cong_viec = "Kiểm tra hàng";
+            } elseif ($item->cong_viec == "9") {
+                $item->ten_cong_viec = "Gỡ seal điện tử";
             } elseif ($item->cong_viec == "10") {
                 $item->ten_cong_viec = "Tất cả";
             }
@@ -727,6 +729,8 @@ class BaoCaoController extends Controller
                 $theoDoiTruLui->cong_viec = "Tiêu hủy hàng";
             } else if ($theoDoiTruLui->cong_viec == 7) {
                 $theoDoiTruLui->cong_viec = "Kiểm tra hàng";
+            } else if ($theoDoiTruLui->cong_viec == 9) {
+                $theoDoiTruLui->cong_viec = "Gỡ seal điện tử";
             }
 
             $theoDoiTruLui->ngay_them = Carbon::parse($theoDoiTruLui->ngay_them)->format('d-m-Y');

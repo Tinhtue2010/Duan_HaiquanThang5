@@ -8,7 +8,7 @@ class NhapHang extends Model
 {
     protected $connection = 'mysql';
     protected $table = 'nhap_hang';
-    protected $primaryKey = 'so_to_khai_nhap'; // Specify your custom primary key
+    protected $primaryKey = 'so_to_khai_nhap';
     protected $casts = [
         'so_to_khai_nhap' => 'string'
     ];

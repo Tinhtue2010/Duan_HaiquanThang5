@@ -24,7 +24,9 @@
                             <button data-bs-toggle="modal" data-bs-target="#themModal"
                                 class="btn btn-success float-end">Thêm seal niêm phong</button>
                             <a href="{{ route('quan-ly-khac.xoa-nhanh-chi-niem-phong') }}"><button
-                                    class="btn btn-danger float-end mx-1">Xóa nhanh</button></a>
+                                    class="btn btn-danger float-end me-1">Xóa nhanh</button></a>
+                            <a href="{{ route('quan-ly-khac.sua-nhanh-chi-niem-phong') }}"><button
+                                    class="btn btn-warning float-end me-1">Sửa nhanh</button></a>
                         </div>
                     </div>
                 </div>

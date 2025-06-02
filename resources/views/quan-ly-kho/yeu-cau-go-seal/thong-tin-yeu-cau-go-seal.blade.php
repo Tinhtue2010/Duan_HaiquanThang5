@@ -1,6 +1,6 @@
 @extends('layout.user-layout')
 
-@section('title', 'Thông tin yêu cầu niêm phong')
+@section('title', 'Thông tin yêu cầu gỡ seal')
 
 @section('content')
     @php
@@ -19,14 +19,14 @@
                     </div>
                 @endif
                 <div class="col-6">
-                    <a class="return-link" href="/danh-sach-yeu-cau-niem-phong">
+                    <a class="return-link" href="/danh-sach-yeu-cau-go-seal">
                         <p>
-                            < Quay lại danh sách yêu cầu niêm phong </p>
+                            < Quay lại danh sách yêu cầu gỡ seal </p>
                     </a>
                 </div>
                 <div class="col-6">
                     @if (trim($yeuCau->trang_thai) != '0')
-                        <a href="{{ route('quan-ly-kho.in-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                        <a href="{{ route('quan-ly-kho.in-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau,'is_go_seal' => '1']) }}">
                             <button class="btn btn-success float-end"> In yêu cầu</button>
                         </a>
                     @endif
@@ -38,7 +38,7 @@
                     <h2 class="text-center">{{ $doanhNghiep->ten_doanh_nghiep }}
 
                     </h2>
-                    <h2 class="text-center">YÊU CẦU NIÊM PHONG CONTAINER SAU CHỌN XUẤT HÀNG</h2>
+                    <h2 class="text-center">YÊU CẦU GỠ SEAL ĐIỆN TỬ</h2>
                     <h2 class="text-center">Số {{ $yeuCau->ma_yeu_cau }} - Ngày yêu cầu:
                         {{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</h2>
                     <table class="table table-bordered mt-5" id="displayTable"
@@ -100,7 +100,7 @@
                                     <div class="row">
                                         <div class="col-6">
                                             <a
-                                                href="{{ route('quan-ly-kho.sua-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                                                href="{{ route('quan-ly-kho.sua-yeu-cau-go-seal', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
                                                 <button class="btn btn-warning px-4">
                                                     <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
                                                     Sửa yêu cầu
@@ -131,7 +131,7 @@
                                         <div class="row">
                                             <div class="col-6">
                                                 <a
-                                                    href="{{ route('quan-ly-kho.sua-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                                                    href="{{ route('quan-ly-kho.sua-yeu-cau-go-seal', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
                                                     <button class="btn btn-warning px-4">
                                                         <img class="side-bar-icon"
                                                             src="{{ asset('images/icons/edit.png') }}">
@@ -201,7 +201,7 @@
                                     <center>
                                         <div class="col-6">
                                             <a
-                                                href="{{ route('quan-ly-kho.xem-sua-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
+                                                href="{{ route('quan-ly-kho.xem-sua-yeu-cau-go-seal', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]) }}">
                                                 <button class="btn btn-warning px-4">
                                                     <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
                                                     Xem sửa đổi
@@ -273,10 +273,10 @@
                     <h4 class="modal-title" id="exampleModalLabel">Xác nhận duyệt tờ khai</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('quan-ly-kho.duyet-yeu-cau-niem-phong') }}" method="POST">
+                <form action="{{ route('quan-ly-kho.duyet-yeu-cau-go-seal') }}" method="POST">
                     @csrf
                     <div class="modal-body">
-                        <h5>Xác nhận duyệt yêu cầu niêm phong?</h5>
+                        <h5>Xác nhận duyệt yêu cầu gỡ seal?</h5>
                         <div class="form-group">
                             <label class="label-text mb-1" for=""><strong>Cán bộ công chức phụ
                                     trách</strong></label>
@@ -347,15 +347,15 @@
     </div>
     </div>
 
-    {{-- Sửa seal niêm phong --}}
+    {{-- Sửa seal gỡ seal --}}
     <div class="modal fade" id="suaSealModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="exampleModalLabel">Thay đổi seal niêm phong</h4> <button type="button"
+                    <h4 class="modal-title" id="exampleModalLabel">Thay đổi seal gỡ seal</h4> <button type="button"
                         class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('quan-ly-kho.sua-seal-niem-phong') }}" method="POST">
+                <form action="{{ route('quan-ly-kho.sua-seal-go-seal') }}" method="POST">
                     @csrf
                     <div class="modal-body"> <input type="hidden" name="ma_yeu_cau" value={{ $yeuCau->ma_yeu_cau }}>
                         <label class="mb-1">Hệ thống sẽ tự động chọn lại số seal theo loại seal được chọn, do công chức
@@ -402,7 +402,7 @@
                     <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy tờ khai</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('quan-ly-kho.huy-yeu-cau-niem-phong') }}" method="POST">
+                <form action="{{ route('quan-ly-kho.huy-yeu-cau-go-seal') }}" method="POST">
                     @csrf
                     <div class="modal-body text-danger">
                         <p class="text-danger">Xác nhận hủy yêu cầu này?</p>
@@ -427,7 +427,7 @@
                     <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy tờ khai</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('quan-ly-kho.huy-huy-yeu-cau-niem-phong') }}" method="POST">
+                <form action="{{ route('quan-ly-kho.huy-huy-yeu-cau-go-seal') }}" method="POST">
                     @csrf
                     <div class="modal-body text-danger">
                         @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_yeu_cau == 1)
@@ -571,8 +571,9 @@
     </script>
     <script>
         $(document).ready(function() {
-            $('#loai-seal-dropdown-search').on('change', function() {
+            $('#cong-chuc-dropdown-search').on('change', function() {
                 var selectedValue = $(this).val();
+                
                 if (selectedValue) {
                     var topLoaiSealValue = $('#loai-seal-dropdown-search').val();
 

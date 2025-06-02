@@ -288,6 +288,11 @@
                                         src="{{ asset('images/icons/giahan.png') }}"></div>
                                 Yêu cầu gia hạn tờ khai
                             </a>
+                            <a class="nav-link" href="/danh-sach-yeu-cau-go-seal">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/check-container.png') }}"></div>
+                                Yêu cầu gỡ seal điện tử
+                            </a>
                         @endif
                         @if (Auth::user()->loai_tai_khoan === 'Doanh nghiệp')
                             <div class="sb-sidenav-menu-heading">Quản lý tồn kho</div>

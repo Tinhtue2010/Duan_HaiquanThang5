@@ -296,6 +296,8 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             $tenCongViec = "Tiêu hủy hàng";
         } else if ($cong_viec == 7) {
             $tenCongViec = "Kiểm tra hàng";
+        } else if ($cong_viec == 9) {
+            $tenCongViec = "Gỡ seal điện tử";
         }
         $theoDoiChiTiet = TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
             ->where('theo_doi_tru_lui.ma_theo_doi', $theoDoi->ma_theo_doi)
@@ -334,7 +336,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         '',
                         $item->so_luong_xuat,
                         $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
-                        '',
+                        $item->so_seal ? $item->so_seal : '',
                         $item->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
                         $item->so_container == $this->nhapHang->container_ban_dau ? '' : $item->so_container,
                         '',

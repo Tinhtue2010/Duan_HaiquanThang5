@@ -83,6 +83,26 @@ class SealNiemPhongController extends Controller
         session()->flash('alert-success', 'Xóa nhanh seal thành công');
         return redirect()->back();
     }
+    public function suaNhanhSeal(Request $request)
+    {
+        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        return view('quan-ly-khac.sua-nhanh-seal', data: compact('congChucs'));
+    }
+    public function suaNhanhSealSubmit(Request $request)
+    {
+        $rowsData = json_decode($request->rows_data, true);
+        foreach ($rowsData as $row) {
+            Seal::find($row["so_seal"])->update([
+                'ma_cong_chuc' => $request->ma_cong_chuc_moi
+            ]);
+        }
+        session()->flash('alert-success', 'Sửa nhanh seal thành công');
+        return redirect()->back();
+    }
+
+
+
+
     public function getThongTinXoaNhanhSeal(Request $request)
     {
         $seals = Seal::join('cong_chuc', 'cong_chuc.ma_cong_chuc', 'seal.ma_cong_chuc')
@@ -95,6 +115,9 @@ class SealNiemPhongController extends Controller
             })
             ->when(!empty($request->loai_seal), function ($query) use ($request) {
                 return $query->where('seal.loai_seal', $request->loai_seal);
+            })
+            ->when(isset($request->trang_thai) && $request->trang_thai !== null, function ($query) use ($request) {
+                return $query->where('seal.trang_thai', $request->trang_thai);
             })
             ->get()
             ->map(function ($seal) {

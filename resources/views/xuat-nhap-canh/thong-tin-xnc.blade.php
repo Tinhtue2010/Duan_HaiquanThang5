@@ -39,9 +39,6 @@
                     <h2 class="text-center text-dark"> Phương tiện:
                         {{ $xuatNhapCanh->PTVTXuatCanh->ten_phuong_tien_vt ?? '' }}</h2>
                     <h2 class="text-center text-dark">
-                        Đại lý: {{ $xuatNhapCanh->chuHang->ten_chu_hang ?? '' }}
-                    </h2>
-                    <h2 class="text-center text-dark">
                         Số thẻ: {{ $xuatNhapCanh->so_the ?? '' }}
                     </h2>
                     @if ($xuatNhapCanh->is_hang_nong == 1)

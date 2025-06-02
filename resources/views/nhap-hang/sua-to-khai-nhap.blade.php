@@ -96,7 +96,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="label-text" for="">Đại lý</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
@@ -116,18 +116,36 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="label-text" for="phuong_tien_vt_nhap">Phương tiện vận
                                     tải</label> <span class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="phuong_tien_vt_nhap"
                                     name="phuong_tien_vt_nhap" placeholder="Nhập phương tiện vận tải" maxlength="50"
                                     required value={{ $nhapHang->phuong_tien_vt_nhap }}>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="label-text" for="trong_luong">Trọng lượng
                                     (Tấn)</label> <span class="text-danger missing-input-text"></span>
                                 <input type="number" class="form-control mt-2" id="trong_luong" name="trong_luong"
                                     placeholder="Nhập tổng trọng lượng (Tấn)" value={{ $nhapHang->trong_luong }} required>
+                            </div>
+                            <div class="col-3">
+                                <label class="label-text mb-2" for="xuat_xu">Xuất xứ</label> <span
+                                    class="text-danger missing-input-text"></span>
+                                <select class="form-control" id="xuat-xu-dropdown-search" name="xuat_xu">
+                                    <option value="">Nhập xuất xứ của sản phẩm</option>
+                                    @foreach ($xuatXus as $xuatXu2)
+                                        @if ($xuatXu2 == $xuatXu)
+                                            <option value="{{ $xuatXu2 }}" selected>
+                                                {{ $xuatXu2 }}
+                                            </option>
+                                        @else
+                                            <option value="{{ $xuatXu2 }}">
+                                                {{ $xuatXu2 }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -148,7 +166,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="form-group">
                                     <label class="label-text mb-2" for="loai_hang">Loại hàng</label>
                                     <span class="text-danger missing-input-text"></span>
@@ -162,25 +180,13 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-3">
-                                <label class="label-text mb-2" for="xuat_xu">Xuất xứ</label> <span
-                                    class="text-danger missing-input-text"></span>
-                                <select class="form-control" id="xuat-xu-dropdown-search" name="xuat_xu">
-                                    <option value="">Nhập xuất xứ của sản phẩm</option>
-                                    @foreach ($xuatXus as $xuatXu)
-                                        <option value="{{ $xuatXu }}">
-                                            {{ $xuatXu }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <label class="label-text" for="">Số container</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="so_container" maxlength="50"
                                     name="so_container" placeholder="Nhập số container" required>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <label class="label-text" for="so_seal">Số seal</label>
                                 <span class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="so_seal" name="so_seal"
@@ -247,7 +253,6 @@
                         <th hidden>Mã hàng</th>
                         <th>Tên hàng</th>
                         <th>Loại hàng</th>
-                        <th>Xuất xứ</th>
                         <th>Số lượng</th>
                         <th>Đơn vị tính</th>
                         <th>Đơn giá (USD)</th>
@@ -293,19 +298,7 @@
                         <span class="file-name" id="fileName"></span>
                     </div>
                     <div class="row">
-                        <div class="col-6">
-                            <label class="label-text mb-2 fw-bold" for="xuat_xu">Xuất xứ</label> <span
-                                class="text-danger missing-input-text"></span>
-                            <select class="form-control" id="xuat-xu-2-dropdown-search" name="xuat_xu_2">
-                                <option value="">Nhập xuất xứ của sản phẩm</option>
-                                @foreach ($xuatXus as $xuatXu)
-                                    <option value="{{ $xuatXu }}">
-                                        {{ $xuatXu }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-6">
+                        <div class="col-12">
                             <label class="label-text mb-2 fw-bold" for="loai_hang">Loại hàng</label> <span
                                 class="text-danger missing-input-text"></span>
                             <select class="form-control" id="loai-hang-2-dropdown-search" name="loai_hang_2">
@@ -358,6 +351,7 @@
                         <input type="hidden" name="ma_hai_quan" id="ma_hai_quan">
                         <input type="hidden" name="so_container" id="so_container_hidden">
                         <input type="hidden" name="ma_loai_hinh" id="ma_loai_hinh">
+                        <input type="hidden" name="xuat_xu" id="xuat_xu_hidden">
                         <input type="hidden" name="phuong_tien_vt_nhap" id="phuong_tien_vt_nhap_hidden">
                         <input type="hidden" name="trong_luong" id="trong_luong_hidden">
                         <input type="hidden" name="so_to_khai_nhap" id="so_to_khai_nhap_hidden">
@@ -417,7 +411,6 @@
                 ma_hang: row.ma_hang,
                 ten_hang: row.ten_hang,
                 loai_hang: row.loai_hang,
-                xuat_xu: row.xuat_xu,
                 so_luong_khai_bao: row.so_luong_khai_bao,
                 don_vi_tinh: row.don_vi_tinh,
                 don_gia: row.don_gia,
@@ -437,7 +430,6 @@
                             <td hidden>${row.ma_hang}</td>
                             <td>${row.ten_hang}</td>
                             <td>${row.loai_hang}</td>
-                            <td>${row.xuat_xu}</td>
                             <td>${row.so_luong_khai_bao}</td>
                             <td>${row.don_vi_tinh}</td>
                             <td>${row.don_gia}</td>
@@ -458,7 +450,6 @@
                 const ma_hang = $("#ma_hang").val();
                 const ten_hang = $("#ten_hang").val();
                 const loai_hang = $("#loai-hang-dropdown-search").val();
-                const xuat_xu = $("#xuat-xu-dropdown-search").val();
                 const so_luong_khai_bao = $("#so_luong_khai_bao").val();
                 const don_vi_tinh = $("#don-vi-tinh-dropdown-search").val();
                 const don_gia = $("#don_gia").val();
@@ -475,10 +466,6 @@
                     {
                         id: "#loai_hang",
                         value: loai_hang
-                    },
-                    {
-                        id: "#xuat_xu",
-                        value: xuat_xu
                     },
                     {
                         id: "#so_luong_khai_bao",
@@ -521,7 +508,6 @@
                         ma_hang,
                         ten_hang,
                         loai_hang,
-                        xuat_xu,
                         so_luong_khai_bao,
                         don_vi_tinh,
                         don_gia,
@@ -533,7 +519,6 @@
                     $(".reset-input").val('');
                     $("#ma_hang").val(0);
                     $("#don-vi-tinh-dropdown-search").val('').trigger("change");
-                    $("#xuat-xu-dropdown-search").val('').trigger("change");
                     $("#loai-hang-dropdown-search").val('').trigger('change');
                     $(".missing-input-text").hide();
                 }
@@ -553,7 +538,6 @@
                 $("#so_seal").val(rowData.so_seal);
 
                 $("#don-vi-tinh-dropdown-search").val(rowData.don_vi_tinh).trigger("change");
-                $("#xuat-xu-dropdown-search").val(rowData.xuat_xu).trigger("change");
                 $("#loai-hang-dropdown-search").val(rowData.loai_hang).trigger("change");
                 rowsData.splice(rowIndex, 1);
                 displayRows();
@@ -572,6 +556,7 @@
                 const maHaiQuan = document.getElementById('hai-quan-dropdown-search').value;
                 const maLoaiHinh = document.getElementById('loai-hinh-dropdown-search').value;
                 const maChuHang = document.getElementById('chu-hang-dropdown-search').value;
+                const xuatXu = document.getElementById('xuat-xu-dropdown-search').value;
                 const ngayThongQuan = $('#datepicker').val();
                 const soToKhaiNhap = $("#so_to_khai_nhap").val();
                 const phuongTienVanTaiNhap = $("#phuong_tien_vt_nhap").val();
@@ -614,13 +599,12 @@
                     ma_hang: row.cells[1].textContent,
                     ten_hang: row.cells[2].textContent,
                     loai_hang: row.cells[3].textContent,
-                    xuat_xu: row.cells[4].textContent,
-                    so_luong: row.cells[5].textContent,
-                    don_vi_tinh: row.cells[6].textContent,
-                    don_gia: row.cells[7].textContent,
-                    tri_gia: row.cells[8].textContent,
-                    so_container: row.cells[9].textContent,
-                    so_seal: row.cells[10].textContent,
+                    so_luong: row.cells[4].textContent,
+                    don_vi_tinh: row.cells[5].textContent,
+                    don_gia: row.cells[6].textContent,
+                    tri_gia: row.cells[7].textContent,
+                    so_container: row.cells[8].textContent,
+                    so_seal: row.cells[9].textContent,
                 }));
 
                 // Set values for hidden inputs
@@ -632,6 +616,7 @@
                 document.getElementById('so_to_khai_nhap_hidden').value = soToKhaiNhap;
                 document.getElementById('ngay_thong_quan_hidden').value = ngayThongQuan;
                 document.getElementById('ma_chu_hang_hidden').value = maChuHang;
+                document.getElementById('xuat_xu_hidden').value = xuatXu;
 
                 // Submit the form
                 $('#xacNhanModal').modal('show');
@@ -644,14 +629,12 @@
                     return;
                 }
                 const loai_hang = $("#loai-hang-2-dropdown-search").val();
-                const xuat_xu = $("#xuat-xu-2-dropdown-search").val();
                 const so_container = $("#so-container-2").val();
                 const so_seal = $("#so-seal-2").val();
 
                 var formData = new FormData();
                 formData.append("hys_file", file);
                 formData.append("loai_hang", loai_hang);
-                formData.append("xuat_xu", xuat_xu);
                 formData.append("so_container", so_container);
                 formData.append("so_seal", so_seal);
                 formData.append("_token", "{{ csrf_token() }}");
@@ -674,7 +657,6 @@
                                         <td>${index + 1}</td>
                                         <td>${row.ten_hang}</td>
                                         <td>${row.loai_hang}</td>
-                                        <td>${row.xuat_xu}</td>
                                         <td>${row.so_luong_khai_bao}</td>
                                         <td>${row.don_vi_tinh}</td>
                                         <td>${row.don_gia}</td>
@@ -690,7 +672,6 @@
                                 rowsData.push({
                                     ten_hang: row.ten_hang,
                                     loai_hang: row.loai_hang,
-                                    xuat_xu: row.xuat_xu,
                                     so_luong_khai_bao: row.so_luong_khai_bao,
                                     don_vi_tinh: row.don_vi_tinh,
                                     don_gia: row.don_gia,

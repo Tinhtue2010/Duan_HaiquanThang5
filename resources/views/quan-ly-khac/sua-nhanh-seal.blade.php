@@ -1,6 +1,6 @@
 @extends('layout.user-layout')
 
-@section('title', 'Xóa nhanh chì niêm phong')
+@section('title', 'Sửa nhanh chì niêm phong')
 
 @section('content')
     <div id="layoutSidenav_content">
@@ -15,7 +15,7 @@
                 <p>
                     < Quay lại quản lý chì niêm phong</p>
             </a>
-            <h2 class="text-center">XÓA NHANH CHÌ NIÊM PHONG</h2>
+            <h2 class="text-center">SỬA NHANH CHÌ NIÊM PHONG</h2>
             <div class="row">
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
@@ -64,6 +64,20 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label class="label-text mt-3" for=""><strong>Chọn cán bộ công chức mới</strong></label>
+                        <select class="form-control" id="cong-chuc-dropdown-search-2" name="ma_cong_chuc" required>
+                            <option></option>
+                            @foreach ($congChucs as $congChuc)
+                                <option value="{{ $congChuc->ma_cong_chuc }}">
+                                    {{ $congChuc->ten_cong_chuc }}
+                                    ({{ $congChuc->taiKhoan->ten_dang_nhap ?? '' }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
                 <div class="row card p-3 mt-4">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="hangTrongContTable"
@@ -100,7 +114,7 @@
                     </div>
                 </div>
                 <center>
-                    <button id="xacNhanBtn" class="btn btn-danger mt-5"> Xóa các seal đã chọn</button>
+                    <button id="xacNhanBtn" class="btn btn-warning mt-5"> Sửa các seal đã chọn</button>
                 </center>
                 </form>
 
@@ -111,18 +125,19 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Xác nhận xóa nhanh chì niêm phong</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">Xác nhận sửa nhanh chì niêm phong</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        Xác nhận xóa nhanh chì niêm phong?
+                        Xác nhận sửa nhanh chì niêm phong?
                     </div>
                     <div class="modal-footer">
-                        <form action="{{ route('quan-ly-khac.xoa-nhanh-chi-niem-phong-submit') }}" method="POST"
+                        <form action="{{ route('quan-ly-khac.sua-nhanh-chi-niem-phong-submit') }}" method="POST"
                             id="mainForm" name='xuatHangForm'>
                             @csrf
                             <input type="hidden" name="rows_data" id="rowsDataInput">
-                            <button id="submitData" type="submit" class="btn btn-success">Xóa seal</button>
+                            <input type="hidden" name="ma_cong_chuc_moi" id="maCongChucMoi">
+                            <button id="submitData" type="submit" class="btn btn-success">Sửa seal</button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                         </form>
                     </div>
@@ -148,9 +163,16 @@
                         .get();
 
                     if (rows.length === 0) {
-                        alert('Vui lòng chọn ít nhất một seal để xóa.');
+                        alert('Vui lòng chọn ít nhất một seal để sửa.');
                         return false;
                     }
+                    let ma_cong_chuc_moi = $("#cong-chuc-dropdown-search-2").val();
+                    if (!ma_cong_chuc_moi) {
+                        alert('Vui lòng chọn cán bộ công chức mới.');
+                        return false;
+                    }
+
+                    $('#maCongChucMoi').val(ma_cong_chuc_moi);
                     $('#rowsDataInput').val(JSON.stringify(rows));
                     $('#xacNhanModal').modal('show');
                 });
@@ -161,7 +183,7 @@
                     let ma_cong_chuc = $("#cong-chuc-dropdown-search").val();
                     let trang_thai = $("#trang-thai-dropdown-search").val();
                     let loai_seal = $("#loai-seal").val();
-
+                    console.log(trang_thai);
                     $.ajax({
                         url: "{{ route('quan-ly-khac.get-thong-tin-xoa-nhanh-seal') }}", // Adjust with your route
                         type: "GET",
@@ -170,6 +192,7 @@
                             ma_cong_chuc: ma_cong_chuc,
                             loai_seal: loai_seal,
                             trang_thai: trang_thai,
+
                         },
                         success: function(response) {
                             console.log(response);
@@ -203,10 +226,10 @@
                 $('#cong-chuc-dropdown-search').on('change', function() {
                     updateTable();
                 });
-                $('#loai-seal').on('input', function() {
+                $('#trang-thai-dropdown-search').on('change', function() {
                     updateTable();
                 });
-                $('#trang-thai-dropdown-search').on('change', function() {
+                $('#loai-seal').on('input', function() {
                     updateTable();
                 });
                 $('#ngay-cap').datepicker({

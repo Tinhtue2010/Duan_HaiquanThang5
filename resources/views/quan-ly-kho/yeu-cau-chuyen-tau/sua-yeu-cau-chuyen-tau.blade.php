@@ -141,6 +141,21 @@
                                         maxlength="255" name="tau_moi" placeholder="Nhập tên tàu" required>
                                 </div>
 
+                                <hr class="mt-2" />
+                                <table class="table table-bordered" id="displayTableHangHoa"
+                                    style="vertical-align: middle; text-align: center;">
+                                    <thead>
+                                        <tr style="vertical-align: middle; text-align: center;">
+                                            <th>STT</th>
+                                            <th>Số container</th>
+                                            <th>Tàu mới</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+
                             </div>
                         </div>
                     </div>
@@ -167,10 +182,6 @@
                             .trim() === soToKhaiNhap;
                     });
 
-                // if (isDuplicate) {
-                //     alert('Số tờ khai nhập đã tồn tại trong bảng!');
-                //     return;
-                // }
                 if (soToKhaiNhap) {
                     $.ajax({
                         url: '/get-to-khai-items2',
@@ -179,12 +190,33 @@
                             so_to_khai_nhap: soToKhaiNhap
                         },
                         success: function(response) {
+                            let tableBody = $("#displayTableHangHoa tbody");
+                            tableBody.empty(); // Clear existing data
+                            $('#modal-so-to-khai').text(response.so_to_khai_nhap);
+
+                            let indexNum = 0;
+                            console.log(response.containers);
+                            $.each(response.containers, function(index, item) {
+                                indexNum++;
+                                let row = `
+                                    <tr>
+                                        <td>${indexNum}</td>
+                                        <td>${item}</td>
+                                        <td>
+                                            <input type="text" class="form-control tau-moi">
+                                        </td>                               
+                                    </tr>
+                                `;
+                                tableBody.append(row);
+
+                            });
+
+
                             if (response.data) {
                                 $('#modal-so-to-khai').text(response.data.so_to_khai_nhap);
                                 $('#modal-tau-cu').val(response.data.phuong_tien_vt_nhap);
                                 $('#modal-so-container').text(response.data.so_container);
 
-                                // Open the modal if it's not triggered by data attributes
                                 $('#chonHangTheoToKhaiModal').modal('show');
                             } else {
                                 alert('Không tìm thấy thông tin tờ khai.');
@@ -236,31 +268,56 @@
             loadChiTiets();
             // When the "doneButton" is clicked, add a row to the table
             $('#doneButton').on('click', function() {
-                // Get the modal values
                 var soToKhai = $('#modal-so-to-khai').text();
                 var tauCu = $('#modal-tau-cu').val();
                 var soContainer = $('#modal-so-container').text();
                 var tauMoi = document.getElementById('modal-tau-moi').value;
 
                 // Validate data before adding a row
-                if (!soToKhai || !tauCu || !soContainer || !tauMoi) {
+                if (!soToKhai || !tauCu || !soContainer) {
                     alert('Vui lòng chọn và điền đầy đủ thông tin trước khi thêm!');
                     return;
                 }
 
                 var containers = soContainer.split(';').map(item => item.trim()).filter(item => item !==
                     "");
+                $("#displayTableHangHoa tbody tr").each(function() {
+                    var $cells = $(this).find("td");
+                    var soToKhai = $('#modal-so-to-khai').text();
 
-                containers.forEach(function(container) {
+                    var stt = $cells.eq(0).text().trim();
+                    var so_container = $cells.eq(1).text().trim();
+                    var tau_moi = $cells.eq(2).find(".tau-moi").val().trim();
+
+                    if (tau_moi === "") {
+                        return;
+                    }
+                    var foundMatch = false;
+                    $("#displayTableChiTiet tbody tr").each(function() {
+                        var $cells2 = $(this).find("td");
+                        var soToKhaiNhap2 = $cells2.eq(1).text().trim();
+                        var soContainer2 = $cells2.eq(2).text().trim();
+                        var tauMoi2 = $cells2.eq(4).text().trim();
+
+                        if (soToKhai === soToKhaiNhap2 && so_container === soContainer2 &&
+                            tau_moi === tauMoi2) {
+                            foundMatch = true;
+                            return false;
+                        }
+
+                    });
+                    if (foundMatch) {
+                        return false;
+                    }
                     var newRow = `
                         <tr>
                             <td class="row-index text-center"></td> <!-- Index column -->
                             <td class="text-center">${soToKhai}</td>
-                            <td class="text-center">${container}</td>
+                            <td class="text-center">${so_container}</td>
                             <td class="text-center">${tauCu}</td>
-                            <td class="text-center">${tauMoi}</td>
+                            <td class="text-center">${tau_moi}</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-danger btn-sm remove-row ">Xóa</button>
+                                <button type="button" class="btn btn-danger btn-sm remove-row">Xóa</button>
                             </td>
                         </tr>
                     `;
@@ -299,6 +356,14 @@
     </script>
     {{-- Submit table --}}
     <script>
+        document.getElementById('modal-tau-moi').addEventListener('input', function() {
+            const value = this.value;
+
+            document.querySelectorAll('.tau-moi').forEach(function(input) {
+                input.value = value;
+            });
+        });
+
         function updateRowsData() {
             const rows = $('#displayTableYeuCau tbody tr').map(function() {
                 const cells = $(this).find('td');
