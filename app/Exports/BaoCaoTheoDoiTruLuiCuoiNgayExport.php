@@ -39,6 +39,10 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
     protected $ten_hai_quan;
     protected $stt;
     protected $result;
+    protected $theoDoiTruLuis;
+    protected $lan_phieu;
+    protected $lanArray = [];
+    protected $seenMaTheoDois = [];
 
     public function title(): string
     {
@@ -78,6 +82,22 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
         $date = DateTime::createFromFormat('Y-m-d', $ngay_dang_ky);
 
         $this->ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
+
+        $this->theoDoiTruLuis = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->when(request('cong_viec') == 1, function ($query) {
+                return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
+                    ->where('xuat_hang.trang_thai', '!=', 0);
+            })
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->cong_viec . '-' . $item->ma_yeu_cau; // Group by both fields combined
+            })
+            ->map(function ($group) {
+                return $group->first();
+            })
+            ->values()
+            ->sortBy('ma_theo_doi')
+            ->values();
 
         $this->result = [
             [''],
@@ -147,7 +167,15 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
         }
 
         $this->array = array_map("unserialize", array_unique(array_map("serialize", $this->array)));
-        $this->result[] = ['', '', '', 'Tổng cộng', '', '', $this->sum, $soLuongTon, '', '', ''];
+        $this->result[] = ['', '', '', 'Tổng cộng', '', '', $this->sum, $soLuongTon == 0 ? '0' : $soLuongTon, '', '', ''];
+        $tongLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->sum('hang_trong_cont.so_luong');
+        $this->result[] = ['', '', '', '', '', '', 'Tồn TK', $tongLuongTon == 0 ? '0' : $tongLuongTon, '', '', ''];
+
+
+
         $this->result[] = [
             [''],
             [''],
@@ -208,6 +236,36 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
 
 
             if (\Carbon\Carbon::parse($item->ngay_dang_ky)->isSameDay($this->tu_ngay)) {
+                $soToKhaiXuatTrongPhieus = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                    ->where('xuat_hang_cont.so_to_khai_nhap', $this->so_to_khai_nhap)
+                    ->whereDate('xuat_hang.ngay_dang_ky',  Carbon::parse($this->tu_ngay)->toDateString())
+                    ->pluck('xuat_hang.so_to_khai_xuat')
+                    ->unique()
+                    ->toArray();
+                foreach ($this->theoDoiTruLuis as $truLui) {
+                    if (in_array($truLui->ma_theo_doi, $this->seenMaTheoDois)) {
+                        continue; // Skip if already processed
+                    }
+
+                    $shouldIncrement = false;
+
+                    if ($truLui->cong_viec == 1) {
+                        $xuatHang = XuatHang::find($truLui->ma_yeu_cau);
+                        if ($xuatHang && $xuatHang->trang_thai != 0) {
+                            $shouldIncrement = true;
+                            if (in_array($xuatHang->so_to_khai_xuat, $soToKhaiXuatTrongPhieus)) {
+                                $this->lanArray[] = $this->lan_phieu + 1; // +1 because we increment after
+                            }
+                        }
+                    } else {
+                        $shouldIncrement = true;
+                    }
+
+                    if ($shouldIncrement) {
+                        $this->lan_phieu++;
+                        $this->seenMaTheoDois[] = $truLui->ma_theo_doi;
+                    }
+                }
                 if ($start === null) {
                     $start = $this->stt + 12; // First occurrence
                 }
@@ -259,10 +317,10 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         '',
                     ];
                 }
+                $this->sum += $item->so_luong_xuat;
             }
 
 
-            $this->sum += $item->so_luong_xuat;
             $end = $this->stt - 1 + 12;
             $soLuongTon = 0;
             foreach ($this->hangHoaArr as $key => $value) {
@@ -299,6 +357,14 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
         } else if ($cong_viec == 9) {
             $tenCongViec = "Gỡ seal điện tử";
         }
+
+        $congViecTrongPhieus = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->select('cong_viec', 'ma_yeu_cau')
+            ->groupBy('cong_viec', 'ma_yeu_cau')
+            ->whereDate('ngay_them',  Carbon::parse($this->tu_ngay)->toDateString())
+            ->get()
+            ->toArray();
+
         $theoDoiChiTiet = TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
             ->where('theo_doi_tru_lui.ma_theo_doi', $theoDoi->ma_theo_doi)
             ->get();
@@ -309,7 +375,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             ->get()
             ->first();
 
-        $ngayCuoiCung = $theoDoiCuoiCung->ngay_them  ?? '2000-01-01';
+        $ngayCuoiCung = $theoDoiCuoiCung->ngay_them ?? '2000-01-01';
         $start = null;
         $end = null;
         $is_xuat_het = false;
@@ -320,12 +386,50 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             }
         }
 
+        // Process lan_phieu counting ONCE before the detail loop
+        foreach ($this->theoDoiTruLuis as $truLui) {
+            if (in_array($truLui->ma_theo_doi, $this->seenMaTheoDois)) {
+                continue; // Skip if already processed
+            }
+
+            $shouldIncrement = false;
+
+            if ($truLui->cong_viec == 1) {
+                $xuatHang = XuatHang::find($truLui->ma_yeu_cau);
+                if ($xuatHang && $xuatHang->trang_thai != 0) {
+                    $shouldIncrement = true;
+                    // Check if this export is in today's report
+                    foreach ($congViecTrongPhieus as $congViec) {
+                        if ($congViec['cong_viec'] == 1 && $congViec['ma_yeu_cau'] == $truLui->ma_yeu_cau) {
+                            $this->lanArray[] = $this->lan_phieu + 1; // +1 because we increment after
+                            break;
+                        }
+                    }
+                }
+            } else {
+                $shouldIncrement = true;
+                // Check if this work is in today's report
+                foreach ($congViecTrongPhieus as $congViec) {
+                    if ($congViec['cong_viec'] == $truLui->cong_viec && $congViec['ma_yeu_cau'] == $truLui->ma_yeu_cau) {
+                        $this->lanArray[] = $this->lan_phieu + 1; // +1 because we increment after
+                        break;
+                    }
+                }
+            }
+
+            if ($shouldIncrement) {
+                $this->lan_phieu++;
+                $this->seenMaTheoDois[] = $truLui->ma_theo_doi;
+            }
+        }
+
+        // Now process the detail items
         foreach ($theoDoiChiTiet as $index => $item) {
             if ($start === null) {
                 $start = $this->stt + 12;
             }
-            if ($item->so_luong_chua_xuat != 0) {
 
+            if ($item->so_luong_chua_xuat != 0) {
                 if ($is_xuat_het == true) {
                     $this->result[] = [
                         $this->stt++,
@@ -376,7 +480,6 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             }
         }
 
-        $this->sum += $item->so_luong_xuat;
         $end = $this->stt - 1 + 12;
 
         if ($start !== null && $end !== null) {
@@ -432,6 +535,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 $sheet->getRowDimension(9)->setRowHeight(28);
                 $sheet->getRowDimension(10)->setRowHeight(28);
                 $sheet->getStyle('L')->getNumberFormat()->setFormatCode('0'); // Apply format
+                $sheet->mergeCells('A5:B5');
 
                 $sheet->setCellValue('L2', $this->so_to_khai_nhap);
                 $this->centerCell($sheet, "L2");
@@ -483,6 +587,8 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         break;
                     }
                 }
+
+
                 $lastStart = null;
                 for ($i = 1; $i <= $lastRow; $i++) {
                     if ($sheet->getCell('B' . $i)->getValue() === 'CÔNG CHỨC HẢI QUAN GIÁM SÁT') {
@@ -537,7 +643,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 ]);
 
 
-                $sheet->getStyle('A' . $lastStart . ':L' . ($lastStart + 1))->applyFromArray([
+                $sheet->getStyle('A' . ($lastStart - 4) . ':L' . ($lastStart + 1))->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -550,6 +656,10 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 $sheet->mergeCells('I' . $lastStart . ':L' . ($lastStart));
                 $sheet->mergeCells('I' . $lastStart + 1 . ':L' . ($lastStart + 1));
 
+                $sheet->mergeCells('G' . $lastStart . ':H' . ($lastStart));
+                $sheet->setCellValue('G' . $lastStart, "LẦN " . implode(',',  $this->lanArray));
+                $sheet->getStyle('G' . $lastStart)->getFont()->setSize(22); // Increased font size
+
                 $first = 0;
                 for ($row = $secondTableStart; $row <= $lastStart - 3; $row++) {
                     if ($first == 1) {
@@ -559,6 +669,10 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 }
                 $sheet->getRowDimension(1)->setRowHeight(30);
                 $sheet->getRowDimension(12)->setRowHeight(30);
+
+                $sheet->getRowDimension($lastStart - 3)->setRowHeight(40);
+                $sheet->getRowDimension($lastStart - 4)->setRowHeight(40);
+
                 if (mb_strlen($this->ten_hai_quan, 'UTF-8') > 40) {
                     $sheet->getRowDimension(7)->setRowHeight(50);
                     $sheet->getStyle('A7:L7')->applyFromArray([

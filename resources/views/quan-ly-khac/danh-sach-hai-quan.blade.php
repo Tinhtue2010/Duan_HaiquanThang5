@@ -43,9 +43,10 @@
                                     Thao tác
                                 </th> --}}
                             </thead>
-                            <tbody>
+                            <tbody class="clickable-row">
                                 @foreach ($data as $index => $haiQuan)
-                                    <tr>
+                                    <tr data-ma-hai-quan="{{ $haiQuan->ma_hai_quan }}"
+                                        data-ten-hai-quan="{{ $haiQuan->ten_hai_quan }}">
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $haiQuan->ma_hai_quan }}</td>
                                         <td>{{ $haiQuan->ten_hai_quan }}</td>
@@ -91,9 +92,35 @@
             </div>
         </div>
     </div>
+    <!-- Thông tin Modal -->
+    <div class="modal fade" id="thongTinModal" tabindex="-1" aria-labelledby="thongTinModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="thongTinModalLabel">Thông tin hải quan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('quan-ly-khac.update-hai-quan') }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="modal-body">
+                        <p><strong>Mã hải quan:</strong> <span id="modalMaHaiQuan"></span></p>
+                        <label for="ten_hai_quan"><strong>Tên hải quan</strong></label>
+                        <textarea type="text" class="form-control mb-3" id="modalTenHaiQuanInput" name="ten_hai_quan"
+                            placeholder="Nhập tên hải quan" cols="3" required></textarea>
+                        <input type="hidden" name="ma_hai_quan" id="modalMaHaiQuanInput">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Cập nhật</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Xóa Modal -->
-    <div class="modal fade" id="xoaModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    {{-- <div class="modal fade" id="xoaModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -122,7 +149,7 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -141,6 +168,20 @@
                     modalMaHaiQuan.textContent = maHaiQuan;
                     modalInputMaHaiQuan.value = maHaiQuan;
                 });
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#dataTable tbody').on('click', 'tr', function(event) {
+                var maHaiQuan = $(this).data('ma-hai-quan');
+                var tenHaiQuan = $(this).data('ten-hai-quan');
+
+                $('#modalMaHaiQuan').text(maHaiQuan);
+                $('#modalTenHaiQuanInput').val(tenHaiQuan);
+                $('#modalMaHaiQuanInput').val(maHaiQuan);
+
+                $('#thongTinModal').modal('show');
             });
         });
     </script>

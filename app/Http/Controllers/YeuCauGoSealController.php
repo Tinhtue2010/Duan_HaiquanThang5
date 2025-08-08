@@ -60,17 +60,16 @@ class YeuCauGoSealController extends Controller
                 'ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep,
                 'trang_thai' => '1',
                 'ngay_yeu_cau' => now(),
-                'is_go_seal' => 1
+                'is_niem_phong' => $request->is_niem_phong
             ]);
 
             // Decode the JSON data from the form
             $rowsData = json_decode($request->rows_data, true);
             foreach ($rowsData as $row) {
-                $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
                 YeuCauGoSealChiTiet::insert([
                     'so_container' => $row['so_container'],
-                    'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
-                    'so_seal_cu' => $niemPhong->so_seal ?? '',
+                    'phuong_tien_vt_nhap' => $row['phuong_tien_vt_nhap'],
+                    'so_seal_cu' => $row['so_seal'],
                     'so_seal_moi' => '',
                     'ma_yeu_cau' => $yeuCau->ma_yeu_cau
                 ]);
@@ -106,7 +105,7 @@ class YeuCauGoSealController extends Controller
             $seals = [];
         }
 
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         return view('quan-ly-kho.yeu-cau-go-seal.thong-tin-yeu-cau-go-seal', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs', 'congChucHienTai', 'seals')); // Pass data to the view
     }
 
@@ -140,11 +139,10 @@ class YeuCauGoSealController extends Controller
             if ($yeuCau->trang_thai == 1) {
                 YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
                 foreach ($rowsData as $row) {
-                    $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
                     YeuCauGoSealChiTiet::insert([
                         'so_container' => $row['so_container'],
-                        'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
-                        'so_seal_cu' => $niemPhong->so_seal ?? '',
+                        'phuong_tien_vt_nhap' => $row['phuong_tien_vt_nhap'],
+                        'so_seal_cu' => $row['so_seal'],
                         'so_seal_moi' => '',
                         'ma_yeu_cau' => $request->ma_yeu_cau,
                     ]);
@@ -153,11 +151,10 @@ class YeuCauGoSealController extends Controller
                 $yeuCau->trang_thai = '3';
                 $yeuCau->save();
                 foreach ($rowsData as $row) {
-                    $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
                     YeuCauGoSealChiTietSua::insert([
                         'so_container' => $row['so_container'],
-                        'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
-                        'so_seal_cu' => $niemPhong->so_seal ?? '',
+                        'phuong_tien_vt_nhap' => $row['phuong_tien_vt_nhap'],
+                        'so_seal_cu' => $row['so_seal'],
                         'so_seal_moi' => '',
                         'ma_yeu_cau' => $request->ma_yeu_cau,
                     ]);
@@ -187,7 +184,6 @@ class YeuCauGoSealController extends Controller
         $containerBiXoa = $containersChiTiet->diff($containersChiTietSua);
         $containerThemVao = $containersChiTietSua->diff($containersChiTiet);
 
-        // If you want the full records from $chiTiets
         $chiTietBiXoa = $chiTiets->whereIn('so_container', $containerBiXoa);
         $chiTietThemVao = $chiTietSuas->whereIn('so_container', $containerThemVao);
 
@@ -212,84 +208,103 @@ class YeuCauGoSealController extends Controller
             $chiTietBiXoa = $chiTiets->whereIn('so_container', $containerBiXoa);
             $chiTietThemVao = $chiTietSuas->whereIn('so_container', $containerThemVao);
 
-            foreach ($chiTietBiXoa as $chiTiet) {
-                $sealModel = Seal::find($chiTiet->so_seal_moi);
-                if ($sealModel) {
-                    $sealModel->update(['trang_thai' => '0']);
-                }
+
+            foreach ($chiTiets as $chiTiet) {
+                $this->huyTienTrinh($chiTiet->so_container, $yeuCau);
             }
+
+
             if (!empty($containerBiXoa)) {
                 $this->quayNguocYeuCau($containerBiXoa, $yeuCau);
                 YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
                     ->whereIn('so_container', $containerBiXoa)
                     ->delete();
             }
-            $rowsData = json_decode($request->rows_data, true);
-            if (!empty($rowsData)) {
-                foreach ($rowsData as $row) {
-                    if ($row['loai_seal'] == "5" && $row['so_seal'] == null) {
-                        session()->flash('alert-danger', 'Chưa chọn số seal cho seal định vị điện tử');
-                        return redirect()->back();
+
+            if ($yeuCau->is_niem_phong == 1) {
+                foreach ($chiTietBiXoa as $chiTiet) {
+                    $sealModel = Seal::find($chiTiet->so_seal_moi);
+                    if ($sealModel) {
+                        $sealModel->update(['trang_thai' => '0']);
                     }
                 }
-                $counts = collect($rowsData)->countBy('loai_seal');
 
-                foreach ($counts as $loai_seal => $count) {
-                    if ($loai_seal == 1) {
-                        $tenSeal = 'Seal dây cáp đồng';
-                    } elseif ($loai_seal == 2) {
-                        $tenSeal = 'Seal dây cáp thép';
-                    } elseif ($loai_seal == 3) {
-                        $tenSeal = 'Seal dây cáp container';
-                    } elseif ($loai_seal == 4) {
-                        $tenSeal = 'Seal dây nhựa dẹt';
-                    } elseif ($loai_seal == 5) {
-                        $tenSeal = 'Seal định vị điện tử';
-                    }
-                    $availableSeals = $this->getSealNhoNhat($loai_seal, $request->ma_cong_chuc, $count);
-                    if (!$availableSeals) {
-                        session()->flash('alert-danger', 'Không đủ số ' . $tenSeal . ' để cấp cho yêu cầu này');
-                        return redirect()->back();
-                    }
-                }
-            }
-
-            if (!empty($chiTietThemVao)) {
-                $rowMap = collect($rowsData)->keyBy('so_container');
-                foreach ($chiTietThemVao as $chiTietThem) {
-                    $soContainer = $chiTietThem->so_container;
-                    $row = $rowMap->get($soContainer);
-                    if ($row) {
-                        $chiTiet = YeuCauGoSealChiTiet::create($chiTietThem->toArray());
-                        if ($row['so_container'] === $chiTiet->so_container) {
-                            if ($row['loai_seal'] == "5") {
-                                $so_seal_moi = $row['so_seal'];
-                            } else {
-                                $availableSeals = $this->getSealNhoNhat($row['loai_seal'], $request->ma_cong_chuc);
-                                $so_seal_moi = $availableSeals->shift();
-                            }
-                        }
-                        $chiTiet->so_seal_moi = $so_seal_moi;
-                        $chiTiet->save();
-
-                        $this->themContainerMoi($chiTiet->so_container);
-                        $suDungSeal = $this->suDungSeal($so_seal_moi, $chiTiet->so_container, $request->ma_cong_chuc);
-                        if (!$suDungSeal) {
-                            session()->flash('alert-danger', 'Seal này đã được sử dụng');
+                $rowsData = json_decode($request->rows_data, true);
+                if (!empty($rowsData)) {
+                    foreach ($rowsData as $row) {
+                        if ($row['loai_seal'] == "5" && $row['so_seal'] == null) {
+                            session()->flash('alert-danger', 'Chưa chọn số seal cho seal định vị điện tử');
                             return redirect()->back();
                         }
-                        $this->updateNiemPhong($so_seal_moi, $chiTiet->so_container, $request->ma_cong_chuc);
-                        $this->capNhatSealXuatHang($chiTiet->so_container, $so_seal_moi);
-                        $this->capNhatSealTruLui($chiTiet->so_container, $so_seal_moi);
-                        $this->capNhatSealTheoDoi($chiTiet->so_container, $so_seal_moi);
-                        $this->themTienTrinh($chiTiet->so_container, 'đã duyệt đề nghị sửa', $request->ma_yeu_cau);
-                    } else {
-                        session()->flash('alert-danger', 'Có lỗi xảy ra');
-                        return redirect()->back();
+                    }
+                    $counts = collect($rowsData)->countBy('loai_seal');
+
+                    foreach ($counts as $loai_seal => $count) {
+                        if ($loai_seal == 1) {
+                            $tenSeal = 'Seal dây cáp đồng';
+                        } elseif ($loai_seal == 2) {
+                            $tenSeal = 'Seal dây cáp thép';
+                        } elseif ($loai_seal == 3) {
+                            $tenSeal = 'Seal dây cáp container';
+                        } elseif ($loai_seal == 4) {
+                            $tenSeal = 'Seal dây nhựa dẹt';
+                        } elseif ($loai_seal == 5) {
+                            $tenSeal = 'Seal định vị điện tử';
+                        }
+                        $availableSeals = $this->getSealNhoNhat($loai_seal, $request->ma_cong_chuc, $count);
+                        if (!$availableSeals) {
+                            session()->flash('alert-danger', 'Không đủ số ' . $tenSeal . ' để cấp cho yêu cầu này');
+                            return redirect()->back();
+                        }
+                    }
+                }
+
+                if (!empty($chiTietThemVao)) {
+                    $rowMap = collect($rowsData)->keyBy('so_container');
+                    foreach ($chiTietThemVao as $chiTietThem) {
+                        $soContainer = $chiTietThem->so_container;
+                        $row = $rowMap->get($soContainer);
+                        if ($row) {
+                            $chiTiet = YeuCauGoSealChiTiet::create($chiTietThem->toArray());
+                            if ($row['so_container'] === $chiTiet->so_container) {
+                                if ($row['loai_seal'] == "5") {
+                                    $so_seal_moi = $row['so_seal'];
+                                } else {
+                                    $availableSeals = $this->getSealNhoNhat($row['loai_seal'], $request->ma_cong_chuc);
+                                    $so_seal_moi = $availableSeals->shift();
+                                }
+                            }
+                            $chiTiet->so_seal_moi = $so_seal_moi;
+                            $chiTiet->save();
+
+                            $this->themContainerMoi($chiTiet->so_container);
+                            $suDungSeal = $this->suDungSeal($so_seal_moi, $chiTiet->so_container, $request->ma_cong_chuc);
+                            if (!$suDungSeal) {
+                                session()->flash('alert-danger', 'Seal này đã được sử dụng');
+                                return redirect()->back();
+                            }
+                            $this->updateNiemPhong($so_seal_moi, $chiTiet->so_container, $request->ma_cong_chuc);
+                            $this->capNhatSealXuatHang($chiTiet->so_container, $so_seal_moi);
+                            $this->capNhatSealTruLui($chiTiet->so_container, $so_seal_moi);
+                            $this->capNhatSealTheoDoi($chiTiet->so_container, $so_seal_moi);
+                            $this->themTienTrinh($chiTiet->so_container, 'đã duyệt đề nghị sửa', $request->ma_yeu_cau);
+                        } else {
+                            session()->flash('alert-danger', 'Có lỗi xảy ra');
+                            return redirect()->back();
+                        }
+                    }
+                }
+            } else {
+                if (!empty($chiTietThemVao)) {
+                    foreach ($chiTietThemVao as $chiTietThem) {
+                        $chiTiet = YeuCauGoSealChiTiet::create($chiTietThem->toArray());
                     }
                 }
             }
 
+            foreach ($chiTietThemVao as $chiTiet) {
+                $this->themTheoDoiTruLui($chiTiet->so_container, $yeuCau, $request->ma_cong_chuc, $chiTiet->so_seal_moi ?? '');
+            }
             YeuCauGoSealChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
             $yeuCau->trang_thai = '2';
             $yeuCau->save();
@@ -351,30 +366,32 @@ class YeuCauGoSealController extends Controller
         $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
 
         $rowsData = json_decode($request->rows_data, true);
-        // $this->kiemTraSubmit($rowsData, $request->ma_cong_chuc);
-        foreach ($rowsData as $row) {
-            if ($row['loai_seal'] == "5" && $row['so_seal'] == null) {
-                session()->flash('alert-danger', 'Chưa chọn số seal cho seal định vị điện tử');
-                return redirect()->back();
+        if ($yeuCau->is_niem_phong == 1) {
+            // $this->kiemTraSubmit($rowsData, $request->ma_cong_chuc);
+            foreach ($rowsData as $row) {
+                if ($row['loai_seal'] == "5" && $row['so_seal'] == null) {
+                    session()->flash('alert-danger', 'Chưa chọn số seal cho seal định vị điện tử');
+                    return redirect()->back();
+                }
             }
-        }
-        $counts = collect($rowsData)->countBy('loai_seal');
-        foreach ($counts as $loai_seal => $count) {
-            if ($loai_seal == 1) {
-                $tenSeal = 'Seal dây cáp đồng';
-            } elseif ($loai_seal == 2) {
-                $tenSeal = 'Seal dây cáp thép';
-            } elseif ($loai_seal == 3) {
-                $tenSeal = 'Seal dây cáp container';
-            } elseif ($loai_seal == 4) {
-                $tenSeal = 'Seal dây nhựa dẹt';
-            } elseif ($loai_seal == 5) {
-                $tenSeal = 'Seal định vị điện tử';
-            }
-            $availableSeals = $this->getSealNhoNhat($loai_seal, $request->ma_cong_chuc, $count);
-            if (!$availableSeals) {
-                session()->flash('alert-danger', 'Không đủ số ' . $tenSeal . ' để cấp cho yêu cầu này');
-                return redirect()->back();
+            $counts = collect($rowsData)->countBy('loai_seal');
+            foreach ($counts as $loai_seal => $count) {
+                if ($loai_seal == 1) {
+                    $tenSeal = 'Seal dây cáp đồng';
+                } elseif ($loai_seal == 2) {
+                    $tenSeal = 'Seal dây cáp thép';
+                } elseif ($loai_seal == 3) {
+                    $tenSeal = 'Seal dây cáp container';
+                } elseif ($loai_seal == 4) {
+                    $tenSeal = 'Seal dây nhựa dẹt';
+                } elseif ($loai_seal == 5) {
+                    $tenSeal = 'Seal định vị điện tử';
+                }
+                $availableSeals = $this->getSealNhoNhat($loai_seal, $request->ma_cong_chuc, $count);
+                if (!$availableSeals) {
+                    session()->flash('alert-danger', 'Không đủ số ' . $tenSeal . ' để cấp cho yêu cầu này');
+                    return redirect()->back();
+                }
             }
         }
         try {
@@ -382,51 +399,58 @@ class YeuCauGoSealController extends Controller
             DB::beginTransaction();
             if ($yeuCau && $yeuCau->trang_thai == '1') {
                 $chiTietYeuCaus = YeuCauGoSealChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
-                $rowMap = collect($rowsData)->keyBy('so_container');
-                foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-                    $soContainer = $chiTietYeuCau->so_container;
-                    $row = $rowMap->get($soContainer);
-                    if ($row) {
-                        if ($row['loai_seal'] != "5") {
-                            $availableSeals = $this->getSealNhoNhat($row['loai_seal'], $request->ma_cong_chuc);
-                            $so_seal_moi = $availableSeals->shift();
-                        } else {
-                            $so_seal_moi = $row['so_seal'];
-                        }
-
-                        while (true) {
-                            if ($soSealUsed->contains($so_seal_moi)) {
-                                $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $yeuCau->ma_cong_chuc);
+                if ($yeuCau->is_niem_phong == 1) {
+                    $rowMap = collect($rowsData)->keyBy('so_container');
+                    foreach ($chiTietYeuCaus as $chiTietYeuCau) {
+                        $soContainer = $chiTietYeuCau->so_container;
+                        $this->themNiemPhong($soContainer);
+                        $row = $rowMap->get($soContainer);
+                        if ($row) {
+                            if ($row['loai_seal'] != "5") {
                                 $availableSeals = $this->getSealNhoNhat($row['loai_seal'], $request->ma_cong_chuc);
                                 $so_seal_moi = $availableSeals->shift();
                             } else {
-                                $soSealUsed->push($so_seal_moi);
-                                $chiTietYeuCau->so_seal_moi = $so_seal_moi;
-                                $chiTietYeuCau->save();
-                                break;
+                                $so_seal_moi = $row['so_seal'];
                             }
-                        }
 
-                        $this->themContainerMoi($chiTietYeuCau->so_container);
-                        $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
-                        
-                        $this->updateNiemPhong($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
-                        $this->capNhatSealXuatHang($chiTietYeuCau->so_container, $so_seal_moi);
-                        $this->capNhatSealTruLui($chiTietYeuCau->so_container, $so_seal_moi);
-                        $this->capNhatSealTheoDoi($chiTietYeuCau->so_container, $so_seal_moi);
-                    } else {
-                        session()->flash('alert-danger', 'Có lỗi xảy ra');
+                            while (true) {
+                                if ($soSealUsed->contains($so_seal_moi)) {
+                                    $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $yeuCau->ma_cong_chuc);
+                                    $availableSeals = $this->getSealNhoNhat($row['loai_seal'], $request->ma_cong_chuc);
+                                    $so_seal_moi = $availableSeals->shift();
+                                } else {
+                                    $soSealUsed->push($so_seal_moi);
+                                    $chiTietYeuCau->so_seal_moi = $so_seal_moi;
+                                    $chiTietYeuCau->save();
+                                    break;
+                                }
+                            }
+
+                            $this->themContainerMoi($chiTietYeuCau->so_container);
+                            $this->suDungSeal($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
+
+                            $this->updateNiemPhong($so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
+                            $this->capNhatSealXuatHang($chiTietYeuCau->so_container, $so_seal_moi);
+                            $this->capNhatSealTruLui($chiTietYeuCau->so_container, $so_seal_moi);
+                            $this->capNhatSealTheoDoi($chiTietYeuCau->so_container, $so_seal_moi);
+                        } else {
+                            session()->flash('alert-danger', 'Có lỗi xảy ra');
+                            return redirect()->back();
+                        }
+                    }
+                    foreach ($chiTietYeuCaus as $chiTietYeuCau) {
+                        $this->updateNiemPhong($chiTietYeuCau->so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
+                        $this->capNhatSealTruLui($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
+                    }
+                    $so_seals = $chiTietYeuCaus->pluck('so_seal_moi');
+                    $duplicates = $so_seals->duplicates();
+                    if ($duplicates->isNotEmpty()) {
+                        session()->flash('alert-danger', 'Có lỗi xảy ra, hãy thử lại');
                         return redirect()->back();
                     }
-                    $this->themTienTrinh($chiTietYeuCau->so_container, 'đã duyệt', $chiTietYeuCau->ma_yeu_cau);
-                    $this->themTheoDoiTruLui($chiTietYeuCau->so_container, $yeuCau, $yeuCau->ma_cong_chuc);
                 }
-
-                $so_seals = $chiTietYeuCaus->pluck('so_seal_moi');
-                $duplicates = $so_seals->duplicates();
-                if ($duplicates->isNotEmpty()) {
-                    session()->flash('alert-danger', 'Có lỗi xảy ra, hãy thử lại');
-                    return redirect()->back();
+                foreach ($chiTietYeuCaus as $chiTietYeuCau) {
+                    $this->themTheoDoiTruLui($chiTietYeuCau->so_container, $yeuCau, $request->ma_cong_chuc, $chiTietYeuCau->so_seal_moi ?? '');
                 }
                 $yeuCau->ma_cong_chuc = $request->ma_cong_chuc;
                 $yeuCau->ngay_hoan_thanh = now();
@@ -437,21 +461,25 @@ class YeuCauGoSealController extends Controller
 
             DB::commit();
 
-            $chiTietYeuCaus = YeuCauGoSeal::join('yeu_cau_go_seal_chi_tiet', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
-                ->where('yeu_cau_go_seal.ma_yeu_cau', $request->ma_yeu_cau)
-                ->get();
-
-            foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-                $this->updateNiemPhong($chiTietYeuCau->so_seal_moi, $chiTietYeuCau->so_container, $request->ma_cong_chuc);
-                $this->capNhatSealTruLui($chiTietYeuCau->so_container, $chiTietYeuCau->so_seal_moi);
-            }
-
 
             return redirect()->route('quan-ly-kho.danh-sach-yeu-cau-go-seal');
         } catch (\Exception $e) {
             session()->flash('alert-danger', 'Có lỗi xảy ra');
             Log::error('Error in duyetYeuCauGoSeal: ' . $e->getMessage());
             return redirect()->back();
+        }
+    }
+
+    private function themNiemPhong($so_container)
+    {
+        $record = NiemPhong::where('so_container',  $so_container)->first();
+        if (!$record) {
+            NiemPhong::insert([
+                'so_container' => $so_container,
+                'so_seal' => '',
+                'ngay_niem_phong' => now(),
+                'phuong_tien_vt_nhap' => '',
+            ]);
         }
     }
     private function getCongChucHienTai()
@@ -461,14 +489,26 @@ class YeuCauGoSealController extends Controller
 
     public function themTienTrinh($so_container, $noi_dung, $ma_yeu_cau)
     {
+        $so_container_no_space = str_replace(' ', '', $so_container);
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
         $ma_cong_chuc = $this->getCongChucHienTai()->ma_cong_chuc ?? '';
         $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', '2')
-            ->where('hang_trong_cont.so_container', $so_container)
-            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->where('nhap_hang.trang_thai', 2)
+            ->whereIn('hang_trong_cont.so_container', [$so_container_no_space, $so_container_with_space])
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
             ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
             ->get()->pluck('so_to_khai_nhap')->toArray();
+
+        $so_to_khai_nhaps_2 = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->where('nhap_hang.trang_thai', 1)
+            ->whereIn('hang_hoa.so_container_khai_bao', [$so_container_no_space, $so_container_with_space])
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()->pluck('so_to_khai_nhap')->toArray();
+
+        $so_to_khai_nhaps = array_merge($so_to_khai_nhaps, $so_to_khai_nhaps_2);
 
         foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
             if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
@@ -596,18 +636,20 @@ class YeuCauGoSealController extends Controller
     public function quayNguocYeuCau($soContainerCanQuayNguoc, $yeuCau)
     {
         foreach ($soContainerCanQuayNguoc as $soContainer) {
-            $chiTiet = YeuCauGoSealChiTiet::where('so_container', $soContainer)
-                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-                ->first();
-            if ($chiTiet->so_seal_cu == null) {
-                $soSealCu = '';
-            } else {
-                $soSealCu = $chiTiet->so_seal_cu;
+            if ($yeuCau->is_niem_phong == 1) {
+                $chiTiet = YeuCauGoSealChiTiet::where('so_container', $soContainer)
+                    ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                    ->first();
+                if ($chiTiet->so_seal_cu == null) {
+                    $soSealCu = '';
+                } else {
+                    $soSealCu = $chiTiet->so_seal_cu;
+                }
+                $this->capNhatSealXuatHang($soContainer, $soSealCu);
+                $this->capNhatSealTruLui($soContainer, $soSealCu);
+                $this->capNhatSealTheoDoi($soContainer,  $soSealCu);
+                $this->updateNiemPhong($soSealCu, $soContainer, $yeuCau->ma_cong_chuc);
             }
-            $this->capNhatSealXuatHang($soContainer, $soSealCu);
-            $this->capNhatSealTruLui($soContainer, $soSealCu);
-            $this->capNhatSealTheoDoi($soContainer,  $soSealCu);
-            $this->updateNiemPhong($soSealCu, $soContainer, $yeuCau->ma_cong_chuc);
             $this->themTienTrinh($soContainer, 'đã duyệt đề nghị hủy', $yeuCau->ma_yeu_cau);
         }
     }
@@ -615,14 +657,16 @@ class YeuCauGoSealController extends Controller
     public function duyetHuyYeuCau(Request $request)
     {
         $yeuCau = YeuCauGoSeal::find($request->ma_yeu_cau);
-        $seals = YeuCauGoSealChiTiet::join('yeu_cau_go_seal', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_go_seal.ma_yeu_cau', $request->ma_yeu_cau)
-            ->pluck('yeu_cau_go_seal_chi_tiet.so_seal_moi');
-        foreach ($seals as $seal) {
-            if ($seal) {
-                $sealModel = Seal::find($seal);
-                if ($sealModel) {
-                    $sealModel->update(['trang_thai' => '0']);
+        if ($yeuCau->is_niem_phong == 1) {
+            $seals = YeuCauGoSealChiTiet::join('yeu_cau_go_seal', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
+                ->where('yeu_cau_go_seal.ma_yeu_cau', $request->ma_yeu_cau)
+                ->pluck('yeu_cau_go_seal_chi_tiet.so_seal_moi');
+            foreach ($seals as $seal) {
+                if ($seal) {
+                    $sealModel = Seal::find($seal);
+                    if ($sealModel) {
+                        $sealModel->update(['trang_thai' => '0']);
+                    }
                 }
             }
         }
@@ -740,15 +784,27 @@ class YeuCauGoSealController extends Controller
     }
     public function huyTienTrinh($so_container, $yeuCau)
     {
+        $so_container_no_space = str_replace(' ', '', $so_container);
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
         $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', '2')
-            ->where('hang_trong_cont.so_container', $so_container)
-            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->where('nhap_hang.trang_thai', 2)
+            ->whereIn('hang_trong_cont.so_container', [$so_container_no_space, $so_container_with_space])
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()
+            ->pluck('so_to_khai_nhap')
+            ->toArray();
+
+        $so_to_khai_nhaps_2 = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->where('nhap_hang.trang_thai', 1)
+            ->whereIn('hang_hoa.so_container_khai_bao', [$so_container_no_space, $so_container_with_space])
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
             ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
             ->get()->pluck('so_to_khai_nhap')->toArray();
 
-
+        $so_to_khai_nhaps = array_merge($so_to_khai_nhaps, $so_to_khai_nhaps_2);
         foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
             TheoDoiHangHoa::where('so_to_khai_nhap', $so_to_khai_nhap)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
@@ -822,17 +878,26 @@ class YeuCauGoSealController extends Controller
                 ->make(true);
         }
     }
-    public function themTheoDoiTruLui($so_container, $yeuCau, $ma_cong_chuc)
+    public function themTheoDoiTruLui($so_container, $yeuCau, $ma_cong_chuc, $so_seal_moi)
     {
+        $so_container_no_space = str_replace(' ', '', $so_container);
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
         $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', '2')
-            ->where('hang_trong_cont.so_container', $so_container)
-            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+            ->where('nhap_hang.trang_thai', 2)
+            ->whereIn('hang_trong_cont.so_container', [$so_container_no_space, $so_container_with_space])
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
             ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
-            ->get()->pluck('so_to_khai_nhap')->toArray();
+            ->get()
+            ->pluck('so_to_khai_nhap')
+            ->toArray();
 
         foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+            $theoDoiTruLui = TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)->count();
+            if ($theoDoiTruLui > 1) {
+                continue;
+            }
             $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
@@ -853,7 +918,7 @@ class YeuCauGoSealController extends Controller
                         'so_luong_chua_xuat' => $hangHoa->so_luong,
                         'ma_theo_doi' => $theoDoi->ma_theo_doi,
                         'so_container' => $hangHoa->so_container,
-                        'so_seal' => '',
+                        'so_seal' => $so_seal_moi ?? '',
                         'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ''
                     ]
                 );
@@ -868,7 +933,56 @@ class YeuCauGoSealController extends Controller
                     'cong_viec' => 9,
                     'phuong_tien_nhan_hang' => '',
                     'so_container' => $hangHoa->so_container,
-                    'so_seal' => '',
+                    'so_seal' => $so_seal_moi ?? '',
+                    'ma_cong_chuc' => $ma_cong_chuc ?? '',
+                    'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+                ]);
+            }
+        }
+
+
+        $so_to_khai_nhaps_2 = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->where('nhap_hang.trang_thai', 1)
+            ->whereIn('hang_hoa.so_container_khai_bao', [$so_container_no_space, $so_container_with_space])
+            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
+            ->get()->pluck('so_to_khai_nhap')->toArray();
+
+        foreach ($so_to_khai_nhaps_2 as $so_to_khai_nhap) {
+            $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
+                ->get();
+
+            $theoDoi = TheoDoiTruLui::create([
+                'so_to_khai_nhap' => $so_to_khai_nhap,
+                'so_ptvt_nuoc_ngoai' => '',
+                'ngay_them' => now(),
+                'cong_viec' => 9,
+                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+            ]);
+            foreach ($hangHoas as $hangHoa) {
+                TheoDoiTruLuiChiTiet::insert(
+                    [
+                        'ten_hang' => $hangHoa->ten_hang,
+                        'so_luong_xuat' => 0,
+                        'so_luong_chua_xuat' => $hangHoa->so_luong_khai_bao,
+                        'ma_theo_doi' => $theoDoi->ma_theo_doi,
+                        'so_container' => $hangHoa->so_container_khai_bao,
+                        'so_seal' => $so_seal_moi ?? '',
+                        'phuong_tien_vt_nhap' => $hangHoa->ptvt_ban_dau ?? ''
+                    ]
+                );
+                TheoDoiHangHoa::insert([
+                    'so_to_khai_nhap' => $hangHoa->so_to_khai_nhap,
+                    'ma_hang'  => $hangHoa->ma_hang,
+                    'thoi_gian'  => now(),
+                    'so_luong_xuat'  => $hangHoa->so_luong_khai_bao,
+                    'so_luong_ton'  => $hangHoa->so_luong_khai_bao,
+                    'phuong_tien_cho_hang' => $hangHoa->ptvt_ban_dau ?? '',
+                    'cong_viec' => 9,
+                    'phuong_tien_nhan_hang' => '',
+                    'so_container' => $hangHoa->so_container_khai_bao,
+                    'so_seal' => $so_seal_moi ?? '',
                     'ma_cong_chuc' => $ma_cong_chuc ?? '',
                     'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
                 ]);

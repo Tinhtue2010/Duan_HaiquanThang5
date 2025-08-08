@@ -386,6 +386,16 @@
                                         src="{{ asset('images/icons/document.png') }}"></div>
                                 Danh sách loại hình
                             </a>
+                            <a class="nav-link" href="/quan-ly-thuc-xuat">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/export-goods-done.png') }}"></div>
+                                Quản lý thực xuất
+                            </a>
+                            <a class="nav-link" href="/quan-ly-yeu-cau-sua-xnc">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/export-import.png') }}"></div>
+                                Yêu cầu sửa xuất nhập cảnh
+                            </a>
                         @elseif (Auth::user()->loai_tai_khoan === 'Lãnh đạo')
                             <div class="sb-sidenav-menu-heading">Quản lý thông tin</div>
                             <a class="nav-link" href="/quan-ly-duyet-xuat-hang">

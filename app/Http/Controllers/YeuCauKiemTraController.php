@@ -138,7 +138,7 @@ class YeuCauKiemTraController extends Controller
         $nhapHangs = NhapHang::whereIn('so_to_khai_nhap', $chiTiets)->get();
 
         $seals = Seal::where('seal.trang_thai', 0)->get();
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $chiTiets = YeuCauKiemTraChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
         return view('quan-ly-kho.yeu-cau-kiem-tra.thong-tin-yeu-cau-kiem-tra', compact('yeuCau', 'nhapHangs', 'doanhNghiep', 'congChucs', 'seals', 'chiTiets')); // Pass data to the view
     }
@@ -567,6 +567,9 @@ class YeuCauKiemTraController extends Controller
         YeuCauKiemTra::find($request->ma_yeu_cau)->update([
             'ma_cong_chuc' => $request->ma_cong_chuc
         ]);
+        TheoDoiHangHoa::where('cong_viec', 7)
+            ->where('ma_yeu_cau', $request->ma_yeu_cau)
+            ->update(['ma_cong_chuc' => $request->ma_cong_chuc]);
         session()->flash('alert-success', 'Thay đổi công chức thành công');
         return redirect()->back();
     }

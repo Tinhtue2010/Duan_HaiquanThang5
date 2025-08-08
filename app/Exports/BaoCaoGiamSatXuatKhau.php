@@ -46,17 +46,17 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // Updated line
             ['Công chức phụ trách: ' . $ten_cong_chuc, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
             ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-            ['STT', 'Tên doanh nghiệp', 'Đại lý', 'Số tờ khai', 'Số lượng kiện xuất', '', '', '', '', 'Số lượng cont hết', 'Số lượng xuồng', 'Tờ khai xuất hết', 'Ngày xuất', 'Ghi chú', 'Stt', 'Tờ khai xuất hết', 'Doanh nghiệp', 'Loại hàng', 'Ghi chú'],
+            ['STT', 'Tên doanh nghiệp', 'Đại lý', 'Số tờ khai', 'Số lượng kiện xuất', '', '', '', '', 'Số lượng cont hết', 'Số lượng xuồng', 'Tờ khai xuất hết', 'Ngày xuất', 'Ghi chú'],
             ['', '', '', '', 'Hàng đông lạnh', 'Thuốc lá', 'Cigar', 'Rượu', 'Hàng khác', '', '', '', '', '', '', ''],
         ];
         $loaiHangArr = ['Đông lạnh', 'Thuốc lá', 'Cigar', 'Rượu', 'Khác'];
-        $loaiHangCounts = array_fill_keys($loaiHangArr, 0); // Initialize counts to 0
+        $loaiHangCounts = array_fill_keys($loaiHangArr, 0);
         $sumSoContainerHet = 0;
         $sumSoXuong = 0;
-        $maXuatCanhList = [];
-
         $stt = 1;
-        $nhapHangs  = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+
+        // Single optimized query to get all required data
+        $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
@@ -68,173 +68,131 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
             })
             ->where('xuat_hang.trang_thai', '!=', '0')
-            ->whereBetween('xuat_hang.ngay_xuat_canh', [$this->tu_ngay, $this->den_ngay])
+            ->whereBetween('xuat_canh.ngay_duyet', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.so_to_khai_nhap',
                 'doanh_nghiep.ten_doanh_nghiep',
                 'chu_hang.ten_chu_hang',
                 'xuat_hang.so_to_khai_xuat',
-                'xuat_hang.ngay_xuat_canh',
+                'xuat_canh.ngay_duyet',
                 'xuat_hang.ten_phuong_tien_vt',
                 'xuat_canh.ma_xuat_canh',
-                DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_ton), 0) as total_so_luong_ton')
+                'hang_hoa.loai_hang',
+                DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_ton), 0) as total_so_luong_ton'),
+                DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_xuat), 0) as total_so_luong_xuat')
             )
             ->groupBy(
                 'nhap_hang.so_to_khai_nhap',
                 'doanh_nghiep.ten_doanh_nghiep',
                 'chu_hang.ten_chu_hang',
                 'xuat_hang.so_to_khai_xuat',
-                'xuat_hang.ngay_xuat_canh',
+                'xuat_canh.ngay_duyet',
                 'xuat_hang.ten_phuong_tien_vt',
                 'xuat_canh.ma_xuat_canh',
+                'hang_hoa.loai_hang'
             )
-            ->orderBy('xuat_hang.ngay_xuat_canh', 'asc')
+            ->orderBy('xuat_canh.ngay_duyet', 'asc')
             ->get();
 
-
+        // Group data by combination of so_to_khai_nhap and ngay_xuat_canh
+        $groupedData = [];
+        $processedCombinations = [];
 
         foreach ($nhapHangs as $nhapHang) {
-            $ngayXuatCanh = Carbon::createFromFormat('Y-m-d', $nhapHang->ngay_xuat_canh)->format('d-m-Y');
-            $exists = false; // Flag to check if the entry already exists
+            $ngayXuatCanh = Carbon::createFromFormat('Y-m-d', $nhapHang->ngay_duyet)->format('d-m-Y');
+            $combinationKey = $nhapHang->so_to_khai_nhap . '|' . $ngayXuatCanh;
 
-            foreach ($result as $row) {
-                if (isset($row[3], $row[12]) && $row[3] == $nhapHang->so_to_khai_nhap && $row[12] == $ngayXuatCanh) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            // If the combination does NOT exist, add a new entry
-            if (!$exists) {
-                $result[] = [
-                    $stt++,
-                    $nhapHang->ten_doanh_nghiep ?? '',
-                    $nhapHang->ten_chu_hang ?? '',
-                    $nhapHang->so_to_khai_nhap ?? '',
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    $ngayXuatCanh,
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    ''
+            if (!isset($groupedData[$combinationKey])) {
+                $groupedData[$combinationKey] = [
+                    'base_data' => $nhapHang,
+                    'ngay_duyet_formatted' => $ngayXuatCanh,
+                    'loai_hang_data' => array_fill_keys($loaiHangArr, 0),
+                    'phuong_tien_list' => [],
+                    'total_so_luong_ton' => 0,
+                    'container_het' => 0,
+                    'so_xuong' => 0
                 ];
             }
 
-
-            foreach ($loaiHangArr as $loaiHang) {
-                if ($loaiHang == 'Khác') {
-                    $data = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                        ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                        ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
-                        ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-                        ->where('xuat_hang.trang_thai', '!=', '0')
-                        ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-                        ->where('xuat_hang.so_to_khai_xuat', $nhapHang->so_to_khai_xuat)
-                        ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
-                            return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
-                        })
-                        ->whereIn('hang_hoa.loai_hang', ['Khác', ''])
-                        ->select(
-                            DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_xuat), 0) as total_so_luong_xuat'),
-                        )
-                        ->first()->total_so_luong_xuat;
-                } else {
-                    $data = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                        ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                        ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
-                        ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-                        ->where('xuat_hang.trang_thai', '!=', '0')
-                        ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-                        ->where('xuat_hang.so_to_khai_xuat', $nhapHang->so_to_khai_xuat)
-                        ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
-                            return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
-                        })
-                        ->where('hang_hoa.loai_hang', $loaiHang)
-                        ->select(
-                            DB::raw('IFNULL(SUM(xuat_hang_cont.so_luong_xuat), 0) as total_so_luong_xuat'),
-                        )
-                        ->first()->total_so_luong_xuat;
-                }
-                $loaiHangCounts[$loaiHang] += $data;
-
-                foreach ($result as &$row) {
-                    if ($row[3] == $nhapHang->so_to_khai_nhap && $row[12] == $ngayXuatCanh) {
-                        if ($loaiHang == "Đông lạnh") {
-                            $row[4] += $data;
-                        } elseif ($loaiHang == "Thuốc lá") {
-                            $row[5] += $data;
-                        } elseif ($loaiHang == "Cigar") {
-                            $row[6] += $data;
-                        } elseif ($loaiHang == "Rượu") {
-                            $row[7] += $data;
-                        } else {
-                            $row[8] += $data;
-                        }
-
-                        // Trim semicolons and count actual items
-                        $tenPhuongTien = trim($nhapHang->ten_phuong_tien_vt, '; ');
-                        $numberXuong = substr_count($tenPhuongTien, ';') + 1;
-
-                        // Update values safely
-                        $row[11] = ($nhapHang->total_so_luong_ton == 0) ? 'x' : $row[11];
-
-                        if (strpos($row[13], $nhapHang->ten_phuong_tien_vt) === false) {
-                            $row[9] += ($nhapHang->total_so_luong_ton == 0) ? 1 : 0;
-                            $row[13] .= ($row[13] !== '' ? '; ' : '') . $nhapHang->ten_phuong_tien_vt;
-                            $row[10] += $numberXuong;
-                        }
-                    }
-                }
-                unset($row); // Prevent reference issues
+            // Process loai_hang
+            $loaiHang = $nhapHang->loai_hang;
+            if (empty($loaiHang)) {
+                $loaiHang = 'Khác';
             }
+
+            if (in_array($loaiHang, $loaiHangArr)) {
+                $groupedData[$combinationKey]['loai_hang_data'][$loaiHang] += $nhapHang->total_so_luong_xuat;
+                $loaiHangCounts[$loaiHang] += $nhapHang->total_so_luong_xuat;
+            }
+
+            // Process phuong_tien (avoid duplicates)
+            $tenPhuongTien = trim($nhapHang->ten_phuong_tien_vt, '; ');
+            if (!in_array($tenPhuongTien, $groupedData[$combinationKey]['phuong_tien_list'])) {
+                $groupedData[$combinationKey]['phuong_tien_list'][] = $tenPhuongTien;
+
+                // Count xuong
+                $numberXuong = substr_count($tenPhuongTien, ';') + 1;
+                $groupedData[$combinationKey]['so_xuong'] += $numberXuong;
+
+                // Count container het
+                if ($nhapHang->total_so_luong_ton == 0) {
+                    $groupedData[$combinationKey]['container_het']++;
+                }
+            }
+
+            $groupedData[$combinationKey]['total_so_luong_ton'] += $nhapHang->total_so_luong_ton;
         }
 
-        $nhapHangXuatHets = NhapHang::whereIn('nhap_hang.trang_thai', ['7', '4'])
-            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep', 'nhap_hang.ma_doanh_nghiep')
-            ->when($this->ma_cong_chuc !== "Tất cả", function ($query) {
-                return $query->where('nhap_hang.ma_cong_chuc_ban_giao', $this->ma_cong_chuc);
-            })
-            ->whereBetween('nhap_hang.ngay_xuat_het', [$this->tu_ngay, $this->den_ngay])
+        // Build result array
+        foreach ($groupedData as $data) {
+            $baseData = $data['base_data'];
+            $loaiHangData = $data['loai_hang_data'];
 
-            ->select(
-                'nhap_hang.so_to_khai_nhap',
-                'doanh_nghiep.ten_doanh_nghiep',
-                DB::raw('(SELECT loai_hang FROM hang_hoa WHERE hang_hoa.so_to_khai_nhap = nhap_hang.so_to_khai_nhap LIMIT 1) as loai_hang')
-            )
-            ->groupBy('nhap_hang.so_to_khai_nhap', 'doanh_nghiep.ten_doanh_nghiep')
-            ->get();
+            $result[] = [
+                $stt++,
+                $baseData->ten_doanh_nghiep ?? '',
+                $baseData->ten_chu_hang ?? '',
+                $baseData->so_to_khai_nhap ?? '',
+                $loaiHangData['Đông lạnh'],
+                $loaiHangData['Thuốc lá'],
+                $loaiHangData['Cigar'],
+                $loaiHangData['Rượu'],
+                $loaiHangData['Khác'],
+                $data['container_het'],
+                $data['so_xuong'],
+                ($data['total_so_luong_ton'] == 0) ? 'x' : '',
+                $data['ngay_duyet_formatted'],
+                implode('; ', $data['phuong_tien_list']),
+                '',
+                '',
+                '',
+                '',
+                ''
+            ];
 
-        $stt2 = 0;
-        foreach ($nhapHangXuatHets as $nhapHangXuatHet) {
-            $result[$stt2 + 9][14] = $stt2 + 1;
-            $result[$stt2 + 9][15] = $nhapHangXuatHet->so_to_khai_nhap;
-            $result[$stt2 + 9][16] = $nhapHangXuatHet->ten_doanh_nghiep;
-            $result[$stt2 + 9][17] = $nhapHangXuatHet->loai_hang;
-            $stt2++;
+            $sumSoContainerHet += $data['container_het'];
+            $sumSoXuong += $data['so_xuong'];
         }
 
+        // Add summary rows
         $result[] = [
-            ['', '', '', '', $loaiHangCounts['Đông lạnh'] ?: '0', $loaiHangCounts['Thuốc lá'] ?: '0', $loaiHangCounts['Cigar'] ?: '0', $loaiHangCounts['Rượu'] ?: '0', $loaiHangCounts['Khác'] ?: '0', $sumSoContainerHet, $sumSoXuong, $sumSoContainerHet],
+            '',
+            '',
+            '',
+            '',
+            $loaiHangCounts['Đông lạnh'] ?: '0',
+            $loaiHangCounts['Thuốc lá'] ?: '0',
+            $loaiHangCounts['Cigar'] ?: '0',
+            $loaiHangCounts['Rượu'] ?: '0',
+            $loaiHangCounts['Khác'] ?: '0',
+            // $sumSoContainerHet,
+            // $sumSoXuong,
+            // $sumSoContainerHet
         ];
-        $result[] = [
-            [''],
-            [''],
-            ['CÔNG CHỨC HẢI QUAN'],
-            [''],
-            [''],
-            [''],
-            [Auth::user()->CongChuc->ten_cong_chuc],
-        ];
+        $result[] = [[''],['']];
+
+        $result[] = [['CÔNG CHỨC HẢI QUAN'],[''],[''],[''],[Auth::user()->CongChuc->ten_cong_chuc ?? '']];
+
 
         return $result;
     }
@@ -250,7 +208,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:T' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:N' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -280,12 +238,6 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $sheet->getColumnDimension('L')->setWidth(width: 10);
                 $sheet->getColumnDimension('M')->setWidth(width: 12);
                 $sheet->getColumnDimension('N')->setWidth(width: 18);
-                $sheet->getColumnDimension('O')->setWidth(width: 7);
-                $sheet->getColumnDimension('P')->setWidth(width: 15);
-                $sheet->getColumnDimension('Q')->setWidth(width: 15);
-                $sheet->getColumnDimension('R')->setWidth(width: 15);
-                $sheet->getColumnDimension('S')->setWidth(width: 15);
-                $sheet->getColumnDimension('T')->setWidth(width: 15);
 
                 $sheet->getStyle('D')->getNumberFormat()->setFormatCode('0'); // Apply format
                 $sheet->getStyle('P')->getNumberFormat()->setFormatCode('0'); // Apply format
@@ -303,9 +255,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 // Merge cells for headers
                 $sheet->mergeCells('A1:E1'); // CỤC HẢI QUAN
                 $sheet->mergeCells('A2:E2'); // CHI CỤC
-                $sheet->mergeCells('A4:S4'); // BÁO CÁO
-                $sheet->mergeCells('A5:S5'); // Tính đến ngày
-                $sheet->mergeCells('A6:S6'); // Tính đến ngày
+                $sheet->mergeCells('A4:N4'); // BÁO CÁO
+                $sheet->mergeCells('A5:N5'); // Tính đến ngày
+                $sheet->mergeCells('A6:N6'); // Tính đến ngày
 
                 $sheet->mergeCells('E8:I8');
                 $sheet->mergeCells('A8:A9');
@@ -317,37 +269,31 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $sheet->mergeCells('L8:L9');
                 $sheet->mergeCells('M8:M9');
                 $sheet->mergeCells('N8:N9');
-                $sheet->mergeCells('O8:O9');
-                $sheet->mergeCells('P8:P9');
-                $sheet->mergeCells('Q8:Q9');
-                $sheet->mergeCells('R8:R9');
-                $sheet->mergeCells('S8:S9');
-                $sheet->mergeCells('T8:T9');
 
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:T6')->applyFromArray([
+                $sheet->getStyle('A1:N6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:T6')->applyFromArray([
+                $sheet->getStyle('A2:N6')->applyFromArray([
                     'font' => ['bold' => true],
                 ]);
-                $sheet->getStyle('A9:T' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A9:N' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:T5')->applyFromArray([
+                $sheet->getStyle('A5:N5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A8:T8')->applyFromArray([
+                $sheet->getStyle('A8:N8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -362,7 +308,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A8:T' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A8:N' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -380,7 +326,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                     }
                 }
 
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':T' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':N' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -388,10 +334,10 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->mergeCells('A' . $chuKyStart . ':T' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':T' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':T' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':T' . ($chuKyStart + 4))->getFont()->setBold(true);
+                $sheet->mergeCells('A' . $chuKyStart . ':N' . $chuKyStart);
+                $sheet->getStyle('A' . $chuKyStart . ':N' . $chuKyStart)->getFont()->setBold(true);
+                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':N' . ($chuKyStart + 4));
+                $sheet->getStyle('A' . ($chuKyStart + 4) . ':N' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

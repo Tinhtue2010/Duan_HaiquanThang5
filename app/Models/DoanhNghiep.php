@@ -15,6 +15,7 @@ class DoanhNghiep extends Model
         'ma_doanh_nghiep',
         'ten_doanh_nghiep',
         'dia_chi',
+        'status',
         'ma_chu_hang',
         'ma_tai_khoan',
     ];

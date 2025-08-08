@@ -512,6 +512,10 @@ $(document).ready(function () {
         placeholder: "Chọn công chức",
         allowClear: true,
     });
+    $('#cong-chuc-dropdown-search-2').select2({
+        placeholder: "Chọn công chức",
+        allowClear: true,
+    });
     $('#tau-dropdown-search').select2({
         placeholder: "Chọn tàu",
         allowClear: true,

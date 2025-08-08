@@ -81,8 +81,8 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-3">
-                                <label class="label-text" for="">Đại lý</label> <span
+                            <div class="col">
+                                <label class="label-text mb-3" for="">Đại lý</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
                                     @foreach ($chuHangs as $chuHang)
@@ -94,20 +94,20 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-3">
+                            <div class="col">
                                 <label class="label-text" for="phuong_tien_vt_nhap">Phương tiện vận
                                     tải</label> <span class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="phuong_tien_vt_nhap"
                                     name="phuong_tien_vt_nhap" placeholder="Nhập phương tiện vận tải" maxlength="50"
                                     required>
                             </div>
-                            <div class="col-3">
+                            <div class="col">
                                 <label class="label-text" for="trong_luong">Trọng lượng
                                     (Tấn)</label> <span class="text-danger missing-input-text"></span>
                                 <input type="number" class="form-control mt-2" id="trong_luong" name="trong_luong"
                                     placeholder="Nhập tổng trọng lượng (Tấn)" required>
                             </div>
-                            <div class="col-3">
+                            <div class="col">
                                 <label class="label-text mb-2" for="xuat_xu">Xuất xứ</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <select class="form-control" id="xuat-xu-dropdown-search" name="xuat_xu">
@@ -118,6 +118,12 @@
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="col">
+                                <label class="label-text" for="ten_doan_tau">Đoàn tàu</label> 
+                                <span class="text-danger missing-input-text"></span>
+                                <input type="text" class="form-control mt-2" id="ten_doan_tau" name="ten_doan_tau"
+                                    placeholder="Nhập đoàn tàu" required>
                             </div>
                         </div>
                     </div>
@@ -275,6 +281,7 @@
                         <input type="hidden" name="so_to_khai_nhap" id="so_to_khai_nhap_hidden">
                         <input type="hidden" name="ngay_thong_quan" id="ngay_thong_quan_hidden">
                         <input type="hidden" name="xuat_xu" id="xuat_xu_hidden">
+                        <input type="hidden" name="ten_doan_tau" id="ten_doan_tau_hidden">
                         <button type="submit" class="btn btn-success">Nhập tờ khai</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </form>
@@ -527,6 +534,7 @@
                 const soToKhaiNhap = $("#so_to_khai_nhap").val();
                 const phuongTienVanTaiNhap = $("#phuong_tien_vt_nhap").val();
                 const trongLuong = $("#trong_luong").val();
+                const tenDoanTau = $("#ten_doan_tau").val();
 
                 // Validate required fields
                 if (!maHaiQuan) {
@@ -586,6 +594,7 @@
                 document.getElementById('so_to_khai_nhap_hidden').value = soToKhaiNhap;
                 document.getElementById('ngay_thong_quan_hidden').value = ngayThongQuan;
                 document.getElementById('xuat_xu_hidden').value = xuatXu;
+                document.getElementById('ten_doan_tau_hidden').value = tenDoanTau;
 
                 // Submit the form
                 $('#xacNhanModal').modal('show');

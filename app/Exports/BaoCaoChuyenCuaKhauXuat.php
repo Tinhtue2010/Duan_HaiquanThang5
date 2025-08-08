@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\NhapHang;
 use App\Models\HangHoa;
+use App\Models\TheoDoiHangHoa;
 use App\Models\XuatHangCont;
 use App\Models\YeuCauHangVeKho;
 use App\Models\YeuCauHangVeKhoChiTiet;
@@ -54,14 +55,18 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                 $hangHoas = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_hoa.so_to_khai_nhap', $chiTiet->so_to_khai_nhap)
                     ->get();
-                $soLuong = 0;
+                $soLuongTieuHuy = TheoDoiHangHoa::where('so_to_khai_nhap', $chiTiet->so_to_khai_nhap)
+                    ->where('cong_viec', '5')
+                    ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                    ->sum('so_luong_ton');
+                $soLuong = $soLuongTieuHuy;
+                $totalSoLuong += $soLuongTieuHuy;
                 $soLuongKhaiBao = 0;
                 foreach ($hangHoas as $hangHoa) {
                     $soLuongKhaiBao += $hangHoa->so_luong_khai_bao;
-                    $soLuong += $hangHoa->so_luong;
                     $totalKhaiBao += $hangHoa->so_luong_khai_bao;
-                    $totalSoLuong += $hangHoa->so_luong;
                 }
+
                 if ($nhapHang && $nhapHang->updated_at) {
                     $formattedDate = Carbon::parse($nhapHang->updated_at)->format('d-m-Y');
                     $result[] = [
@@ -84,7 +89,7 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                         Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('d-m-Y'),
                         $hangHoa->so_container
                     ];
-                } 
+                }
             }
         }
         $result[] = [

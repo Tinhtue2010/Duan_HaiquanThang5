@@ -16,7 +16,9 @@ class DoanhNghiepController extends Controller
     public function danhSachDoanhNghiep()
     {
         $data = DoanhNghiep::leftJoin('chu_hang', 'doanh_nghiep.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
+            ->select('doanh_nghiep.*', 'chu_hang.ten_chu_hang')
             ->get();
+
         $chuHangs = ChuHang::select('ma_chu_hang', 'ten_chu_hang')->get();
         return view('quan-ly-khac.danh-sach-doanh-nghiep',  data: compact('data', 'chuHangs'));
     }
@@ -81,6 +83,8 @@ class DoanhNghiepController extends Controller
             if ($exists) {
                 session()->flash('alert-danger', 'Không thể xóa doanh nghiệp do doanh nghiệp này ở còn xuất hiện trong một số tờ khai nhập đang được xử lý');
             } else {
+                $doanhNghiep = DoanhNghiep::find($request->ma_doanh_nghiep);
+                TaiKhoan::find($doanhNghiep->ma_tai_khoan)->delete();
                 DoanhNghiep::find($request->ma_doanh_nghiep)->delete();
                 session()->flash('alert-success', 'Xóa doanh nghiệp thành công');
             }
@@ -103,15 +107,25 @@ class DoanhNghiepController extends Controller
     public function updateDoanhNghiep(Request $request)
     {
         if (DoanhNghiep::find($request->ma_doanh_nghiep)) {
-            DoanhNghiep::find($request->ma_doanh_nghiep)->update(['ma_chu_hang' => $request->ma_chu_hang]);
+            DoanhNghiep::find($request->ma_doanh_nghiep)->update([
+                'ma_chu_hang' => $request->ma_chu_hang,
+                'status' => $request->status,
+                'ten_doanh_nghiep' => $request->ten_doanh_nghiep,
+                'dia_chi' => $request->dia_chi,
+            ]);
+            if ($request->mat_khau) {
+                $doanhNghiep = DoanhNghiep::find($request->ma_doanh_nghiep);
+                $taiKhoan = TaiKhoan::where('ma_tai_khoan', $doanhNghiep->ma_tai_khoan)->first();
+                if ($taiKhoan) {
+                    $taiKhoan->update([
+                        'mat_khau' => Hash::make($request->mat_khau),
+                    ]);
+                }
+            }
             session()->flash('alert-success', 'Cập nhật thành công');
             return redirect('/quan-ly-doanh-nghiep');
         }
         session()->flash('alert-danger', 'Có lỗi xảy ra');
         return redirect()->back();
     }
-
-
-
 }
-

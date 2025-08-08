@@ -26,7 +26,7 @@
                     @if (session('alert-danger'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert" id="myAlert">
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            <strong>Thông tin đăng nhập không chính xác</strong>
+                            <strong>{{ session('alert-danger') }}</strong>
                         </div>
                     @endif
                     <form method="POST" action="{{ route('submit-dang-nhap') }}">

@@ -163,7 +163,7 @@ class YeuCauNiemPhongController extends Controller
             $seals = [];
         }
 
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         return view('quan-ly-kho.yeu-cau-niem-phong.thong-tin-yeu-cau-niem-phong', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs', 'congChucHienTai', 'seals')); // Pass data to the view
     }
 
@@ -808,6 +808,18 @@ class YeuCauNiemPhongController extends Controller
                 }
             })->pluck('yeu_cau_tau_cont_chi_tiet.so_container_dich')
             ->unique();
+        $tauContGocs = YeuCauTauCont::join('yeu_cau_tau_cont_chi_tiet', 'yeu_cau_tau_cont_chi_tiet.ma_yeu_cau', 'yeu_cau_tau_cont.ma_yeu_cau')
+            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->where('trang_thai', '!=', 0)
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_yeu_cau', today())
+                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_yeu_cau', today());
+                }
+            })->pluck('yeu_cau_tau_cont_chi_tiet.so_container_goc')
+            ->unique();
 
         $containers = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_container_chi_tiet.ma_yeu_cau', 'yeu_cau_chuyen_container.ma_yeu_cau')
             ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
@@ -820,6 +832,18 @@ class YeuCauNiemPhongController extends Controller
                     $query->whereDate('ngay_yeu_cau', today());
                 }
             })->pluck('yeu_cau_container_chi_tiet.so_container_dich')
+            ->unique();
+        $containerGocs = YeuCauChuyenContainer::join('yeu_cau_container_chi_tiet', 'yeu_cau_container_chi_tiet.ma_yeu_cau', 'yeu_cau_chuyen_container.ma_yeu_cau')
+            ->where('ma_doanh_nghiep', $ma_doanh_nghiep)
+            ->where('trang_thai', '!=', 0)
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_yeu_cau', today())
+                        ->orWhereDate('ngay_yeu_cau', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_yeu_cau', today());
+                }
+            })->pluck('yeu_cau_container_chi_tiet.so_container_goc')
             ->unique();
 
         $kiemTra = YeuCauKiemTra::join('yeu_cau_kiem_tra_chi_tiet', 'yeu_cau_kiem_tra_chi_tiet.ma_yeu_cau', 'yeu_cau_kiem_tra.ma_yeu_cau')
@@ -837,9 +861,13 @@ class YeuCauNiemPhongController extends Controller
 
         $containers = $xuatHangs
             ->merge($tauConts)
+            ->merge($tauContGocs)
             ->merge($containers)
+            ->merge($containerGocs)
             ->merge($kiemTra)
             ->unique();
+
+
         $containersChuaHetHang = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
             ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')

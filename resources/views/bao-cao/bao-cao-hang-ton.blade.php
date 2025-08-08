@@ -407,13 +407,24 @@
                         </div>
                         <div class="card p-3 ms-3 col-5">
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
-                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 16)->first()?->phan_quyen == 1)
-                                <h4>Theo dõi hàng hóa quá 15 ngày chưa thực xuất</h4>
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 29)->first()?->phan_quyen == 1)
+                                <h4>Báo cáo hàng tiêu hủy</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.hang-hoa-chua-thuc-xuat') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-tieu-huy') }}" method="GET">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
+                                                <input type="text" class="form-control datepicker"
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
+                                                <input type="text" class="form-control datepicker"
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                            </div>
+                                        </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
-                                                cáo</button>
-                                        </center>
+                                                cáo</button></center>
                                     </form>
                                 </div>
                             @endif
@@ -765,6 +776,24 @@
                                     </form>
                                 </div>
                             @endif
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="card p-3 me-3 col-5">
+                            @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 16)->first()?->phan_quyen == 1)
+                                <h4>Theo dõi hàng hóa quá 15 ngày chưa thực xuất</h4>
+                                <div class="form-group">
+                                    <form action="{{ route('export.hang-hoa-chua-thuc-xuat') }}" method="GET">
+                                        <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
+                                                cáo</button>
+                                        </center>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="card p-3 ms-3 col-5">
+
                         </div>
                     </div>
                 </div>

@@ -103,11 +103,10 @@
                         {{ $xuatHang->loaiHinh ? $xuatHang->loaiHinh->ten_loai_hinh : '' }}
                         ({{ $xuatHang->loaiHinh->ma_loai_hinh }})
                     </h2>
-                    <h2 class="text-center text-dark">Số: {{ $xuatHang->so_to_khai_xuat }}, ngày
+                    <h2 class="text-center text-dark">Số: {{ $xuatHang->so_to_khai_xuat }}, đoàn tàu: {{ $xuatHang->ten_doan_tau ?? '' }} , ngày
                         {{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}
                     </h2>
-                    <h2 class="text-center text-dark">Phương tiện xuất cảnh:
-                        {{ $ptvts }}</h2>
+                    <h2 class="text-center text-dark"> Phương tiện xuất cảnh: {{ $ptvts }}</h2>
                     <hr />
                     <h3 class="text-center text-dark">Thông tin hàng hóa</h3>
                     <table class="table table-bordered mt-2 fs-6" id="displayTable"
@@ -388,6 +387,49 @@
                                     {{ $xuatHang->congChuc->ten_cong_chuc ?? '' }}</h2>
                                 <h2 class="text-success">Ngày duyệt:
                                     {{ \Carbon\Carbon::parse($xuatHang->ngay_xuat_canh)->format('d-m-Y') }}</h2>
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
+                                    <div class="row mt-5">
+                                        <center>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#thayDoiCongChucModal"
+                                                        class="btn btn-warning ">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Thay đổi công chức</button>
+                                                </a>
+                                            </div>
+                                        </center>
+                                    </div>
+                                @endif
+                                @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
+                                        DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
+                                            $xuatHang->ma_doanh_nghiep)
+                                    <center>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <a
+                                                    href="{{ route('xuat-hang.sua-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat]) }}">
+                                                    <button class="btn btn-warning px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Yêu cầu sửa phiếu
+                                                    </button>
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#yeuCauHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Yêu cầu hủy phiếu
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </center>
+                                @endif
                             @elseif(
                                 $xuatHang->trang_thai == '3' ||
                                     $xuatHang->trang_thai == '4' ||
@@ -481,6 +523,9 @@
                                 @endif
                             @elseif($xuatHang->trang_thai == '14')
                                 <h2 class="text-warning">Đã duyệt sửa lần 1</h2>
+                                <h4 class="text-dark">Phiếu đã thực xuất cần duyệt 2 lần</h4>
+                                <h4 class="text-dark">(Tài khoản lãnh đạo sẽ duyệt lần 2)</h4>
+                                
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
                                 @if ($xuatHang->ghi_chu)
                                     <h3 class="text-dark">Ghi chú: {{ $xuatHang->ghi_chu }}</h3>
@@ -513,6 +558,56 @@
                                             </a>
                                         </center>
                                     </div>
+                                @endif
+                            @elseif($xuatHang->trang_thai == '15')
+                                <h2 class="text-danger">Đã duyệt hủy lần 1</h2>
+                                <h4 class="text-dark">Phiếu đã thực xuất cần duyệt 2 lần</h4>
+                                <h4 class="text-dark">(Tài khoản lãnh đạo sẽ duyệt lần 2)</h4>
+                                <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
+                                @if ($xuatHang->ghi_chu)
+                                    <h3 class="text-dark">Ghi chú: {{ $xuatHang->ghi_chu }}</h3>
+                                @endif
+                                @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
+                                        DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
+                                            $xuatHang->ma_doanh_nghiep)
+                                    <center>
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanTuChoiHuyModal"
+                                                    class="btn btn-danger px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
+                                                    Thu hồi yêu cầu hủy
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </center>
+                                @elseif(Auth::user()->loai_tai_khoan == 'Lãnh đạo')
+                                    <center>
+
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#yeuCauHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Chấp nhận hủy
+                                                    </button>
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#xacNhanTuChoiHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Từ chối yêu cầu hủy
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </center>
                                 @endif
                             @elseif(trim($xuatHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>

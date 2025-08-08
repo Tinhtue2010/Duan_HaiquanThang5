@@ -109,7 +109,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
                         'xuat_hang_cont.so_to_khai_nhap',
                         'xuat_hang_cont.so_luong_xuat',
                         'nhap_hang.ngay_thong_quan',
-                        'nhap_hang.phuong_tien_vt_nhap',
+                        'xuat_hang_cont.phuong_tien_vt_nhap',
                         'hang_hoa.ma_hang',
                         'hang_hoa.ten_hang',
                         'hang_hoa.don_vi_tinh',
@@ -169,9 +169,11 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
                         ->where('xuat_hang_sua.ma_yeu_cau', $this->ma_yeu_cau)
                         ->first();
                     $soLuongXuatSua = $xuatHangSua->so_luong_xuat;
-                    $soLuongTon   = $soLuongTonArr[$ma_hang] - $soLuongXuatSua;
-                    $soLuongDaXuat = $soLuongDaXuatArr[$ma_hang];
+                    // $soLuongTon   = $soLuongTonArr[$ma_hang] - $soLuongXuatSua;
+                    // $soLuongDaXuat = $soLuongDaXuatArr[$ma_hang];
+                    $soLuongTon  = $xuatHangSua->so_luong_ton;
                     $soLuongKhaiBao = $soLuongKhaiBaoArr[$ma_hang];
+                    $soLuongDaXuat = $soLuongKhaiBao - $soLuongXuatSua - $soLuongTon;
                     $hangHoa = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                         ->where('ma_hang', $maHang)
                         ->first();
@@ -205,7 +207,7 @@ class ToKhaiXuatExport implements FromCollection, WithHeadings, WithStyles, With
                     'xuat_hang_cont.so_to_khai_nhap',
                     'xuat_hang_cont.so_luong_xuat',
                     'nhap_hang.ngay_thong_quan',
-                    'nhap_hang.phuong_tien_vt_nhap',
+                    'xuat_hang_cont.phuong_tien_vt_nhap',
                     'hang_hoa.ma_hang',
                     'hang_hoa.ten_hang',
                     'hang_hoa.don_vi_tinh',

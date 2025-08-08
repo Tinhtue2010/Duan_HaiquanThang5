@@ -43,6 +43,9 @@
                                     Tên đăng nhập
                                 </th>
                                 <th>
+                                    Trạng thái
+                                </th>
+                                <th>
                                     Thao tác
                                 </th>
                             </thead>
@@ -51,11 +54,22 @@
                                     <tr data-ma-thu-kho="{{ $thuKho->ma_thu_kho }}"
                                         data-ten-thu-kho="{{ $thuKho->ten_thu_kho }}"
                                         data-ten-dang-nhap="{{ $thuKho->ten_dang_nhap }}"
-                                        data-ma-tai-khoan="{{ $thuKho->ma_tai_khoan }}">
+                                        data-ma-tai-khoan="{{ $thuKho->ma_tai_khoan }}" data-status="{{ $thuKho->status }}">
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $thuKho->ma_thu_kho }}</td>
                                         <td>{{ $thuKho->ten_thu_kho }}</td>
                                         <td>{{ $thuKho->ten_dang_nhap }}</td>
+                                        <td>
+                                            @if ($thuKho->status == 1)
+                                                <p class="text-success">Đang công tác</p>
+                                            @elseif ($thuKho->status == 2)
+                                                <p class="text-warning">Chuyển công tác</p>
+                                            @elseif ($thuKho->status == 3)
+                                                <p class="text-warning">Nghỉ hưu</p>
+                                            @else
+                                                <p class="text-warning">Lý do khác</p>
+                                            @endif
+                                        </td>
                                         <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
                                                 data-ma-thu-kho="{{ $thuKho->ma_thu_kho }}"
                                                 data-ten-thu-kho="{{ $thuKho->ten_thu_kho }}">
@@ -72,7 +86,7 @@
     </div>
     <!-- Thông tin Modal -->
     <div class="modal fade" id="thongTinModal" tabindex="-1" aria-labelledby="thongTinModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="thongTinModalLabel">Thông tin thủ kho</h5>
@@ -82,29 +96,59 @@
                     @csrf
                     @method('POST')
                     <div class="modal-body">
-                        <label class="mt-1" for="ma_cong_chuc"><strong>Mã thủ kho</strong></label>
-                        <input type="text" class="form-control" id="modalMaCongChuc" name="ma_thu_kho_moi"
-                            max="50" placeholder="Nhập mã thủ kho" required>
+                        <div class="row">
+                            <div class="col-8">
+                                <label class="mt-1" for="ma_cong_chuc"><strong>Mã thủ kho</strong></label>
+                                <input type="text" class="form-control" id="modalMaCongChuc" name="ma_thu_kho_moi"
+                                    max="50" placeholder="Nhập mã thủ kho" required>
 
-                        <label class="mt-1" for="ten_cong_chuc"><strong>Tên thủ kho</strong></label>
-                        <input type="text" class="form-control" id="modalTenCongChuc" name="ten_thu_kho" max="255"
-                            placeholder="Nhập tên thủ kho" required>
+                                <label class="mt-1" for="ten_cong_chuc"><strong>Tên thủ kho</strong></label>
+                                <input type="text" class="form-control" id="modalTenCongChuc" name="ten_thu_kho"
+                                    max="255" placeholder="Nhập tên thủ kho" required>
 
-                        <p class="mt-2"><strong>Tên đăng nhập:</strong> <span id="modalTenDangNhap"></span></p>
+                                <p class="mt-2"><strong>Tên đăng nhập:</strong> <span id="modalTenDangNhap"></span></p>
 
-                        <input hidden id="modalMaCongChucInput" name="ma_thu_kho">
-                        <hr />
-                        <h5>Chọn tài khoản khác cho thủ kho này</h5>
-                        <em>(Danh sách chỉ hiện các tài khoản thuộc loại "Thủ kho" chưa được gán cho thủ kho nào)</em>
-                        <p><strong>Tên đăng nhập: </strong></p>
-                        <select class="form-control" id="tai-khoan-dropdown-search" name="ma_tai_khoan">
-                            <option></option>
-                            @foreach ($taiKhoans as $taiKhoan)
-                                <option value="{{ $taiKhoan->ma_tai_khoan }}">
-                                    {{ $taiKhoan->ten_dang_nhap }}
-                                </option>
-                            @endforeach
-                        </select>
+                                <input hidden id="modalMaCongChucInput" name="ma_thu_kho">
+                                <hr />
+                                <h5>Chọn tài khoản khác cho thủ kho này</h5>
+                                <em>(Danh sách chỉ hiện các tài khoản thuộc loại "Thủ kho" chưa được gán cho thủ kho
+                                    nào)</em>
+                                <p><strong>Tên đăng nhập: </strong></p>
+                                <select class="form-control" id="tai-khoan-dropdown-search" name="ma_tai_khoan">
+                                    <option></option>
+                                    @foreach ($taiKhoans as $taiKhoan)
+                                        <option value="{{ $taiKhoan->ma_tai_khoan }}">
+                                            {{ $taiKhoan->ten_dang_nhap }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-4">
+                                <center class="mt-3">
+                                    <h5>Trạng thái</h5>
+                                </center>
+                                <input type="radio" name="status" id="dang-cong-tac" value="1"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Đang công tác</label>
+                                <br>
+
+                                <input class="mt-2" type="radio" name="status" id="chuyen-cong-tac" value="2"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Chuyển công tác</label>
+                                <br>
+
+                                <input class="mt-2" type="radio" name="status" id="nghi-huu" value="3"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Nghỉ hưu</label>
+                                <br>
+
+                                <input class="mt-2" type="radio" name="status" id="ly-do-khac" value="4"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Lý do khác</label>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Cập nhật</button>
@@ -139,7 +183,7 @@
                             placeholder="Nhập tên đăng nhập"autocomplete="new-password" required>
                         <label class="mt-1" for="mat_khau"><strong>Mật khẩu</strong></label>
                         <input type="password" class="form-control" id="mat_khau" name="mat_khau"
-                        placeholder="Nhập mật khẩu" autocomplete="new-password" required>
+                            placeholder="Nhập mật khẩu" autocomplete="new-password" required>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Thêm mới</button>
@@ -214,9 +258,19 @@
                 var maCongChuc = $(this).data('ma-thu-kho');
                 var tenCongChuc = $(this).data('ten-thu-kho');
                 var tenDangNhap = $(this).data('ten-dang-nhap');
-                var maTaiKhoan = $(this).data('ma-tai-khoan');                
-                console.log(maCongChuc);
-                // Set the data in the modal
+                var maTaiKhoan = $(this).data('ma-tai-khoan');
+                var trangThai = $(this).data('status');
+
+                if (trangThai == 1) {
+                    document.getElementById('dang-cong-tac').checked = true;
+                } else if (trangThai == 2) {
+                    document.getElementById('chuyen-cong-tac').checked = true;
+                } else if (trangThai == 3) {
+                    document.getElementById('nghi-huu').checked = true;
+                } else if (trangThai == 4) {
+                    document.getElementById('ly-do-khac').checked = true;
+                } // Set the data in the modal
+
                 document.getElementById('modalMaCongChuc').value = maCongChuc;
                 document.getElementById('modalTenCongChuc').value = tenCongChuc;
                 $('#modalTenDangNhap').text(tenDangNhap);

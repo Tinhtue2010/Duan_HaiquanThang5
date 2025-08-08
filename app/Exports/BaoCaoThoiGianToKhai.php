@@ -31,13 +31,16 @@ class BaoCaoThoiGianToKhai implements FromArray, WithEvents
             ['BÁO CÁO THỜI GIAN TỜ KHAI LƯU TẠI CẢNG', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
-            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Loại hàng', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá (USD)', 'Số lượng tồn', 'Số tàu', 'Số cont hiện tại','Số ngày lưu tại cảng'],
+            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Loại hàng', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá (USD)', 'Số lượng tồn', 'Số tàu', 'Số cont hiện tại', 'Số ngày lưu tại cảng'],
             [''],
         ];
         $stt = 1;
 
         $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->join('hang_trong_cont', function ($join) {
+                $join->on('hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                    ->where('hang_trong_cont.so_luong', '!=', 0); // ✅ Filter here
+            })
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
             ->where('nhap_hang.trang_thai', '2')
@@ -53,14 +56,14 @@ class BaoCaoThoiGianToKhai implements FromArray, WithEvents
                 DB::raw("(SELECT SUM(htc.so_luong) 
             FROM hang_hoa hh 
             JOIN hang_trong_cont htc ON hh.ma_hang = htc.ma_hang 
-            WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong"),
+            WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap AND htc.so_luong != 0) AS total_so_luong"),
                 DB::raw("MIN(hang_hoa.ma_hang) as ma_hang"),
                 DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"),
                 DB::raw("MIN(hang_hoa.loai_hang) as loai_hang"),
                 DB::raw("MIN(hang_hoa.xuat_xu) as xuat_xu"),
                 DB::raw("MIN(hang_hoa.don_vi_tinh) as don_vi_tinh"),
                 DB::raw("MIN(hang_hoa.don_gia) as don_gia"),
-                DB::raw("MIN(hang_trong_cont.so_container) as so_container"),
+                DB::raw("MIN(hang_trong_cont.so_container) as so_container"), // ✅ Only containers with so_luong != 0
                 DB::raw("MIN(doanh_nghiep.ma_doanh_nghiep) as ma_doanh_nghiep"),
                 DB::raw("MIN(doanh_nghiep.ten_doanh_nghiep) as ten_doanh_nghiep"),
                 DB::raw("MIN(doanh_nghiep.dia_chi) as dia_chi"),
@@ -74,6 +77,7 @@ class BaoCaoThoiGianToKhai implements FromArray, WithEvents
             )
             ->orderByDesc('days_apart')
             ->get();
+
 
         $totalHangTon = 0;
         $totalKhaiBao = 0;
@@ -196,7 +200,7 @@ class BaoCaoThoiGianToKhai implements FromArray, WithEvents
                 $sheet->mergeCells('A4:R4'); // BÁO CÁO
                 $sheet->mergeCells('A5:R5'); // Tính đến ngày
 
-                foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q','R'] as $column) {
+                foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'] as $column) {
                     $sheet->mergeCells($column . '7:' . $column . '8');
                 }
 

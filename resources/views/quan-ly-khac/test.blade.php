@@ -15,27 +15,52 @@
                 </div>
             @endif
 
-            <form action="{{ route('quan-ly-khac.xoa-theo-doi-tru-lui') }}" method="POST">
+            <form action="{{ route('quan-ly-khac.action-1') }}" method="POST">
                 @csrf
                 @method('POST')
-                <p>Tên đăng nhập</p>
-                <input type="text" class="form-control" name="ten_dang_nhap">
-                <p>Mật khẩu</p>
-                <input type="text" class="form-control" name="mat_khau">
-                <button type="submit">Done</button>
+                <h5>Kiểm tra chuẩn số lượng tồn</h5>
+                <button class="btn btn-primary" type="submit">Done</button>
             </form>
-
-            <form action="{{ route('quan-ly-khac.xoa-theo-doi-hang') }}" method="POST">
+            <hr>
+            <form action="{{ route('quan-ly-khac.action-2') }}" method="POST">
                 @csrf
                 @method('POST')
-                <p>STKN</p>
-                <input type="text" class="form-control" name="so_to_khai_nhap">
-                <p>STKX</p>
-                <input type="text" class="form-control" name="so_to_khai_xuat">
-                <button type="submit">Done</button>
+                <h5>Khôi phục xuất hàng</h5>
+                <div class="row">
+                    <div class="col-2">
+                        <h6>Nhập số tờ khai xuất</h6>
+                        <input type="text" class="form-control" name="so_to_khai_xuat">
+                    </div>
+                    <div class="col-2">
+                        <h6>Nhập trạng thái</h6>
+                        <input type="text" class="form-control" name="trang_thai">
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Done</button>
             </form>
+            <hr>
 
+            <form action="{{ route('quan-ly-khac.action-3') }}" method="POST">
+                @csrf
+                @method('POST')
+                <h5>Kiểm tra xuất hết không đúng số lượng</h5>
+                <button class="btn btn-primary" type="submit">Done</button>
+            </form>
+            <hr>
 
+            <form action="{{ route('quan-ly-khac.action-4') }}" method="POST">
+                @csrf
+                @method('POST')
+                <h5>Kiểm tra xuất hết sai tên công chức</h5>
+                <button class="btn btn-primary" type="submit">Done</button>
+            </form>
+            <hr>
+            <form action="{{ route('quan-ly-khac.action-5') }}" method="POST">
+                @csrf
+                @method('POST')
+                <h5>Fix xuất hết</h5>
+                <button class="btn btn-primary" type="submit">Done</button>
+            </form>
         </div>
     </div>
 @stop

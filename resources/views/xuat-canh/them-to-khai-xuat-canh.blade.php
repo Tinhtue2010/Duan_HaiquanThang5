@@ -132,6 +132,7 @@
     </div>
     <script>
         $(document).ready(function() {
+            const doanhNghiep = @json($doanhNghiep);
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
 
@@ -226,6 +227,13 @@
                                         `<option value="${item.ma_doanh_nghiep}">${item.ten_doanh_nghiep}</option>`
                                     );
                                 }
+                                if (!addedDoanhNghieps.has(doanhNghiep.ma_doanh_nghiep)) {
+                                    addedDoanhNghieps.add(doanhNghiep.ma_doanh_nghiep);
+                                    doanhNghiepDropdown.append(
+                                        `<option value="${doanhNghiep.ma_doanh_nghiep}">${doanhNghiep.ten_doanh_nghiep}</option>`
+                                    );
+                                }
+
                             });
                             calculateTotal();
                         } else {

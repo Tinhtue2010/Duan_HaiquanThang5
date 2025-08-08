@@ -53,6 +53,7 @@
                                 <th>Số lượng trong container</th>
                                 <th>Đơn vị tính</th>
                                 <th>Số container</th>
+                                <th>Số tàu</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,6 +75,7 @@
                                         <td>{{ $hang->so_luong }}</td>
                                         <td>{{ $hang->hangHoa->don_vi_tinh }}</td>
                                         <td>{{ $hang->so_container }}</td>
+                                        <td>{{ $hang->phuong_tien_vt_nhap }}</td>
                                     </tr>
                                     @php
                                         $displayIndex++; 

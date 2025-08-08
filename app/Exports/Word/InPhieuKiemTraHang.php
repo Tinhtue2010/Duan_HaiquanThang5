@@ -162,22 +162,6 @@ class InPhieuKiemTraHang
         $cell2 = $headerTable2->addCell(6000);
         $cell2->addText($yeuCau->doanhNghiep->ten_doanh_nghiep ?? '', ['bold' => true], ['alignment' => 'center']);
 
-
-        $section->addTextBreak();
-        $section->addText('LĐ Đội KTGS và KSHQ:');
-        $congChuc =  $yeuCau->congChuc->ten_cong_chuc ?? '';
-        $section->addText('- Phân công Đ/C ' . $congChuc . ' thực hiện.');
-
-        $headerTable3 = $section->addTable(['cellMargin' => 0]);
-
-        // First cell of the header
-        $headerTable3->addRow();
-        $cell1 = $headerTable3->addCell(6000);
-
-        // Second cell of the header
-        $cell2 = $headerTable3->addCell(6000);
-        // $cell2->addText('KÝ, GHI RÕ HỌ TÊN', ['size' => 12], ['alignment' => 'center']);
-
         // Save the document
         $fileName = 'Phiếu yêu cầu kiểm tra hàng.docx';
         $tempFilePath = storage_path($fileName);

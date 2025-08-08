@@ -48,7 +48,7 @@ class BangKeCongViec implements FromArray, WithEvents
             ['NHẬT KÝ CÔNG VIỆC VÀ ĐÁNH GIÁ CỦA CẤP CÓ THẨM QUYỀN'],
             ["Tháng " . Carbon::parse($this->tu_ngay)->month . " năm " . Carbon::parse($this->tu_ngay)->year],
             [''],
-            ['1. Họ tên: '. $tenCongChuc],
+            ['1. Họ tên: ' . $tenCongChuc],
             ['2. Vị trí, đơn vị công tác: Kiểm tra giám sát hàng hoá XNK'],
             ['3. Số ngày làm việc trong tháng: …../….. ngày. Số ngày nghỉ: Không/Nếu có thì ghi rõ số ngày nghỉ, có phép hay không có phép.'],
             ['4. Vi phạm kỷ luật, kỷ cương hành chính: Không/Nếu có thì ghi rõ hành vi và số lần vi phạm'],
@@ -59,7 +59,7 @@ class BangKeCongViec implements FromArray, WithEvents
             ['', '', '', '', '', '', 'Vượt tiến độ', 'Đạt tiến độ', 'Chậm tiến độ', 'Đạt', 'Không đạt'],
             ['(1)', '(2)', '(3)', '(4)', '(5)', '(6)', '(7)', '(8)', '(9)', '(10)', '(11)', '(12)', '(13)']
         ];
-        
+
         $nhapHangs = NhapHang::select('nhap_hang.created_at', 'nhap_hang.so_to_khai_nhap')
             ->whereMonth('nhap_hang.created_at', Carbon::parse($this->tu_ngay)->month)
             ->where('ma_cong_chuc', $this->ma_cong_chuc)
@@ -172,7 +172,7 @@ class BangKeCongViec implements FromArray, WithEvents
             ->count();
 
         $stt = 1;
-        $ngayThucHiens = $nhapHangs->pluck('created_at')->map(function ($date) {
+        $ngayThucHiens = $nhapHangs->pluck('created_at')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -183,12 +183,20 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $nhapHangs->count() . ' tờ khai',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
 
-        $ngayThucHiens = $xuatHangs->pluck('ngay_dang_ky')->map(function ($date) {
+        $ngayThucHiens = $xuatHangs->pluck('ngay_dang_ky')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -199,11 +207,19 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $xuatHangs->count() . ' tờ khai',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
-        $ngayThucHiens = $nhapCanhs->pluck('ngay_dang_ky')->map(function ($date) {
+        $ngayThucHiens = $nhapCanhs->pluck('ngay_dang_ky')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -214,10 +230,18 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $nhapCanhs->count() . ' tờ khai nhập cảnh',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
-        $ngayThucHiens = $xuatCanhs->pluck('ngay_dang_ky')->map(function ($date) {
+        $ngayThucHiens = $xuatCanhs->pluck('ngay_dang_ky')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -228,10 +252,18 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $xuatCanhs->count() . ' tờ khai xuất cảnh',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
-        $ngayThucHiens = $niemPhongs->pluck('ngay_dang_ky')->map(function ($date) {
+        $ngayThucHiens = $niemPhongs->pluck('ngay_dang_ky')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -241,11 +273,19 @@ class BangKeCongViec implements FromArray, WithEvents
                 'Giám sát niêm phong',
                 $ngayThucHiens,
                 '',
-                'Giám sát ' . $niemPhongs->count() . ' yêu cầu niêm phong và niêm phong '.$soLuongNiemPhong.' container',
+                'Giám sát ' . $niemPhongs->count() . ' yêu cầu niêm phong và niêm phong ' . $soLuongNiemPhong . ' container',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
-        $ngayThucHiens = $chuyenTauConts->pluck('ngay_yeu_cau')->map(function ($date) {
+        $ngayThucHiens = $chuyenTauConts->pluck('ngay_yeu_cau')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -256,11 +296,19 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $chuyenTauConts->count() . ' yêu cầu chuyển tàu container và chuyển ' . $soLuongTauConts . ' container',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
-        $ngayThucHiens = $chuyenTaus->pluck('ngay_yeu_cau')->map(function ($date) {
+        $ngayThucHiens = $chuyenTaus->pluck('ngay_yeu_cau')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -271,11 +319,19 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $chuyenTaus->count() . ' yêu cầu chuyển tàu và chuyển ' . $soLuongChuyenTaus . ' lần chuyển tàu',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
-        $ngayThucHiens = $chuyenConts->pluck('ngay_yeu_cau')->map(function ($date) {
+        $ngayThucHiens = $chuyenConts->pluck('ngay_yeu_cau')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -286,11 +342,19 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $chuyenConts->count() . ' yêu cầu chuyển container và chuyển ' . $soLuongChuyenConts . ' container',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
-        $ngayThucHiens = $kiemTras->pluck('ngay_yeu_cau')->map(function ($date) {
+        $ngayThucHiens = $kiemTras->pluck('ngay_yeu_cau')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -301,12 +365,20 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $kiemTras->count() . ' yêu cầu kiểm tra và kiểm tra ' . $soLuongKiemTras . ' container',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
 
-        $ngayThucHiens = $tieuHuys->pluck('ngay_yeu_cau')->map(function ($date) {
+        $ngayThucHiens = $tieuHuys->pluck('ngay_yeu_cau')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -317,12 +389,20 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $tieuHuys->count() . ' yêu cầu tiêu hủy',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
 
 
 
-        $ngayThucHiens = $hangVeKhos->pluck('ngay_yeu_cau')->map(function ($date) {
+        $ngayThucHiens = $hangVeKhos->pluck('ngay_yeu_cau')->sort()->map(function ($date) {
             return Carbon::parse($date)->format('d-m-Y');
         })->unique()->implode(', ');
 
@@ -333,10 +413,26 @@ class BangKeCongViec implements FromArray, WithEvents
                 $ngayThucHiens,
                 '',
                 'Giám sát ' . $hangVeKhos->count() . ' yêu cầu hàng về kho',
+                $ngayThucHiens,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Đồng ý',
             ];
         }
-
-
+        $result[] = [''];
+        $result[] = [''];
+        $result[] = ['', 'NGƯỜI THỰC HIỆN', '', '', '', '', '', '', 'PHÓ ĐỘI TRƯỞNG'];
+        $result[] = ['', '', '', '', '', '', '', '', 'PHỤ TRÁCH BỘ PHẬN KIỂM TRA GIÁM SÁT'];
+        $result[] = [''];
+        $result[] = [''];
+        $result[] = [''];
+        $result[] = [''];
+        $result[] = [''];
+        $result[] = ['', $tenCongChuc, '', '', '', '', '', '', 'Lê Thanh Bình'];
         return $result;
     }
     public function registerEvents(): array
@@ -447,7 +543,7 @@ class BangKeCongViec implements FromArray, WithEvents
                 ]);
 
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A17:E' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A17:M' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
@@ -469,6 +565,33 @@ class BangKeCongViec implements FromArray, WithEvents
                     ],
                 ]);
                 // $event->sheet->getDelegate()->getStyle('N1')->getFont()->setBold(true);
+                $secondTableStart = null;
+                for ($i = 1; $i <= $lastRow; $i++) {
+                    if ($sheet->getCell('B' . $i)->getValue() === 'NGƯỜI THỰC HIỆN') {
+                        $secondTableStart = $i;
+                        break;
+                    }
+                }
+
+                $sheet->mergeCells('I' . $secondTableStart . ':M' . $secondTableStart);
+                $sheet->mergeCells('I' . ($secondTableStart + 1) . ':M' . ($secondTableStart + 1));
+                $sheet->mergeCells('I' . ($secondTableStart + 7) . ':M' . ($secondTableStart + 7));
+
+                $sheet->getStyle('A' . ($secondTableStart-2) . ':M' . ($secondTableStart + 7))->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_NONE,
+                        ],
+                    ],
+                ]);
+
+                $sheet->getStyle('A' . $secondTableStart . ':M' . ($secondTableStart + 7))->applyFromArray([
+                    'font' => ['bold' => true],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ]
+                ]);
             },
         ];
     }

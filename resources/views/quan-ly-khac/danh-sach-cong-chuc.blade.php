@@ -68,6 +68,9 @@
                                     Chỉ xem
                                 </th>
                                 <th>
+                                    Trạng thái
+                                </th>
+                                <th>
                                     Thao tác
                                 </th>
                             </thead>
@@ -82,7 +85,9 @@
                                         data-is-xuat-canh="{{ $congChuc->is_xuat_canh }}"
                                         data-is-yeu-cau="{{ $congChuc->is_yeu_cau }}"
                                         data-is-ban-giao="{{ $congChuc->is_ban_giao }}"
-                                        data-is-chi-xem="{{ $congChuc->is_chi_xem }}">
+                                        data-is-chi-xem="{{ $congChuc->is_chi_xem }}"
+                                        data-status="{{ $congChuc->status }}">
+
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $congChuc->ma_cong_chuc }}</td>
                                         <td>{{ $congChuc->ten_cong_chuc }}</td>
@@ -100,6 +105,17 @@
                                         <td><input type="checkbox" {{ $congChuc->is_ban_giao ? 'checked' : '' }} disabled>
                                         </td>
                                         <td><input type="checkbox" {{ $congChuc->is_chi_xem ? 'checked' : '' }} disabled>
+                                        </td>
+                                        <td>
+                                            @if ($congChuc->status == 1)
+                                                <p class="text-success">Đang công tác</p>
+                                            @elseif ($congChuc->status == 2)
+                                                <p class="text-warning">Chuyển công tác</p>
+                                            @elseif ($congChuc->status == 3)
+                                                <p class="text-warning">Nghỉ hưu</p>
+                                            @else
+                                                <p class="text-warning">Lý do khác</p>
+                                            @endif
                                         </td>
                                         <td>
                                             <button class="btn btn-primary" data-bs-toggle="modal"
@@ -187,7 +203,29 @@
                                 <input class="mt-2" type="checkbox" name="is_chi_xem" id="chi-xem" value="1">
                                 <label for="myCheckbox">Chỉ xem</label>
 
+                                <center class="mt-3">
+                                    <h5>Trạng thái</h5>
+                                </center>
+                                <input type="radio" name="status" id="dang-cong-tac" value="1"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Đang công tác</label>
+                                <br>
+
+                                <input class="mt-2" type="radio" name="status" id="chuyen-cong-tac"
+                                    value="2" style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Chuyển công tác</label>
+                                <br>
+
+                                <input class="mt-2" type="radio" name="status" id="nghi-huu" value="3"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Nghỉ hưu</label>
+                                <br>
+
+                                <input class="mt-2" type="radio" name="status" id="ly-do-khac" value="4"
+                                    style="transform: scale(1.5);">
+                                <label class="ms-2" for="">Lý do khác</label>
                             </div>
+
                         </div>
 
 
@@ -372,6 +410,9 @@
                         <br>
                         <input class="mt-2" type="checkbox" name="28" id="28" value="1">
                         <label for="myCheckbox">Báo cáo thời gian tờ khai lưu tại cảng</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="29" id="29" value="1">
+                        <label for="myCheckbox">Báo cáo hàng tiêu hủy</label>
 
 
 
@@ -418,6 +459,7 @@
                 var tenCongChuc = $(this).data('ten-cong-chuc');
                 var tenDangNhap = $(this).data('ten-dang-nhap');
                 var maTaiKhoan = $(this).data('ma-tai-khoan');
+
                 document.getElementById('modalMaCongChuc').value = maCongChuc;
                 document.getElementById('modalTenCongChuc').value = tenCongChuc;
                 $('#modalTenDangNhap').text(tenDangNhap);
@@ -447,6 +489,16 @@
                 }
                 if ($(this).data('is-chi-xem') == 1) {
                     $("#chi-xem").prop("checked", true); // Use jQuery
+                }
+                var trangThai = $(this).data('status');
+                if (trangThai == 1) {
+                    document.getElementById('dang-cong-tac').checked = true;
+                } else if (trangThai == 2) {
+                    document.getElementById('chuyen-cong-tac').checked = true;
+                } else if (trangThai == 3) {
+                    document.getElementById('nghi-huu').checked = true;
+                } else if (trangThai == 4) {
+                    document.getElementById('ly-do-khac').checked = true;
                 }
 
                 const selectElement = document.getElementById('tai-khoan-dropdown-search');
@@ -490,7 +542,7 @@
                 button.addEventListener('click', function() {
                     const maCongChucBC = this.getAttribute('data-ma-cong-chuc');
                     const tenCongChucBC = this.getAttribute('data-ten-cong-chuc');
-                    for (let i = 1; i <= 28; i++) {
+                    for (let i = 1; i <= 29; i++) {
                         $(`#${i}`).prop("checked", false);
                     }
 

@@ -248,35 +248,6 @@ class InPhieuChuyenContainer
         $cell2 = $headerTable2->addCell(6000);
         $cell2->addText($yeuCau->doanhNghiep->ten_doanh_nghiep ?? '', ['bold' => true], ['alignment' => 'center']);
 
-        $section->addPageBreak();
-        $section->addText('ĐỘI KTGS và KS HẢI QUAN', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
-        $section->addText('1. Cán bộ công chức tiếp nhận:');
-        $section->addText('- Đã kiểm tra hồ sơ công ty.');
-        $section->addText('- Kính chuyển lãnh đạo Đội quyết định.');
-
-        $headerTable3 = $section->addTable(['cellMargin' => 0]);
-        $headerTable3->addRow();
-        $cell1 = $headerTable3->addCell(6000);
-        $cell2 = $headerTable3->addCell(6000);
-        // $cell2->addText('KÝ, GHI RÕ HỌ TÊN', ['size' => 12], ['alignment' => 'center']);
-
-        $section->addTextBreak(4);
-
-        $section->addText('ĐỘI KTGS và KS HẢI QUAN', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
-        $section->addText('-2.  LĐ Đội KTGS và KSHQ');
-        $section->addText('- Phân công Đ/C ...................................... thực hiện.');
-        $section->addText('- Đề xuất lãnh đạo phê duyệt.');
-
-        $headerTable4 = $section->addTable(['cellMargin' => 0]);
-        $headerTable4->addRow();
-        $cell1 = $headerTable4->addCell(6000);
-        $cell2 = $headerTable4->addCell(6000);
-        // $cell2->addText('KÝ, GHI RÕ HỌ TÊN', ['size' => 12], ['alignment' => 'center']);
-        $section->addTextBreak(4);
-
-        $section->addText('Ý KIẾN PHÊ DUYỆT CỦA LÃNH', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
-        $section->addText('Đồng ý đề xuất.', ['bold' => true, 'size' => 14], ['alignment' => 'center']);
-
         // Save the document
         $fileName = 'Phiếu yêu cầu chuyển container.docx';
         $tempFilePath = storage_path($fileName);

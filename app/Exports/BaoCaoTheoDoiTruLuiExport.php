@@ -38,6 +38,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
     protected $nhapHang;
     protected $ten_hai_quan;
     protected $is_nhieu_tau;
+    protected $lan_phieu = 0;
+    protected $lanArray = [];
 
     public function title(): string
     {
@@ -175,9 +177,41 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $is_xuat_het = true;
             }
         }
+        $theoDoiTruLuis = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->when(request('cong_viec') == 1, function ($query) {
+                return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
+                    ->where('xuat_hang.trang_thai', '!=', 0);
+            })
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->cong_viec . '-' . $item->ma_yeu_cau; // Group by both fields combined
+            })
+            ->map(function ($group) {
+                return $group->first();
+            })
+            ->values()
+            ->sortBy('ma_theo_doi')
+            ->values();
+
+        foreach ($theoDoiTruLuis as $truLui) {
+            if ($truLui->cong_viec == 1 && XuatHang::find($truLui->ma_yeu_cau)->trang_thai != 0) {
+                $this->lan_phieu++;
+                // if (Carbon::parse($truLui->ngay_them)->toDateString() == Carbon::parse($tu_ngay)->toDateString()) {
+                //     $this->lanArray[] = $this->lan_phieu;
+                // }
+            } elseif ($truLui->cong_viec != 1) {
+                $this->lan_phieu++;
+                if ($truLui->ma_theo_doi == $theoDoi->ma_theo_doi) {
+                    $this->lanArray[] = $this->lan_phieu;
+                    break;
+                }
+            }
+        }
 
         foreach ($theoDoiChiTiet as $item) {
             if ($item->so_luong_chua_xuat != 0) {
+
+
                 $soTaus[] = $item->phuong_tien_vt_nhap;
                 if ($is_xuat_het == true) {
                     if ($item->cong_viec != 1) {
@@ -251,7 +285,16 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
             $this->is_nhieu_tau = true;
         }
 
-        $result[] = ['', '', '', 'Tổng cộng', '', '', '', $sum, '', '', ''];
+
+        $tongLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->sum('hang_trong_cont.so_luong');
+
+        $result[] = ['', '', '', 'Tổng cộng', '', '', '', $sum == 0 ? '0' : $sum, '', '', ''];
+        $result[] = ['', '', '', '', '', '', 'Tồn TK', $tongLuongTon == 0 ? '0' : $tongLuongTon, '', '', ''];
+
+
         $result[] = [
             [''],
             [''],
@@ -288,7 +331,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->getParent()->getDefaultStyle()->getFont()->setSize(20);
 
                 // Auto-width columns
-                $sheet->getColumnDimension('A')->setWidth(width: 5);
+                $sheet->getColumnDimension('A')->setWidth(width: 7);
                 $sheet->getColumnDimension('B')->setWidth(width: 18);
                 $sheet->getColumnDimension('C')->setWidth(width: 18);
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
@@ -326,6 +369,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->mergeCells('A9:L9');
                 $sheet->mergeCells('A10:G10');
                 $sheet->mergeCells('H10:L10');
+                $sheet->mergeCells('A5:B5');
 
                 $sheet->getStyle('A3:L4')->applyFromArray([
                     'font' => ['bold' => true],
@@ -359,6 +403,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                         break;
                     }
                 }
+
                 $lastStart = null;
                 for ($i = 1; $i <= $lastRow; $i++) {
                     if ($sheet->getCell('B' . $i)->getValue() === 'CÔNG CHỨC HẢI QUAN GIÁM SÁT') {
@@ -403,14 +448,14 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
 
                 $tenCongViec = $this->tenCongViec;
 
-                $sheet->mergeCells('B' . $secondTableStart + 2 . ':B' . $lastStart - 4);
+                $sheet->mergeCells('B' . $secondTableStart + 2 . ':B' . $lastStart - 5);
                 $sheet->setCellValue('B' . $secondTableStart + 2, $tenCongViec);
-                $sheet->mergeCells('C' . $secondTableStart + 2 . ':C' . $lastStart - 4);
+                $sheet->mergeCells('C' . $secondTableStart + 2 . ':C' . $lastStart - 5);
                 $sheet->setCellValue('C' . $secondTableStart + 2, $this->theoDoi->so_ptvt_nuoc_ngoai);
 
                 if ($this->is_nhieu_tau == false) {
                     $tau = $this->theoDoi->theoDoiChiTiet->first()?->phuong_tien_vt_nhap;
-                    $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 4);
+                    $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 5);
                     $sheet->setCellValue('J' . $secondTableStart + 2, $tau == $this->nhapHang->ptvt_ban_dau ? '' : $tau);
                 }
 
@@ -423,7 +468,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                     ]
                 ]);
 
-                $sheet->getStyle('A' . ($lastStart) . ':L' . ($lastStart + 1))->applyFromArray([
+                $sheet->getStyle('A' . ($lastStart - 4) . ':L' . ($lastStart + 1))->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -438,6 +483,10 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->mergeCells('I' . $lastStart + 1 . ':L' . ($lastStart + 1));
                 $sheet->getStyle('A' . ($lastStart - 3) . ':L' . ($lastStart - 3))->getFont()->setBold(true);
 
+                $sheet->mergeCells('G' . $lastStart . ':H' . ($lastStart));
+                $sheet->setCellValue('G' . $lastStart, "LẦN " . implode(',',  $this->lanArray));
+                $sheet->getStyle('G' . $lastStart)->getFont()->setSize(22); // Increased font size
+
                 $first = 0;
                 for ($row = $secondTableStart; $row <= $lastStart - 3; $row++) {
                     if ($first == 1) {
@@ -448,6 +497,9 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
 
                 $sheet->getRowDimension(1)->setRowHeight(30);
                 $sheet->getRowDimension(12)->setRowHeight(30);
+
+                $sheet->getRowDimension($lastStart - 3)->setRowHeight(40);
+                $sheet->getRowDimension($lastStart - 4)->setRowHeight(40);
                 // Set left alignment for number columns
                 // $sheet->getStyle('A13:A'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 

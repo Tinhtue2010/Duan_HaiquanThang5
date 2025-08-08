@@ -51,7 +51,7 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
             ->join('hai_quan', 'hai_quan.ma_hai_quan', 'nhap_hang.ma_hai_quan')
             ->whereIn('nhap_hang.trang_thai', ['7', '4'])
             ->where('xuat_hang.trang_thai', '!=', '0')
-            ->whereBetween('xuat_hang.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay]) // This filter is added for the xuat_hang
+            ->whereBetween('nhap_hang.ngay_xuat_het', [$this->tu_ngay, $this->den_ngay]) // This filter is added for the xuat_hang
             ->select(
                 'hang_hoa.ten_hang',
                 'hang_hoa.xuat_xu',
@@ -62,14 +62,14 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',
                 'nhap_hang.trong_luong',
-                'nhap_hang.ma_cong_chuc_ban_giao',
+                'xuat_hang.ma_cong_chuc',
                 'nhap_hang.ngay_xuat_het',
                 'nhap_hang.ma_doanh_nghiep',
                 'nhap_hang.trong_luong',
                 'xuat_hang_cont.so_container',
                 'doanh_nghiep.ten_doanh_nghiep',
                 'hai_quan.ten_hai_quan',
-                'xuat_hang.ngay_dang_ky as ngay_dang_ky_xuat',
+                'nhap_hang.ngay_xuat_het',
                 'xuat_hang.trang_thai',
                 DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as total_so_luong_xuat')
             )
@@ -83,7 +83,7 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
                 'nhap_hang.so_to_khai_nhap',
                 'nhap_hang.ngay_dang_ky',
                 'nhap_hang.trong_luong',
-                'nhap_hang.ma_cong_chuc_ban_giao',
+                'xuat_hang.ma_cong_chuc',
                 'nhap_hang.ngay_xuat_het',
                 'nhap_hang.ma_doanh_nghiep',
                 'nhap_hang.trong_luong',
@@ -115,10 +115,10 @@ class BaoCaoSoLuongToKhaiXuat implements FromArray, WithEvents
                 $xuatHang->don_vi_tinh ?? '',
                 $xuatHang->trong_luong ?? '',
                 $xuatHang->tri_gia ?? '',
-                $xuatHang->ngay_dang_ky_xuat ? Carbon::parse($xuatHang->ngay_dang_ky_xuat)->format('d-m-Y') : '',
+                $xuatHang->ngay_xuat_het ? Carbon::parse($xuatHang->ngay_xuat_het)->format('d-m-Y') : '',
                 $xuatHang->total_so_luong_xuat ?? '',
                 $xuatHang->so_container ?? '',
-                $xuatHang->congChucBanGiao->ten_cong_chuc ?? '',
+                $xuatHang->congChuc->ten_cong_chuc ?? '',
                 in_array($xuatHang->trang_thai, [13, 12]) ? 'X' : '',
             ];
         }

@@ -26,7 +26,8 @@
                 </div>
                 <div class="col-6">
                     @if (trim($yeuCau->trang_thai) != '0')
-                        <a href="{{ route('quan-ly-kho.in-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau,'is_go_seal' => '1']) }}">
+                        <a
+                            href="{{ route('quan-ly-kho.in-yeu-cau-niem-phong', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau, 'is_go_seal' => '1']) }}">
                             <button class="btn btn-success float-end"> In yêu cầu</button>
                         </a>
                     @endif
@@ -39,6 +40,12 @@
 
                     </h2>
                     <h2 class="text-center">YÊU CẦU GỠ SEAL ĐIỆN TỬ</h2>
+                    @if ($yeuCau->is_niem_phong == 1)
+                        <h2 class="text-center">CÓ NIÊM PHONG</h2>
+                    @else
+                        <h2 class="text-center">KHÔNG NIÊM PHONG</h2>
+                    @endif
+                    <h2 class="text-center"></h2>
                     <h2 class="text-center">Số {{ $yeuCau->ma_yeu_cau }} - Ngày yêu cầu:
                         {{ \Carbon\Carbon::parse($yeuCau->ngay_yeu_cau)->format('d-m-Y') }}</h2>
                     <table class="table table-bordered mt-5" id="displayTable"
@@ -48,6 +55,7 @@
                                 <th>STT</th>
                                 <th>Số container</th>
                                 <th>Tàu</th>
+                                <th>Số seal điện tử</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -56,6 +64,7 @@
                                     <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
                                     <td>{{ $chiTiet->so_container }}</td>
                                     <td>{{ $chiTiet->phuong_tien_vt_nhap }}</td>
+                                    <td>{{ $chiTiet->so_seal_cu }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -153,45 +162,47 @@
 
                                     </center>
                                 @endif
-                                <table class="table table-bordered mt-5" id="">
-                                    <thead class="align-middle">
-                                        <tr>
-                                            <th>STT</th>
-                                            <th>Số container</th>
-                                            <th>Tàu</th>
-                                            <th>Số seal niêm phong cũ</th>
-                                            <th>Số seal niêm phong mới</th>
-                                            @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
-                                                    Auth::user()->congChuc->is_yeu_cau == 1 &&
-                                                    $yeuCau->ma_cong_chuc == Auth::user()->congChuc->ma_cong_chuc)
-                                                <th>Thao tác</th>
-                                            @endif
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($chiTiets as $index => $chiTiet)
+                                @if ($yeuCau->is_niem_phong == 1)
+                                    <table class="table table-bordered mt-5" id="">
+                                        <thead class="align-middle">
                                             <tr>
-                                                <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
-                                                <td>{{ $chiTiet->so_container }}</td>
-                                                <td>{{ $chiTiet->phuong_tien_vt_nhap }}</td>
-                                                <td>{{ $chiTiet->so_seal_cu }}</td>
-                                                <td>{{ $chiTiet->so_seal_moi }}</td>
+                                                <th>STT</th>
+                                                <th>Số container</th>
+                                                <th>Tàu</th>
+                                                <th>Số seal niêm phong cũ</th>
+                                                <th>Số seal niêm phong mới</th>
                                                 @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
                                                         Auth::user()->congChuc->is_yeu_cau == 1 &&
                                                         $yeuCau->ma_cong_chuc == Auth::user()->congChuc->ma_cong_chuc)
-                                                    <td> <a href="#">
-                                                            <button data-bs-toggle="modal"
-                                                                data-container="{{ $chiTiet->so_container }}"
-                                                                data-bs-target="#suaSealModal" class="btn btn-primary ">
-                                                                Sửa seal niêm phong
-                                                            </button>
-                                                        </a>
-                                                    </td>
+                                                    <th>Thao tác</th>
                                                 @endif
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($chiTiets as $index => $chiTiet)
+                                                <tr>
+                                                    <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
+                                                    <td>{{ $chiTiet->so_container }}</td>
+                                                    <td>{{ $chiTiet->phuong_tien_vt_nhap }}</td>
+                                                    <td>{{ $chiTiet->so_seal_cu }}</td>
+                                                    <td>{{ $chiTiet->so_seal_moi }}</td>
+                                                    @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
+                                                            Auth::user()->congChuc->is_yeu_cau == 1 &&
+                                                            $yeuCau->ma_cong_chuc == Auth::user()->congChuc->ma_cong_chuc)
+                                                        <td> <a href="#">
+                                                                <button data-bs-toggle="modal"
+                                                                    data-container="{{ $chiTiet->so_container }}"
+                                                                    data-bs-target="#suaSealModal" class="btn btn-primary ">
+                                                                    Sửa seal niêm phong
+                                                                </button>
+                                                            </a>
+                                                        </td>
+                                                    @endif
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @endif
                             @elseif(trim($yeuCau->trang_thai) == '3')
                                 <h2 class="text-warning">Doanh nghiệp đề nghị sửa yêu cầu</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
@@ -284,56 +295,57 @@
                                 <option value="{{ $congChucHienTai->ma_cong_chuc ?? '' }}" selected>
                                     {{ $congChucHienTai->ten_cong_chuc ?? '' }}</option>
                             </select>
+                            @if ($yeuCau->is_niem_phong == 1)
+                                <label class="label-text mb-1" for="">
+                                    <strong>Loại seal</strong>
+                                </label>
+                                <select class="form-control" id="loai-seal-dropdown-search" name="loai_seal"
+                                    placeholder="Chọn loại seal" required>
+                                    <option></option>
+                                    <option value="1">Seal dây cáp đồng</option>
+                                    <option value="2">Seal dây cáp thép</option>
+                                    <option value="3">Seal container</option>
+                                    <option value="4">Seal dây nhựa dẹt</option>
+                                    <option value="5">Seal định vị điện tử</option>
+                                </select>
 
-                            <label class="label-text mb-1" for="">
-                                <strong>Loại seal</strong>
-                            </label>
-                            <select class="form-control" id="loai-seal-dropdown-search" name="loai_seal"
-                                placeholder="Chọn loại seal" required>
-                                <option></option>
-                                <option value="1">Seal dây cáp đồng</option>
-                                <option value="2">Seal dây cáp thép</option>
-                                <option value="3">Seal container</option>
-                                <option value="4">Seal dây nhựa dẹt</option>
-                                <option value="5">Seal định vị điện tử</option>
-                            </select>
 
-
-                            <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
-                                id="displayTableYeuCau">
-                                <thead class="align-middle">
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Số container</th>
-                                        <th>Loại seal</th>
-                                        <th>Seal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($chiTiets as $index => $chiTiet)
-                                        <tr class="container-row">
-                                            <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
-                                            <td>{{ $chiTiet->so_container }}</td>
-                                            <td>
-                                                <select class="form-control loai-seal-dropdown-search" name="loai_seal"
-                                                    placeholder="Chọn loại seal" required>
-                                                    <option></option>
-                                                    <option value="1">Seal dây cáp đồng</option>
-                                                    <option value="2">Seal dây cáp thép</option>
-                                                    <option value="3">Seal container</option>
-                                                    <option value="4">Seal dây nhựa dẹt</option>
-                                                    <option value="5">Seal định vị điện tử</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select class="form-control seal-dropdown-search" name="so_seal">
-                                                    <option value="">Chọn seal</option>
-                                                </select>
-                                            </td>
+                                <table class="table table-bordered mt-2"
+                                    style="vertical-align: middle; text-align: center;" id="displayTableYeuCau">
+                                    <thead class="align-middle">
+                                        <tr>
+                                            <th>STT</th>
+                                            <th>Số container</th>
+                                            <th>Loại seal</th>
+                                            <th>Seal</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($chiTiets as $index => $chiTiet)
+                                            <tr class="container-row">
+                                                <td>{{ $index + 1 }}</td> <!-- Display index (1-based) -->
+                                                <td>{{ $chiTiet->so_container }}</td>
+                                                <td>
+                                                    <select class="form-control loai-seal-dropdown-search"
+                                                        name="loai_seal" placeholder="Chọn loại seal" required>
+                                                        <option></option>
+                                                        <option value="1">Seal dây cáp đồng</option>
+                                                        <option value="2">Seal dây cáp thép</option>
+                                                        <option value="3">Seal container</option>
+                                                        <option value="4">Seal dây nhựa dẹt</option>
+                                                        <option value="5">Seal định vị điện tử</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control seal-dropdown-search" name="so_seal">
+                                                        <option value="">Chọn seal</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @endif
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -352,7 +364,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="exampleModalLabel">Thay đổi seal gỡ seal</h4> <button type="button"
+                    <h4 class="modal-title" id="exampleModalLabel">Thay đổi seal niêm phong</h4> <button type="button"
                         class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ route('quan-ly-kho.sua-seal-go-seal') }}" method="POST">
@@ -573,7 +585,7 @@
         $(document).ready(function() {
             $('#cong-chuc-dropdown-search').on('change', function() {
                 var selectedValue = $(this).val();
-                
+
                 if (selectedValue) {
                     var topLoaiSealValue = $('#loai-seal-dropdown-search').val();
 

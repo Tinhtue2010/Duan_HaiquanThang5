@@ -41,7 +41,7 @@ class CongChucController extends Controller
         ]);
 
         $baoCaos = BaoCao::all();
-        foreach($baoCaos as $baoCao) {
+        foreach ($baoCaos as $baoCao) {
             $check = PhanQuyenBaoCao::where('ma_cong_chuc', $congChuc->ma_cong_chuc)
                 ->where('ma_bao_cao', $baoCao->ma_bao_cao)
                 ->exists();
@@ -70,7 +70,10 @@ class CongChucController extends Controller
     }
     public function xoaCongChuc(Request $request)
     {
+        $congChuc = CongChuc::find($request->ma_cong_chuc);
+        TaiKhoan::find($congChuc->ma_tai_khoan)->delete();
         CongChuc::find($request->ma_cong_chuc)->delete();
+
         session()->flash('alert-success', 'Xóa công chức thành công');
         return redirect()->back();
     }
@@ -99,7 +102,7 @@ class CongChucController extends Controller
             $congChuc->is_ban_giao = $request->is_ban_giao ? 1 : 0;
             $congChuc->is_yeu_cau = $request->is_yeu_cau ? 1 : 0;
             $congChuc->is_chi_xem = $request->is_chi_xem ? 1 : 0;
-
+            $congChuc->status = $request->status ?? 1;
             $congChuc->save();
             session()->flash('alert-success', 'Cập nhật thành công');
             return redirect()->back();

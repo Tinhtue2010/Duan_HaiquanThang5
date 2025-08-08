@@ -74,7 +74,12 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
 
             $is_xuat_het = false;
             if ($this->nhapHang->trang_thai == 4 || $this->nhapHang->trang_thai == 7) {
-                if (Carbon::parse($this->nhapHang->ngay_xuat_het)->isSameDay(Carbon::parse($theoDoiHangHoa->thoi_gian))) {
+                $xuatHang = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+                    ->where('xuat_hang_cont.so_to_khai_nhap', $this->nhapHang->so_to_khai_nhap)
+                    ->whereNotIn('xuat_hang.trang_thai', [0, 1, 7, 8, 9, 10])
+                    ->orderBy('xuat_hang.created_at', 'desc')
+                    ->first();
+                if (Carbon::parse($xuatHang->ngay_dang_ky)->isSameDay(Carbon::parse($theoDoiHangHoa->thoi_gian))) {
                     $is_xuat_het = true;
                 }
             }
@@ -163,7 +168,9 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
             } else {
                 $seal = $theoDoiHangHoa->so_seal;
             }
-
+            if ($theoDoiHangHoa->so_luong_xuat == 0) {
+                continue;
+            }
             $result[] = [
                 $stt++,
                 $time,
@@ -179,6 +186,21 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
                 $theoDoiHangHoa->ghi_chu,
             ];
         }
+        $tongLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $this->so_to_khai_nhap)
+            ->sum('hang_trong_cont.so_luong');
+        if(NhapHang::find($this->so_to_khai_nhap)->trang_thai == 5){
+            $tongLuongTon = 0;
+        }
+        $result[] = [
+            '',
+            '',
+            '',
+            'Tồn TK',
+            $tongLuongTon == 0 ? '0' : $tongLuongTon,
+        ];
+
 
         return $result;
     }
@@ -269,9 +291,8 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
 
 
                 $hangHoaLonNhat = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                    ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('nhap_hang.so_to_khai_nhap', $this->nhapHang->so_to_khai_nhap)
-                    ->orderByDesc('hang_hoa.so_luong_khai_bao')
+                    ->orderByRaw('CAST(hang_hoa.so_luong_khai_bao AS UNSIGNED) DESC')
                     ->first();
                 $tongSoLuongs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', 'hang_hoa.so_to_khai_nhap')
                     ->where('nhap_hang.so_to_khai_nhap', $this->nhapHang->so_to_khai_nhap)

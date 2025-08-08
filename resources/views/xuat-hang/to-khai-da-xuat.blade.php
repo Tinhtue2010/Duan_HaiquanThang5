@@ -15,6 +15,8 @@
                             @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_chi_xem == 0)
                                 <a href="/duyet-nhanh-thuc-xuat"><button class="btn btn-success float-end">Duyệt
                                         thực xuất</button></a>
+                                <a href="/thay-doi-nhanh-cong-chuc-xuat"><button class="btn btn-warning float-end mx-1">Thay đổi
+                                        công chức</button></a>
                             @endif
                         </div>
                     </div>

@@ -44,35 +44,84 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
         ];
         $from = Carbon::parse($this->tu_ngay)->startOfDay();
         $to = Carbon::parse($this->den_ngay)->endOfDay();
-        $today = Carbon::now()->format('Y-m-d'); // Format now() as yyyy-mm-dd
+        $today = Carbon::now()->format('Y-m-d');
         $stt = 1;
         $totalSoLuong = 0;
-        $thongTinData = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->whereBetween('nhap_hang.created_at', [$from, $to])
+        $totalContainers = 0;
+
+        // Get all nhap_hang entries within date range
+        $nhapHangEntries = NhapHang::whereBetween('created_at', [$from, $to])
+            ->select('ma_hai_quan', 'so_to_khai_nhap')
+            ->get()
+            ->groupBy('ma_hai_quan');
+
+        $thongTinData = [];
+
+        foreach ($nhapHangEntries as $maHaiQuan => $entries) {
+            $soToKhaiList = $entries->pluck('so_to_khai_nhap')->toArray();
+            
+            // Get hang_hoa for each group
+            $hangHoaData = DB::table('hang_hoa')
+            ->whereIn('so_to_khai_nhap', $soToKhaiList)
             ->select(
-                'nhap_hang.ma_hai_quan',
-                'hang_hoa.don_vi_tinh',
-                'hang_hoa.loai_hang',
-                DB::raw('COUNT(DISTINCT nhap_hang.so_to_khai_nhap) as count_so_to_khai'),
-                DB::raw('SUM(hang_hoa.so_luong_khai_bao) as total_so_luong'),
-                DB::raw('SUM(hang_hoa.tri_gia) as total_tri_gia')
+                'loai_hang',
+                'don_vi_tinh',
+                'so_to_khai_nhap',
+                'so_container_khai_bao',
+                'so_luong_khai_bao',
+                'tri_gia'
             )
-            ->groupBy('nhap_hang.ma_hai_quan', 'hang_hoa.loai_hang')
-            ->get();
+            ->get()
+            ->groupBy('loai_hang');
+
+            foreach ($hangHoaData as $loaiHang => $items) {
+            $countSoToKhai = count(array_unique($items->pluck('so_to_khai_nhap')->toArray()));
+            $uniqueContainers = [];
+            
+            // Group containers by so_to_khai_nhap and count unique containers per group
+            $containersByToKhai = $items->groupBy('so_to_khai_nhap');
+            foreach ($containersByToKhai as $soToKhai => $itemsInGroup) {
+                $containersInGroup = [];
+                foreach ($itemsInGroup as $item) {
+                    if (!empty($item->so_container_khai_bao) && !in_array($item->so_container_khai_bao, $containersInGroup)) {
+                        $containersInGroup[] = $item->so_container_khai_bao;
+                    }
+                }
+                $uniqueContainers = array_merge($uniqueContainers, $containersInGroup);
+            }
+            
+            $countContainers = count($uniqueContainers);
+            $totalSoLuongGroup = $items->sum('so_luong_khai_bao');
+            $totalTriGiaGroup = $items->sum('tri_gia');
+            $donViTinh = $items->first()->don_vi_tinh;
+
+            $thongTinData[] = (object)[
+                'ma_hai_quan' => $maHaiQuan,
+                'loai_hang' => $loaiHang,
+                'don_vi_tinh' => $donViTinh,
+                'count_so_to_khai' => $countSoToKhai,
+                'count_containers' => $countContainers,
+                'total_so_luong' => $totalSoLuongGroup,
+                'total_tri_gia' => $totalTriGiaGroup
+            ];
+            
+            $totalContainers += $countContainers;
+            }
+        }
 
         foreach ($thongTinData as $data) {
             $haiQuanName = $haiQuans->where('ma_hai_quan', $data->ma_hai_quan)->first()->ten_hai_quan ?? 'Unknown';
             $loaiHangName = $loaiHangs->where('ten_loai_hang', $data->loai_hang)->first()->ten_loai_hang ?? 'Unknown';
 
             $result[] = [
-                $stt++,
-                $haiQuanName,
-                $loaiHangName,
-                $data->count_so_to_khai, 
-                $data->count_so_to_khai, 
-                $data->total_so_luong,
-                $data->don_vi_tinh,
-                $data->total_tri_gia,
+            $stt++,
+            $haiQuanName,
+            $loaiHangName,
+            $data->count_so_to_khai,
+            $data->count_containers,
+            $data->total_so_luong,
+            $data->don_vi_tinh,
+            $data->total_tri_gia,
             ];
             $totalSoLuong += $data->count_so_to_khai;
         }
@@ -81,6 +130,7 @@ class BaoCaoTiepNhanHangNgayExport implements FromArray, WithEvents
             '',
             '',
             $totalSoLuong,
+            $totalContainers,
             '',
             '',
             '',

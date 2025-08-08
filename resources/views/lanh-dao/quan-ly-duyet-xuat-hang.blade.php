@@ -71,7 +71,11 @@
                                         <td>{{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}</td>
                                         <td>{{ $xuatHang->tong_so_luong }}</td>
                                         <td>{{ $xuatHang->ten_phuong_tien_vt }}</td>
-                                        <td class="text-warning">Đã duyệt lần 1</td>
+                                        @if ($xuatHang->trang_thai == 14)
+                                            <td class="text-warning">Đã duyệt sửa lần 1</td>
+                                        @elseif($xuatHang->trang_thai == 15)
+                                            <td class="text-danger">Đã duyệt hủy lần 1</td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>

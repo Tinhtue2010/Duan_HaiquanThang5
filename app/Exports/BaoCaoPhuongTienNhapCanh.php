@@ -29,8 +29,8 @@ class BaoCaoPhuongTienNhapCanh implements FromArray, WithEvents
     }
     public function array(): array
     {
-        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
-        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d/m/y');
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d/m/y');
 
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', '', '', '', '', '', '', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'],
@@ -82,13 +82,13 @@ class BaoCaoPhuongTienNhapCanh implements FromArray, WithEvents
                 $nhapCanh->quoc_tich_tau,
                 $nhapCanh->ten_thuyen_truong,
                 'Vạn Gia',
-                Carbon::parse($nhapCanh->ngay_duyet)->format('d-m-Y'),
+                Carbon::parse($nhapCanh->ngay_duyet)->format('d/m/y'),
                 $xnc->thoi_gian_nhap_canh ?? '',
                 $nhapCanh->loai_hang ?? '',
                 $nhapCanh->so_luong ?? '',
                 $nhapCanh->don_vi_tinh ?? '',
                 $nhapCanh->cang_den ?? '',
-                !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d-m-Y') : null,
+                !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d/m/y') : null,
                 $xnc->thoi_gian_xuat_canh ?? '',
                 $nhapCanh->ten_cong_chuc,
                 $nhapCanh->ten_doanh_nghiep,

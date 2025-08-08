@@ -18,6 +18,7 @@ class YeuCauTieuHuyChiTiet extends Model
         'so_to_khai_nhap',
         'so_container',
         'so_tau',
+        'ten_hang',
         'ngay_dang_ky',
         'ma_yeu_cau',
     ];

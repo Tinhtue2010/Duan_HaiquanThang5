@@ -212,16 +212,17 @@
                 if (e.target.classList.contains('deleteRowButton')) {
                     const row = e.target.closest('tr');
                     if (!row) return;
+                    row.remove();
 
                     // Get the text from the second column of the clicked row
-                    const soToKhaiNhapValue = row.children[1].textContent.trim();
+                    // const soToKhaiNhapValue = row.children[1].textContent.trim();
 
                     // Remove all rows with the same second column value
-                    Array.from(tableBody.querySelectorAll('tr')).forEach((tr) => {
-                        if (tr.children[1].textContent.trim() === soToKhaiNhapValue) {
-                            tr.remove();
-                        }
-                    });
+                    // Array.from(tableBody.querySelectorAll('tr')).forEach((tr) => {
+                    //     if (tr.children[1].textContent.trim() === soToKhaiNhapValue) {
+                    //         tr.remove();
+                    //     }
+                    // });
 
                     // Reorder the STT column after deletion
                     Array.from(tableBody.querySelectorAll('tr')).forEach((tr, index) => {

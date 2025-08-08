@@ -21,6 +21,7 @@ class CongChuc extends Model
         'is_yeu_cau',
         'is_ban_giao',
         'is_chi_xem',
+        'status'
     ];
     public function phanQuyenBaoCao()
     {

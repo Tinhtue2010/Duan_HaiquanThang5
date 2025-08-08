@@ -18,6 +18,7 @@
                 <p>
                     < Quay lại quản lý nhập hàng</p>
             </a>
+            <center><h3>Giao diện này chỉ có thể sửa: Trọng lượng, trị giá, đơn giá</h3></center>
             <h2 class="text-center text-dark">{{ $nhapHang->doanhNghiep->ten_doanh_nghiep }}</h2>
             <h2 class="text-center text-dark">TỜ KHAI NHẬP KHẨU HÀNG HÓA</h2>
             <!-- Input fields for each column -->
@@ -132,7 +133,7 @@
                         <th hidden>Mã hàng</th>
                         <th>Tên hàng</th>
                         <th>Loại hàng</th>
-                        <th>Xuất xứ</th>
+                        <th hidden>Xuất xứ</th>
                         <th>Số lượng</th>
                         <th>Đơn vị tính</th>
                         <th>Đơn giá (USD)</th>
@@ -164,7 +165,7 @@
                                     @endforeach
                                 </select>
                             </td>
-                            <td>
+                            {{-- <td>
                                 <select class="form-control select2-dropdown" name="xuat_xu">
                                     <option></option>
                                     @foreach ($xuatXus as $xuatXu)
@@ -174,7 +175,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </td>
+                            </td> --}}
                             <td>
                                 <center>
                                     <input type="text" class="form-control number" name="so_luong_khai_bao"

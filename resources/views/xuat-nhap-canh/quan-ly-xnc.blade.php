@@ -55,6 +55,9 @@
                                 <th>
                                     Tên công chức
                                 </th>
+                                <th>
+                                    Trạng thái
+                                </th>
                             </thead>
                             <tbody class="clickable-row">
                             </tbody>
@@ -64,8 +67,17 @@
             </div>
         </div>
     </div>
+    <!-- Custom search box -->
+    <div class="mb-3">
+        <div class="col-4">
+            <input type="text" id="customSearchBox" class="form-control mb-3" placeholder="Tìm kiếm theo Số thẻ...">
+        </div>
+    </div>
     <script>
         $(document).ready(function() {
+            // Move the custom search box above the table
+            $('#customSearchBox').insertBefore('#dataTable');
+
             var table = $('#dataTable').DataTable({
                 processing: true,
                 serverSide: true,
@@ -128,14 +140,58 @@
                     {
                         data: 'ten_cong_chuc',
                         name: 'ten_cong_chuc',
+                    },
+                    {
+                        data: 'trang_thai',
+                        name: 'trang_thai',
                     }
 
                 ],
+                initComplete: function() {
+                    $('.dataTables_filter input[type="search"]').css({
+                        width: '350px',
+                        display: 'inline-block',
+                        height: '40px'
+                    });
+                    var column = this.api().column(8); // Status column index
+                    var select = $(
+                        '<select class="form-control"><option value="">TẤT CẢ</option></select>'
+                    )
+
+                    select.append('<option class="text-success" value="1">ĐÃ DUYỆT</option>');
+                    select.append(
+                        '<option class="text-warning" value="3">YÊU CẦU SỬA</option>');
+                    select.append(
+                        '<option class="text-danger" value="4">YÊU CẦU HỦY</option>');
+
+                    $(column.header()).empty().append(select);
+
+                    select.on('change', function() {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val().trim());
+                        localStorage.setItem('xnk', val);
+                        column.search(val ? val : '', false, true).draw();
+                    });
+
+                    var savedFilter = localStorage.getItem('xnk');
+                    if (savedFilter) {
+                        select.val(savedFilter);
+                        column.search(savedFilter ? savedFilter : '', false, true).draw();
+                    }
+
+                },
                 createdRow: function(row, data, dataIndex) {
                     $(row).addClass('clickable-row').attr('onclick',
                         `window.location='{{ url('/thong-tin-xnc') }}/${data.ma_xnc}'`
                     );
                 },
+            });
+
+            // Custom search box event: search only in the 2nd column (Số thẻ)
+            $('#customSearchBox').on('keyup', function() {
+                table
+                    .columns(1) // 0-based index, so 1 is the 2nd column
+                    .search(this.value)
+                    .draw();
             });
         });
     </script>

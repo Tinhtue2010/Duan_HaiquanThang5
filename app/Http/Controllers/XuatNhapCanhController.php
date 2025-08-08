@@ -7,6 +7,7 @@ use App\Models\PTVTXuatCanh;
 use App\Models\ChuHang;
 use App\Models\NhapCanh;
 use App\Models\XuatNhapCanh;
+use App\Models\XuatNhapCanhSua;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,16 @@ class XuatNhapCanhController extends Controller
         return view('xuat-nhap-canh.quan-ly-xnc');
     }
 
+    public function quanLyYeuCauSuaXNC()
+    {
+        $XNCs = XuatNhapCanh::orderBy('ma_xnc', 'desc')
+            ->whereIn('xuat_nhap_canh.trang_thai', [3, 4])
+            ->join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+            ->join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->select('xuat_nhap_canh.*', 'ptvt_xuat_canh.ten_phuong_tien_vt', 'cong_chuc.ten_cong_chuc')
+            ->get();
+        return view('xuat-nhap-canh.quan-ly-xnc-sua', compact('XNCs'));
+    }
     public function themXNC()
     {
         return view('xuat-nhap-canh.them-xnc', [
@@ -62,17 +73,52 @@ class XuatNhapCanhController extends Controller
         if (XuatNhapCanh::find($ma_xnc)) {
             $xuatNhapCanh = XuatNhapCanh::find($ma_xnc);
         }
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
 
         return view('xuat-nhap-canh.thong-tin-xnc', compact('xuatNhapCanh', 'congChucs')); // Pass data to the view
     }
 
     public function huyXNC(Request $request)
     {
-        XuatNhapCanh::find($request->ma_xnc)->delete();
+        $xnc = XuatNhapCanh::find($request->ma_xnc);
+        if ($xnc->trang_thai == 1) {
+            if (!Carbon::parse($xnc->ngay_them)->lt(Carbon::today()->subDays(2))) {
+                $xnc->delete();
+            } else {
+                $xnc->trang_thai = 4;
+                $xnc->save();
+            }
+        } else {
+            if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức') {
+                $xnc->trang_thai = 1;
+                $xnc->save();
+            } else {
+                $xnc->delete();
+            }
+        }
+
         session()->flash('alert-success', 'Hủy theo dõi xuất nhập cảnh thành công!');
-        return redirect()->route('xuat-nhap-canh.danh-sach-xnc');
+        if (Auth::user()->loai_tai_khoan == 'Admin') {
+            return redirect()->route('xuat-nhap-canh.quan-ly-yeu-cau-sua-xnc');
+        } else {
+            return redirect()->route('xuat-nhap-canh.danh-sach-xnc');
+        }
     }
+    public function thuHoiYeuCauHuyXNC(Request $request)
+    {
+        $xnc = XuatNhapCanh::find($request->ma_xnc);
+        $xnc->trang_thai = 1;
+        $xnc->save();
+
+        session()->flash('alert-success', 'Thu hồi hủy theo dõi xuất nhập cảnh thành công!');
+        if (Auth::user()->loai_tai_khoan == 'Admin') {
+            return redirect()->route('xuat-nhap-canh.quan-ly-yeu-cau-sua-xnc');
+        } else {
+            return redirect()->route('xuat-nhap-canh.danh-sach-xnc');
+        }
+    }
+
+
     public function suaXNC($ma_xnc)
     {
         $xuatNhapCanh = XuatNhapCanh::find($ma_xnc);
@@ -86,17 +132,38 @@ class XuatNhapCanhController extends Controller
         try {
             DB::beginTransaction();
             $xuatNhapCanh = XuatNhapCanh::find($request->ma_xnc);
-            XuatNhapCanh::find($request->ma_xnc)->update([
-                'so_ptvt_xuat_canh' => $request->so_ptvt_xuat_canh,
-                'so_the' => $request->so_the,
-                'is_hang_lanh' => $request->is_hang_lanh,
-                'is_hang_nong' => $request->is_hang_nong,
-                'so_luong_may' => $request->so_luong_may,
-                'tong_trong_tai' => $request->tong_trong_tai,
-                'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
-                'thoi_gian_xuat_canh' => $request->thoi_gian_xuat_canh,
-                'ghi_chu' => $request->ghi_chu,
-            ]);
+            if (!Carbon::parse($xuatNhapCanh->ngay_them)->lt(Carbon::today()->subDays(2))) {
+                XuatNhapCanh::find($request->ma_xnc)->update([
+                    'so_ptvt_xuat_canh' => $request->so_ptvt_xuat_canh,
+                    'so_the' => $request->so_the,
+                    'is_hang_lanh' => $request->is_hang_lanh,
+                    'is_hang_nong' => $request->is_hang_nong,
+                    'so_luong_may' => $request->so_luong_may,
+                    'tong_trong_tai' => $request->tong_trong_tai,
+                    'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
+                    'thoi_gian_xuat_canh' => $request->thoi_gian_xuat_canh,
+                    'ghi_chu' => $request->ghi_chu,
+                ]);
+            } else {
+                XuatNhapCanhSua::create([
+                    'ma_xnc' => $request->ma_xnc,
+                    'so_ptvt_xuat_canh' => $request->so_ptvt_xuat_canh,
+                    'so_the' => $request->so_the,
+                    'is_hang_lanh' => $request->is_hang_lanh,
+                    'is_hang_nong' => $request->is_hang_nong,
+                    'so_luong_may' => $request->so_luong_may,
+                    'tong_trong_tai' => $request->tong_trong_tai,
+                    'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
+                    'thoi_gian_xuat_canh' => $request->thoi_gian_xuat_canh,
+                    'ghi_chu' => $request->ghi_chu,
+                    'ngay_them' => $xuatNhapCanh->ngay_them,
+                    'ma_cong_chuc' => $xuatNhapCanh->ma_cong_chuc,
+                ]);
+                XuatNhapCanh::find($request->ma_xnc)->update([
+                    'trang_thai' => 3
+                ]);
+            }
+
             DB::commit();
             session()->flash('alert-success', 'Sửa theo dõi xuất nhập cảnh thành công!');
             return redirect()->route('xuat-nhap-canh.thong-tin-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]);
@@ -106,6 +173,61 @@ class XuatNhapCanhController extends Controller
             Log::error('Error in suaXuatNhapCanhSubmit: ' . $e->getMessage());
             return redirect()->back();
         }
+    }
+
+
+    public function xemYeuCauSuaXNC($ma_xnc)
+    {
+        $xuatNhapCanh = XuatNhapCanh::join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+            ->join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->where('ma_xnc', $ma_xnc)
+            ->first();
+
+        $xuatNhapCanhSua = XuatNhapCanhSua::where('ma_xnc', $ma_xnc)
+            ->orderBy('ma_yeu_cau', 'desc')
+            ->join('ptvt_xuat_canh', 'xuat_nhap_canh_sua.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+            ->join('cong_chuc', 'xuat_nhap_canh_sua.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->first();
+        return view('xuat-nhap-canh.xem-yeu-cau-sua-xnc', [
+            'xuatNhapCanh' => $xuatNhapCanh,
+            'xuatNhapCanhSua' => $xuatNhapCanhSua,
+        ]);
+    }
+
+    public function duyetYeuCauSuaXNC($ma_yeu_cau)
+    {
+        $xuatNhapCanhSua = XuatNhapCanhSua::find($ma_yeu_cau);
+        $ma_xnc = $xuatNhapCanhSua->ma_xnc;
+        $xuatNhapCanh = XuatNhapCanh::find($ma_xnc);
+
+        $xuatNhapCanh->update([
+            'so_ptvt_xuat_canh' => $xuatNhapCanhSua->so_ptvt_xuat_canh,
+            'so_the' => $xuatNhapCanhSua->so_the,
+            'is_hang_lanh' => $xuatNhapCanhSua->is_hang_lanh,
+            'is_hang_nong' => $xuatNhapCanhSua->is_hang_nong,
+            'ma_chu_hang' => $xuatNhapCanhSua->ma_chu_hang,
+            'so_luong_may' => $xuatNhapCanhSua->so_luong_may,
+            'tong_trong_tai' => $xuatNhapCanhSua->tong_trong_tai,
+            'thoi_gian_nhap_canh' => $xuatNhapCanhSua->thoi_gian_nhap_canh,
+            'thoi_gian_xuat_canh' => $xuatNhapCanhSua->thoi_gian_xuat_canh,
+            'ghi_chu' => $xuatNhapCanhSua->ghi_chu,
+            'trang_thai' => 1,
+        ]);
+
+        XuatNhapCanhSua::find($ma_yeu_cau)->delete();
+
+        session()->flash('alert-success', 'Duyệt yêu cầu sửa thành công!');
+        return redirect()->route('xuat-nhap-canh.thong-tin-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]);
+    }
+    public function huyYeuCauSuaXNC($ma_yeu_cau)
+    {
+        $ma_xnc = XuatNhapCanhSua::find($ma_yeu_cau)->ma_xnc;
+        $xuatNhapCanh = XuatNhapCanh::find($ma_xnc);
+        $xuatNhapCanh->trang_thai = 1;
+        $xuatNhapCanh->save();
+        XuatNhapCanhSua::where('ma_yeu_cau', operator: $ma_yeu_cau)->delete();
+        session()->flash('alert-success', 'Hủy yêu cầu sửa thành công!');
+        return redirect()->route('xuat-nhap-canh.thong-tin-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]);
     }
 
     public function thayDoiCongChucXNC(Request $request)
@@ -142,7 +264,8 @@ class XuatNhapCanhController extends Controller
                         $query->where(function ($q) use ($search) {
                             $q->orWhere('xuat_nhap_canh.ma_xnc', 'LIKE', "%{$search}%")
                                 ->orWhereRaw("DATE_FORMAT(xuat_nhap_canh.ngay_them, '%d-%m-%Y') LIKE ?", ["%{$search}%"])
-                                ->orWhere('ptvt_xuat_canh.ten_phuong_tien_vt', 'LIKE', "%{$search}%");
+                                ->orWhere('ptvt_xuat_canh.ten_phuong_tien_vt', 'LIKE', "%{$search}%")
+                                ->orWhere('xuat_nhap_canh.so_the', 'LIKE', "%{$search}%");
                         });
                     }
                 })
@@ -175,7 +298,20 @@ class XuatNhapCanhController extends Controller
                         return 'Hàng nóng';
                     }
                 })
-                ->rawColumns(['loai_hang', 'action'])
+                ->editColumn('trang_thai', function ($xuatHang) {
+                    $status = trim($xuatHang->trang_thai);
+
+                    $statusLabels = [
+                        '1' => ['text' => 'Đã duyệt', 'class' => 'text-success'],
+                        '3' => ['text' => 'Yêu cầu sửa', 'class' => 'text-warning'],
+                        '4' => ['text' => 'Yêu cầu hủy', 'class' => 'text-danger'],
+                    ];
+
+                    return isset($statusLabels[$status])
+                        ? "<span class='{$statusLabels[$status]['class']}'>{$statusLabels[$status]['text']}</span>"
+                        : '<span class="text-muted">Trạng thái không xác định</span>';
+                })
+                ->rawColumns(['loai_hang', 'trang_thai', 'action'])
                 ->make(true);
         }
     }

@@ -22,10 +22,17 @@
                 @endif
 
                 <div class="col-6">
-                    <a class="return-link" href="/danh-sach-xnc">
-                        <p>
-                            < Quay lại quản lý nhập cảnh </p>
-                    </a>
+                    @if (Auth::user()->loai_tai_khoan == 'Admin')
+                        <a class="return-link" href="/quan-ly-yeu-cau-sua-xnc">
+                            <p>
+                                < Quay lại quản lý nhập cảnh </p>
+                        </a>
+                    @else
+                        <a class="return-link" href="/danh-sach-xnc">
+                            <p>
+                                < Quay lại quản lý nhập cảnh </p>
+                        </a>
+                    @endif
                 </div>
                 <div class="col-6">
                 </div>
@@ -68,7 +75,8 @@
                         <div class="col-5">
                             <p class="fs-5"><strong>Số lượng máy :</strong> {{ $xuatNhapCanh->so_luong_may ?? '' }}
                             </p>
-                            <p class="fs-5"><strong>Tổng trọng tải (Tấn) :</strong> {{ $xuatNhapCanh->tong_trong_tai ?? '' }}
+                            <p class="fs-5"><strong>Tổng trọng tải (Tấn) :</strong>
+                                {{ $xuatNhapCanh->tong_trong_tai ?? '' }}
                             </p>
                             <p class="fs-5"><strong>Ghi chú :</strong> {{ $xuatNhapCanh->ghi_chu ?? '' }}
                             </p>
@@ -76,34 +84,93 @@
                     </div>
                 </div>
             </div>
-
-            <div class="row mt-5">
-                <div class="col-3"></div>
-                <div class="col-6">
-                    <div class="text-center">
-                        <center>
-                            <div class="row">
-                                <div class="col-6">
-                                    <a href="{{ route('xuat-nhap-canh.sua-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]) }}">
-                                        <button class="btn btn-warning px-4">
-                                            <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
-                                            Sửa theo dõi
-                                        </button>
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="#">
-                                        <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
-                                            class="btn btn-danger px-4">
-                                            <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
-                                            Hủy theo dõi
-                                        </button>
-                                    </a>
-                                </div>
-                        </center>
-                    </div>
-                </div>
-            </div>
+            <center>
+                <div class="col-6 card mt-5">
+                    @if ($xuatNhapCanh->trang_thai == '1')
+                        <h2 class="text-primary mt-3 mb-4">Cập nhật theo dõi</h2>
+                        <div class="row">
+                            <div class="text-center">
+                                <center>
+                                    @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức')
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <a
+                                                    href="{{ route('xuat-nhap-canh.sua-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]) }}">
+                                                    <button class="btn btn-warning px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Sửa theo dõi
+                                                    </button>
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Hủy theo dõi
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </center>
+                            </div>
+                        </div>
+                    @elseif($xuatNhapCanh->trang_thai == '3')
+                        <h2 class="text-warning mb-4 mt-3">Yêu cầu sửa theo dõi</h2>
+                        <div class="row mt-3">
+                            <a
+                                href="{{ route('xuat-nhap-canh.xem-yeu-cau-sua-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]) }}">
+                                <button class="btn btn-warning px-4">
+                                    <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                    Xem sửa đổi
+                                </button>
+                            </a>
+                        </div>
+                    @elseif($xuatNhapCanh->trang_thai == '4')
+                        <div class="row mt-3">
+                            <center>
+                                <h2 class="text-danger mb-4 ">Yêu cầu hủy theo dõi</h2>
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức')
+                                    <div class="col-6">
+                                        <a href="#">
+                                            <button data-bs-toggle="modal" data-bs-target="#xacNhanTuChoiHuyModal"
+                                                class="btn btn-danger px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/cancel.png') }}">
+                                                Thu hồi yêu cầu hủy
+                                            </button>
+                                        </a>
+                                    </div>
+                                @else
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanHuyModal"
+                                                    class="btn btn-danger px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
+                                                    Duyệt yêu cầu hủy
+                                                </button>
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#xacNhanTuChoiHuyModal"
+                                                    class="btn btn-danger px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
+                                                    Từ chối yêu cầu hủy
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+                            </center>
+                        </div>
+                    @endif
+            </center>
         </div>
     </div>
     </div>
@@ -131,8 +198,36 @@
         </div>
     </div>
 
+    {{-- Từ chối Hủy --}}
+    <div class="modal fade" id="xacNhanTuChoiHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('xuat-nhap-canh.thu-hoi-yeu-cau-huy-xnc', ['ma_xnc' => $xuatNhapCanh->ma_xnc]) }}"
+                    method="POST">
+                    @csrf
+                    <div class="modal-body text-danger">
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_hang == 1)
+                            <p class="text-danger">Xác nhận từ chối yêu cầu xin hủy này?</p>
+                        @else
+                            <p class="text-danger">Xác nhận thu hồi yêu cầu xin hủy này?</p>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-    <div class="modal fade" id="thayDoiCongChucModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="thayDoiCongChucModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">

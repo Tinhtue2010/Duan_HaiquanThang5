@@ -48,7 +48,7 @@
                     </h2>
                     <h2 class="text-center text-dark">Phương tiện vận
                         tải:
-                        {{ $nhapHang->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHang->trong_luong }} tấn</h2>
+                        {{ $nhapHang->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHang->trong_luong }} tấn - Đoàn tàu: {{ $nhapHang->ten_doan_tau ?? '' }}</h2>
                     <div class="float-end mb-2 d-flex align-items-center justify-content-center">
                     </div>
                     <table class="table table-bordered mt-2" id="displayTable"
@@ -146,7 +146,7 @@
                         </h2>
                         <h2
                             class="{{ $nhapHang->trong_luong != $nhapHangSua->trong_luong ? 'text-warning' : 'text-dark' }} text-center">
-                            - Trọng lượng: {{ $nhapHangSua->trong_luong }} tấn
+                            - Trọng lượng: {{ $nhapHangSua->trong_luong }} tấn - Đoàn tàu: {{ $nhapHangSua->ten_doan_tau ?? '' }}
                         </h2>
                     </div>
 

@@ -31,12 +31,13 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
             ['BÁO CÁO HÀNG TỒN TẠI CẢNG', '', '', '', '', ''],
             ["(Tính đến ngày $currentDate tháng $currentMonth năm $currentYear)", '', '', '', '', ''], // Updated line
             ['', '', '', '', '', ''],
-            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Loại hàng','Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá (USD)', 'Số lượng tồn', 'Số tàu', 'Số cont hiện tại'],
+            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng', 'Loại hàng', 'Xuất xứ', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá (USD)', 'Số lượng tồn', 'Số tàu', 'Số cont hiện tại'],
             [''],
         ];
         $stt = 1;
 
-        $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+        $nhapHangs = DB::table('nhap_hang')
+            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
             ->join('hai_quan', 'nhap_hang.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
@@ -46,32 +47,27 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                 'nhap_hang.ngay_dang_ky',
                 'nhap_hang.trong_luong',
                 'nhap_hang.phuong_tien_vt_nhap',
-                DB::raw("(SELECT SUM(hh.so_luong_khai_bao) 
-                    FROM hang_hoa hh 
-                    WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"),
-                DB::raw("(SELECT SUM(htc.so_luong) 
-                    FROM hang_hoa hh 
-                    JOIN hang_trong_cont htc ON hh.ma_hang = htc.ma_hang 
-                    WHERE hh.so_to_khai_nhap = nhap_hang.so_to_khai_nhap) AS total_so_luong"),
-                DB::raw("MIN(hang_hoa.ma_hang) as ma_hang"),
-                DB::raw("MIN(hang_hoa.ten_hang) as ten_hang"),
-                DB::raw("MIN(hang_hoa.loai_hang) as loai_hang"),
-                DB::raw("MIN(hang_hoa.xuat_xu) as xuat_xu"),
-                DB::raw("MIN(hang_hoa.don_vi_tinh) as don_vi_tinh"),
-                DB::raw("MIN(hang_hoa.don_gia) as don_gia"),
-                DB::raw("MIN(hang_trong_cont.so_container) as so_container"),
-                DB::raw("MIN(doanh_nghiep.ma_doanh_nghiep) as ma_doanh_nghiep"),
-                DB::raw("MIN(doanh_nghiep.ten_doanh_nghiep) as ten_doanh_nghiep"),
-                DB::raw("MIN(doanh_nghiep.dia_chi) as dia_chi"),
-                DB::raw("MIN(hai_quan.ten_hai_quan) as ten_hai_quan"),
+                'hang_hoa.ma_hang',
+                'hang_hoa.ten_hang',
+                'hang_hoa.loai_hang',
+                'hang_hoa.xuat_xu',
+                'hang_hoa.don_vi_tinh',
+                'hang_hoa.don_gia',
+                'hang_trong_cont.so_container',
+                'doanh_nghiep.ma_doanh_nghiep',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'doanh_nghiep.dia_chi',
+                'hai_quan.ten_hai_quan',
+                DB::raw('ROW_NUMBER() OVER (PARTITION BY nhap_hang.so_to_khai_nhap ORDER BY hang_hoa.ma_hang) as rn'),
+                DB::raw("SUM(hang_hoa.so_luong_khai_bao) OVER (PARTITION BY nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"),
+                DB::raw("SUM(hang_trong_cont.so_luong) OVER (PARTITION BY nhap_hang.so_to_khai_nhap) AS total_so_luong")
             )
-            ->groupBy(
-                'nhap_hang.so_to_khai_nhap',
-                'nhap_hang.ngay_dang_ky',
-                'nhap_hang.trong_luong',
-                'nhap_hang.phuong_tien_vt_nhap',
-            )
-            ->get();
+            ->get()
+            ->where('rn', 1)
+            ->map(function ($item) {
+                unset($item->rn);
+                return $item;
+            });
         $totalHangTon = 0;
         $totalKhaiBao = 0;
 
@@ -161,17 +157,17 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     $sheet->getColumnDimension($column)->setWidth(width: 10);
                 }
                 $sheet->getColumnDimension('A')->setWidth(width: 7); //STT
-                $sheet->getColumnDimension('B')->setWidth(width: 15); 
-                $sheet->getColumnDimension('C')->setWidth(width: 12); 
-                $sheet->getColumnDimension('D')->setWidth(width: 15); 
-                $sheet->getColumnDimension('E')->setWidth(width: 15); 
-                $sheet->getColumnDimension('F')->setWidth(width: 15); 
-                $sheet->getColumnDimension('G')->setWidth(width: 25); 
-                $sheet->getColumnDimension('H')->setWidth(width: 25); 
-                $sheet->getColumnDimension('M')->setWidth(width: 15); 
-                $sheet->getColumnDimension('O')->setWidth(width: 15); 
-                $sheet->getColumnDimension('P')->setWidth(width: 15); 
-                $sheet->getColumnDimension('Q')->setWidth(width: 15); 
+                $sheet->getColumnDimension('B')->setWidth(width: 15);
+                $sheet->getColumnDimension('C')->setWidth(width: 12);
+                $sheet->getColumnDimension('D')->setWidth(width: 15);
+                $sheet->getColumnDimension('E')->setWidth(width: 15);
+                $sheet->getColumnDimension('F')->setWidth(width: 15);
+                $sheet->getColumnDimension('G')->setWidth(width: 25);
+                $sheet->getColumnDimension('H')->setWidth(width: 25);
+                $sheet->getColumnDimension('M')->setWidth(width: 15);
+                $sheet->getColumnDimension('O')->setWidth(width: 15);
+                $sheet->getColumnDimension('P')->setWidth(width: 15);
+                $sheet->getColumnDimension('Q')->setWidth(width: 15);
 
 
                 $sheet->getStyle('B')->getNumberFormat()->setFormatCode('0'); // Apply format

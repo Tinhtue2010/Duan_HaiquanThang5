@@ -132,24 +132,25 @@ class BaoCaoHangHoaXuatNhapKhau
         $soLuongToKhai = $nhapHangs->count() ?? 0;
         $soLuongToKhai = number_format($soLuongToKhai, 0);
 
-        $totalTriGia = NhapHang::whereBetween('created_at', [
-            Carbon::parse($tu_ngay)->startOfDay(),
-            Carbon::parse($den_ngay)->endOfDay()
-        ])
-            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->sum('tri_gia');
+        // $totalTriGia = NhapHang::whereBetween('created_at', [
+        //     Carbon::parse($tu_ngay)->startOfDay(),
+        //     Carbon::parse($den_ngay)->endOfDay()
+        // ])
+        //     ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+        //     ->sum('tri_gia');
+        // $totalTriGia = number_format($totalTriGia, 0);
 
-        $totalTriGia = number_format($totalTriGia, 0);
-        $tongSoContainer = $this->getTongContainerNhap($tu_ngay, $den_ngay);
-        $tongSoContainer = number_format($tongSoContainer, 0);
+        // $tongSoContainer = $this->getTongContainerNhap($tu_ngay, $den_ngay);
 
+        $tongSoContainerx = 0;
+        $tongTriGiax = 0;
 
         $table->addRow();
         $table->addCell(500)->addText('1', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỜ KHAI', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($soLuongToKhai, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($tongSoContainer, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($totalTriGia, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
 
         $stt = 2;
         $totalTotalSoLuong = 0;
@@ -165,6 +166,9 @@ class BaoCaoHangHoaXuatNhapKhau
             $totalSoLuong = number_format($data1->total_so_luong, 0);
             $totalTriGia = number_format($data1->total_tri_gia, 0);
 
+            $tongSoContainerx += $data1->total_so_container;
+            $tongTriGiax += $data1->total_tri_gia;
+
             $table->addRow();
             $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
             $table->addCell(3000)->addText($loaiHang->ten_loai_hang, [], ['alignment' => 'center']);
@@ -174,14 +178,15 @@ class BaoCaoHangHoaXuatNhapKhau
         }
 
         $totalTotalSoLuong = number_format($totalTotalSoLuong, 0);
+        $tongSoContainerx = number_format($tongSoContainerx, 0);
+        $tongTriGiax = number_format($tongTriGiax, 0);
         //Tổng Cộng
         $table->addRow();
         $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỔNG CỘNG', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($totalTotalSoLuong, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
-
+        $table->addCell(3000)->addText($tongSoContainerx, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText($tongTriGiax, [], ['alignment' => 'center']);
 
 
         $table->addRow();
@@ -242,27 +247,29 @@ class BaoCaoHangHoaXuatNhapKhau
         // $soLuongToKhaiXuat = $soLuongToKhaiXuat1;
         // $soLuongToKhaiXuat = number_format($soLuongToKhaiXuat, 0);
 
-        $totalTriGiaXuat1 = XuatHang::whereBetween('ngay_dang_ky', [
-            Carbon::parse($tu_ngay)->startOfDay(),
-            Carbon::parse($den_ngay)->endOfDay()
-        ])
-            ->where('xuat_hang.trang_thai', '!=', '0')
-            ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
-            ->sum('xuat_hang_cont.tri_gia');
+        // $totalTriGiaXuat1 = XuatHang::whereBetween('ngay_dang_ky', [
+        //     Carbon::parse($tu_ngay)->startOfDay(),
+        //     Carbon::parse($den_ngay)->endOfDay()
+        // ])
+        //     ->where('xuat_hang.trang_thai', '!=', '0')
+        //     ->join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
+        //     ->sum('xuat_hang_cont.tri_gia');
 
-        $tongSoContainer = $this->getTongContXuat($tu_ngay, $den_ngay)->total_so_container;
         $tongTkXuat = $this->getTongContXuat($tu_ngay, $den_ngay)->total_tk_xuat;
-
-        $tongSoContainer = number_format($tongSoContainer, 0);
         $tongTkXuat = number_format($tongTkXuat, 0);
-        $totalTriGiaXuat = number_format($totalTriGiaXuat1, 0);
+
+        // $tongSoContainer = $this->getTongContXuat($tu_ngay, $den_ngay)->total_so_container;
+        // $tongSoContainer = number_format($tongSoContainer, 0);
+        // $totalTriGiaXuat = number_format($totalTriGiaXuat1, 0);
+        $tongSoContainerx = 0;
+        $tongTriGiax = 0;
 
         $table->addRow();
         $table->addCell(500)->addText('1', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỜ KHAI', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($tongTkXuat, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($tongSoContainer, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($totalTriGiaXuat, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
 
         $stt = 2;
 
@@ -279,6 +286,9 @@ class BaoCaoHangHoaXuatNhapKhau
             $totalSoLuongXuat = number_format($totalSoLuongXuat, 0);
             $tongSoContainer = number_format($data1->total_so_container, 0);
 
+            $tongSoContainerx += $data1->total_so_container;
+            $tongTriGiax += $data1->total_tri_gia;
+
             $table->addRow();
             $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
             $table->addCell(3000)->addText($loaiHang->ten_loai_hang, [], ['alignment' => 'center']);
@@ -287,14 +297,15 @@ class BaoCaoHangHoaXuatNhapKhau
             $table->addCell(3000)->addText($totalTriGia, [], ['alignment' => 'center']);
         }
         $totalSoLuong = number_format($totalSoLuong, 0);
-
+        $tongTriGiax = number_format($tongTriGiax, 0);
+        $tongSoContainerx = number_format($tongSoContainerx, 0);
         //Tổng Cộng
         $table->addRow();
         $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỔNG CỘNG', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($totalSoLuong, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText('KIỆN', [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText($tongSoContainerx, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText($tongTriGiax, [], ['alignment' => 'center']);
 
 
         //3.Hàng lưu tại cửa khẩu
@@ -360,12 +371,16 @@ class BaoCaoHangHoaXuatNhapKhau
         $soLuongToKhaiLuu = number_format($soLuongToKhaiLuu, 0);
         $tongSoContainer = number_format($tongSoContainer, 0);
 
+
+        $tongTriGiax = 0;
+        $tongSoContainerx = 0;
+
         $table->addRow();
         $table->addCell(500)->addText('1', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỜ KHAI', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($soLuongToKhaiLuu, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($tongSoContainer, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($totalTriGiaLuu, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
 
         $stt = 2;
         $totalTotalSoLuong = 0;
@@ -379,6 +394,9 @@ class BaoCaoHangHoaXuatNhapKhau
             $total_tri_gia = number_format($data->total_tri_gia, 0);
             $total_so_container = number_format($data->total_so_container, 0);
 
+            $tongTriGiax += $data->total_tri_gia;
+            $tongSoContainerx += $data->total_so_container;
+
             $table->addRow();
             $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
             $table->addCell(3000)->addText($loaiHang->ten_loai_hang, [], ['alignment' => 'center']);
@@ -387,14 +405,15 @@ class BaoCaoHangHoaXuatNhapKhau
             $table->addCell(3000)->addText($total_tri_gia, [], ['alignment' => 'center']);
         }
         $totalTotalSoLuong = number_format($totalTotalSoLuong, 0);
-
+        $tongTriGiax = number_format($tongTriGiax, 0);
+        $tongSoContainerx = number_format($tongSoContainerx, 0);
         //Tổng Cộng
         $table->addRow();
         $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỔNG CỘNG', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($totalTotalSoLuong, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText('KIỆN', [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText('', [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText($tongSoContainerx, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText($tongTriGiax, [], ['alignment' => 'center']);
 
 
         $section->addTextBreak(1);
@@ -419,81 +438,145 @@ class BaoCaoHangHoaXuatNhapKhau
 
     public function getDataXuat($loaiHang, $tu_ngay, $den_ngay)
     {
-        return HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+        $subQuery = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('xuat_hang.trang_thai', '!=', '0')
             ->where('hang_hoa.loai_hang', $loaiHang->ten_loai_hang)
             ->whereBetween('xuat_hang.ngay_dang_ky', [$tu_ngay, $den_ngay])
+            ->groupBy('hang_hoa.so_to_khai_nhap')
             ->select(
                 DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as total_so_luong_xuat'),
                 DB::raw('SUM(xuat_hang_cont.tri_gia) as total_tri_gia'),
-                DB::raw('COUNT(DISTINCT xuat_hang_cont.so_container) as total_so_container'),
+                DB::raw('COUNT(DISTINCT xuat_hang_cont.so_container) as total_so_container')
+            );
+
+        return DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
+            ->mergeBindings($subQuery->getQuery())
+            ->select(
+                DB::raw('SUM(total_so_luong_xuat) as total_so_luong_xuat'),
+                DB::raw('SUM(total_tri_gia) as total_tri_gia'),
+                DB::raw('SUM(total_so_container) as total_so_container')
             )
             ->first();
     }
+
     public function getTongContXuat($tu_ngay, $den_ngay)
     {
-        return HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+        $subQuery = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->join('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('xuat_hang.trang_thai', '!=', '0')
             ->whereBetween('xuat_hang.ngay_dang_ky', [$tu_ngay, $den_ngay])
+            ->groupBy('hang_hoa.so_to_khai_nhap')
             ->select(
                 DB::raw('COUNT(DISTINCT xuat_hang_cont.so_container) as total_so_container'),
-                DB::raw('COUNT(DISTINCT xuat_hang_cont.so_to_khai_nhap) as total_tk_xuat')
+                DB::raw('COUNT(DISTINCT xuat_hang_cont.so_to_khai_xuat) as total_tk_xuat')
+            );
+
+        return DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
+            ->mergeBindings($subQuery->getQuery())
+            ->select(
+                DB::raw('SUM(total_so_container) as total_so_container'),
+                DB::raw('SUM(total_tk_xuat) as total_tk_xuat')
             )
             ->first();
     }
     public function getDataNhap($loaiHang, $tu_ngay, $den_ngay)
     {
-        return HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
+        $subQuery = HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->whereBetween('created_at', [
+            ->whereBetween('nhap_hang.created_at', [
                 Carbon::parse($tu_ngay)->startOfDay(),
                 Carbon::parse($den_ngay)->endOfDay()
             ])
+            ->groupBy('nhap_hang.so_to_khai_nhap')
             ->select(
                 DB::raw('SUM(hang_hoa.tri_gia) as total_tri_gia'),
                 DB::raw('SUM(hang_hoa.so_luong_khai_bao) as total_so_luong'),
-                DB::raw('COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container'),
+                DB::raw('COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container')
+            );
+
+        return DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
+            ->mergeBindings($subQuery->getQuery())
+            ->select(
+                DB::raw('SUM(total_tri_gia) as total_tri_gia'),
+                DB::raw('SUM(total_so_luong) as total_so_luong'),
+                DB::raw('SUM(total_so_container) as total_so_container')
             )
             ->first();
     }
+
     public function getTongContainerNhap($tu_ngay, $den_ngay)
     {
-        return HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->whereBetween('created_at', [
+        $subQuery = HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+            ->whereBetween('nhap_hang.created_at', [
                 Carbon::parse($tu_ngay)->startOfDay(),
                 Carbon::parse($den_ngay)->endOfDay()
             ])
+            ->groupBy('nhap_hang.so_to_khai_nhap')
             ->select(
-                DB::raw('COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container'),
+                DB::raw('COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container')
+            );
+
+        $result = DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
+            ->mergeBindings($subQuery->getQuery())
+            ->select(
+                DB::raw('SUM(total_so_container) as total_so_container')
             )
-            ->first()->total_so_container;
+            ->first();
+
+        return $result ? $result->total_so_container : 0;
     }
+
     public function getDataHienTai($loaiHang, $tu_ngay, $den_ngay)
     {
-        return HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
+        $subQuery = HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.trang_thai', '2')
+            ->whereBetween('nhap_hang.created_at', [
+                Carbon::parse($tu_ngay)->startOfDay(),
+                Carbon::parse($den_ngay)->endOfDay()
+            ])
+            ->groupBy('nhap_hang.so_to_khai_nhap')
             ->select(
                 DB::raw('SUM(hang_trong_cont.so_luong * hang_hoa.don_gia) as total_tri_gia'),
                 DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'),
-                DB::raw('COUNT(DISTINCT hang_trong_cont.so_container) as total_so_container'),
+                DB::raw('COUNT(DISTINCT hang_trong_cont.so_container) as total_so_container')
+            );
+
+        return DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
+            ->mergeBindings($subQuery->getQuery())
+            ->select(
+                DB::raw('SUM(total_tri_gia) as total_tri_gia'),
+                DB::raw('SUM(total_so_luong) as total_so_luong'),
+                DB::raw('SUM(total_so_container) as total_so_container')
             )
             ->first();
     }
+
     public function getTongContainerHienTai($tu_ngay, $den_ngay)
     {
-        return HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+        $subQuery = HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.trang_thai', '2')
-
+            ->whereBetween('nhap_hang.created_at', [
+                Carbon::parse($tu_ngay)->startOfDay(),
+                Carbon::parse($den_ngay)->endOfDay()
+            ])
+            ->groupBy('nhap_hang.so_to_khai_nhap')
             ->select(
-                DB::raw('COUNT(DISTINCT hang_trong_cont.so_container) as total_so_container'),
+                DB::raw('COUNT(DISTINCT hang_trong_cont.so_container) as total_so_container')
+            );
+
+        $result = DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
+            ->mergeBindings($subQuery->getQuery())
+            ->select(
+                DB::raw('SUM(total_so_container) as total_so_container')
             )
-            ->first()->total_so_container;
+            ->first();
+
+        return $result ? $result->total_so_container : 0;
     }
 }

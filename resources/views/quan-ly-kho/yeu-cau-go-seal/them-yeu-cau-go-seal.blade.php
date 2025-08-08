@@ -3,6 +3,60 @@
 @section('title', 'Thêm yêu cầu gỡ seal')
 
 @section('content')
+
+    <style>
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* space between toggle and text */
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+    </style>
     <div id="layoutSidenav_content">
         <div class="container-fluid px-5 mt-3">
             @if (Session::has('alert-success'))
@@ -31,27 +85,54 @@
 
             <div class="row">
                 <div class="col-12">
+                    {{-- <span class="mb fs-5 fst-italic">*Nếu cần niêm phong sau khi gỡ seal thì doanh nghiệp vào yêu cầu niêm phong container</span> --}}
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
-                            <div class="col-5">
-                                <div class="form-group">
-                                    <span class="mt-n2 mb-1 fs-5">Số container:</span>
-                                    <select class="form-control" id="container-dropdown-search">
-                                        <option></option>
-                                        @foreach ($soContainers as $soContainer)
-                                            <option value=""></option>
-                                            <option
-                                                value="{{ $soContainer['so_container'] }}|{{ $soContainer['phuong_tien_vt_nhap'] ?? '' }}">
-                                                {{ $soContainer['so_container'] }}
-                                                ({{ $soContainer['phuong_tien_vt_nhap'] ?? '' }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <center>
-                                        <button type="button" id="addRowButton" class="btn btn-primary mt-2">Thêm
-                                            dòng</button>
-                                    </center>
-                                </div>
+                            <div class="form-group">
+                                <center>
+                                    <div class="col-10">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <span class="mt-n2 mb-1 fs-5">Số container:</span>
+                                                <select class="form-control" id="container-dropdown-search">
+                                                    <option></option>
+                                                    @foreach ($soContainers as $soContainer)
+                                                        <option value=""></option>
+                                                        <option value="{{ $soContainer['so_container'] }}">
+                                                            {{ $soContainer['so_container'] }}
+                                                            ({{ $soContainer['phuong_tien_vt_nhap'] ?? '' }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="mt-n2 mb-1 fs-5">Số tàu:</span>
+                                                <input type="text" class="form-control" id="phuong-tien-vt-nhap"
+                                                    placeholder="Nhập số tàu">
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="mt-n2 mb-1 fs-5">Số seal điện tử:</span>
+                                                <input type="text" class="form-control" id="so-seal"
+                                                    placeholder="Nhập số seal điện tử">
+                                            </div>
+                                        </div>
+                                        <center>
+                                            <div class="row">
+                                                <div class="toggle-container">
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" id="toggleControl">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                    <span>Niêm phong sau khi gỡ seal</span>
+                                                </div>
+                                            </div>
+                                        </center>
+                                        <center>
+                                            <button type="button" id="addRowButton" class="btn btn-primary mt-2">Thêm
+                                                dòng</button>
+                                        </center>
+                                    </div>
+                                </center>
                             </div>
                         </div>
                     </div>
@@ -63,6 +144,7 @@
                         <th>STT</th>
                         <th>Số container</th>
                         <th>Số tàu</th>
+                        <th>Số seal</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -91,6 +173,7 @@
                 <div class="modal-footer">
                     <form action="{{ route('quan-ly-kho.them-yeu-cau-go-seal-submit') }}" method="POST" id="mainForm">
                         @csrf
+                        <input type="hidden" name="is_niem_phong" id="is_niem_phong_hidden" value="0">
                         <input type="hidden" name="rows_data" id="rowsDataInput">
                         <button type="submit" class="btn btn-success">Thêm yêu cầu</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -102,7 +185,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const addRowButton = document.getElementById('addRowButton');
-            const soContainerInput = document.getElementById('container-dropdown-search');
             const tableBody = document.querySelector('#displayTableYeuCau tbody');
             const rowsDataInput = document.getElementById('rowsDataInput'); // Ensure this exists in your HTML form
 
@@ -110,9 +192,9 @@
 
             // Add a new row
             addRowButton.addEventListener('click', function() {
-                const values = soContainerInput.value.split('|');
-                const soContainer = values[0] ? values[0].trim() : '';
-                const phuongTien = values[1] ? values[1].trim() : '';
+                const soContainer = document.getElementById('container-dropdown-search').value;
+                const phuongTien = document.getElementById('phuong-tien-vt-nhap').value;
+                const soSeal = document.getElementById('so-seal').value;
 
                 if (soContainer === '') {
                     alert('Vui lòng nhập số container!');
@@ -135,6 +217,7 @@
                         <td class="text-center">${rowIndex}</td>
                         <td class="text-center">${soContainer}</td>
                         <td class="text-center">${phuongTien}</td>
+                        <td class="text-center">${soSeal}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
@@ -160,14 +243,20 @@
             });
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
+                const toggle = document.getElementById('toggleControl');
+                document.getElementById('is_niem_phong_hidden').value = toggle.checked ? 1 : 0;
+
                 const rows = Array.from(tableBody.querySelectorAll('tr'));
                 const rowsData = rows.map(row => {
                     return {
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
                         so_container: row.querySelector('td:nth-child(2)').textContent.trim(),
-                        phuong_tien_vt_nhap: row.querySelector('td:nth-child(3)').textContent.trim()
+                        phuong_tien_vt_nhap: row.querySelector('td:nth-child(3)').textContent
+                            .trim(),
+                        so_seal: row.querySelector('td:nth-child(4)').textContent.trim()
                     };
                 });
+
                 const rowCount = $('#displayTableYeuCau tbody tr').length;
                 if (rowCount === 0) {
                     alert('Vui lòng thêm ít nhất một hàng thông tin');
@@ -178,32 +267,6 @@
                 $('#xacNhanModal').modal('show');
             });
         });
-//         document.getElementById("addContainer").addEventListener("click", function() {
-//             $.ajax({
-//                 url: "{{ route('quan-ly-kho.get-so-container') }}", // Adjust with your route
-//                 type: "GET",
-//                 success: function(response) {
-//                     let tbody = $("#displayTableYeuCau tbody");
-//                     tbody.empty();
-//                     if (response.containers && response.containers.length > 0) {
-//                         $.each(response.containers, function(index, item) {
-//                             tbody.append(`
-//                                 <tr>
-// =                                    <td>${index + 1}</td>
-//                                      <td>${item.so_container}</td>
-//                                      <td>${item.phuong_tien_vt_nhap}</td>
-//                                     <td class="text-center">
-//                                         <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
-//                                     </td>
-//                                 </tr>
-//                             `);
-//                         });
-//                     } else {
-//                         tbody.append('<tr><td colspan="4">Không có dữ liệu</td></tr>');
-//                     }
-//                 }
-//             });
-//         });
     </script>
 
 

@@ -66,6 +66,9 @@
                                     Đại lý
                                 </th>
                                 <th>
+                                    Trạng thái
+                                </th>
+                                <th>
                                     Thao tác
                                 </th>
                             </thead>
@@ -74,12 +77,21 @@
                                     <tr data-ma-doanh-nghiep="{{ $doanhNghiep->ma_doanh_nghiep }}"
                                         data-ten-doanh-nghiep="{{ $doanhNghiep->ten_doanh_nghiep }}"
                                         data-dia-chi="{{ $doanhNghiep->dia_chi }}"
-                                        data-ma-chu-hang="{{ $doanhNghiep->ma_chu_hang }}">
+                                        data-ma-chu-hang="{{ $doanhNghiep->ma_chu_hang }}"
+                                        data-status ="{{ $doanhNghiep->status }}">
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $doanhNghiep->ma_doanh_nghiep }}</td>
                                         <td>{{ $doanhNghiep->ten_doanh_nghiep }}</td>
                                         <td>{{ $doanhNghiep->ten_chu_hang }}</td>
-
+                                        <td>
+                                            @if ($doanhNghiep->status == 1)
+                                                <p class="text-success">Đang hoạt động</p>
+                                            @elseif ($doanhNghiep->status == 0)
+                                                <p class="text-danger">Ngừng hoạt động</p>
+                                            @else
+                                                <p class="text-warning">Lý do khác</p>
+                                            @endif
+                                        </td>
                                         <td>
                                             {{-- <button class="btn btn-primary mx-1"
                                                 onclick="window.location.href='{{ route('quan-ly-khac.danh-sach-doanh-nghiep-ql', ['ma_doanh_nghiep' => $doanhNghiep->ma_doanh_nghiep]) }}'">
@@ -89,7 +101,8 @@
                                             <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
                                                 data-ma-doanh-nghiep="{{ $doanhNghiep->ma_doanh_nghiep }}"
                                                 data-ten-doanh-nghiep="{{ $doanhNghiep->ten_doanh_nghiep }}"
-                                                data-dia-chi="{{ $doanhNghiep->dia_chi }}">
+                                                data-dia-chi="{{ $doanhNghiep->dia_chi }}"
+                                                data-status="{{ $doanhNghiep->status }}">
                                                 Xóa
                                             </button>
                                         </td>
@@ -136,6 +149,7 @@
                                 </option>
                             @endforeach
                         </select>
+
                         <hr />
                         <label class="mt-1" for="mat_khau"><strong>Mật khẩu</strong></label>
                         <input type="password" class="form-control" id="mat_khau" name="mat_khau"
@@ -162,8 +176,15 @@
                     @method('POST')
                     <div class="modal-body">
                         <p><strong>Mã doanh nghiệp:</strong> <span id="modalMaDoanhNghiep"></span></p>
-                        <p><strong>Tên doanh nghiệp:</strong> <span id="modalTenDoanhNghiep"></span></p>
-                        <p><strong>Địa chỉ:</strong> <span id="modalDiaChi"></span></p>
+                        <label class="" for="ten_doanh_nghiep"><strong>Tên doanh nghiệp</strong></label>
+                        <input type="text" class="form-control" id="modalTenDoanhNghiepInput" name="ten_doanh_nghiep"
+                            max="255" placeholder="Nhập tên doanh nghiệp" required>
+
+                        <label class="mt-3" for="dia_chi"><strong>Địa chỉ</strong></label>
+                        <textarea type="text" class="form-control mb-3" id="modalDiaChiInput" name="dia_chi"
+                            placeholder="Nhập địa chỉ doanh nghiệp" cols="3" required></textarea>
+
+
                         <input hidden id="modalMaDoanhNghiepInput" name="ma_doanh_nghiep">
                         <p><strong>Đại lý:</strong>
                             <select class="form-control" id="chu-hang-dropdown-search2" name="ma_chu_hang">
@@ -175,6 +196,20 @@
                                     </option>
                                 @endforeach
                             </select>
+                        <h5>Trạng thái</h5>
+                        <input type="radio" name="status" id="dang-hoat-dong" value="1"
+                            style="transform: scale(1.5);">
+                        <label class="ms-2" for="">Đang hoạt động</label>
+                        <br>
+
+                        <input class="mt-2" type="radio" name="status" id="ngung-hoat-dong" value="0"
+                            style="transform: scale(1.5);">
+                        <label class="ms-2" for="">Ngừng hoạt động</label>
+                        <br>
+                        <hr />
+                        <label class="mt-1" for="mat_khau"><strong>Mật khẩu mới</strong></label>
+                        <input type="password" class="form-control" id="mat_khau" name="mat_khau"
+                            autocomplete="new-password">
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Cập nhật</button>
@@ -268,14 +303,22 @@
                 var tenDoanhNghiep = $(this).data('ten-doanh-nghiep');
                 var maChuHang = $(this).data('ma-chu-hang');
                 var diaChi = $(this).data('dia-chi');
+                var trangThai = $(this).data('status');
 
+                // Set radio button based on status
+                if (trangThai == 1) {
+                    document.getElementById('dang-hoat-dong').checked = true;
+                } else if (trangThai == 0) {
+                    document.getElementById('ngung-hoat-dong').checked = true;
+                }
+                console.log(diaChi);
                 // Set the data in the modal
                 $('#modalMaDoanhNghiep').text(maDoanhNghiep);
-                $('#modalTenDoanhNghiep').text(tenDoanhNghiep);
-                $('#modalMaChuHang').text(maChuHang);
-                $('#modalDiaChi').text(diaChi);
-                document.getElementById('modalMaDoanhNghiepInput').value = maDoanhNghiep;
+                $('#modalTenDoanhNghiepInput').val(tenDoanhNghiep);
+                $('#modalDiaChiInput').val(diaChi);
+                $('#modalMaDoanhNghiepInput').val(maDoanhNghiep);
 
+                // Set the dropdown value and trigger change to update Select2
                 $('#chu-hang-dropdown-search2').val(maChuHang).trigger('change');
 
                 // Show the modal

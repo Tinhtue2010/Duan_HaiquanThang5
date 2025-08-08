@@ -16,7 +16,7 @@ class SealNiemPhongController extends Controller
     public function danhSachChiNiemPhong()
     {
         $seals = Seal::all();
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
 
         return view('quan-ly-khac.danh-sach-chi-niem-phong', data: compact('seals', 'congChucs'));
     }
@@ -58,7 +58,7 @@ class SealNiemPhongController extends Controller
     public function danhSachSealDienTu()
     {
         $seals = Seal::where('loai_seal', 5)->get();
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
 
         return view('quan-ly-khac.danh-sach-seal-dien-tu', data: compact('seals', 'congChucs'));
     }
@@ -71,7 +71,7 @@ class SealNiemPhongController extends Controller
     }
     public function xoaNhanhSeal(Request $request)
     {
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         return view('quan-ly-khac.xoa-nhanh-seal', data: compact('congChucs'));
     }
     public function xoaNhanhSealSubmit(Request $request)
@@ -85,7 +85,7 @@ class SealNiemPhongController extends Controller
     }
     public function suaNhanhSeal(Request $request)
     {
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         return view('quan-ly-khac.sua-nhanh-seal', data: compact('congChucs'));
     }
     public function suaNhanhSealSubmit(Request $request)

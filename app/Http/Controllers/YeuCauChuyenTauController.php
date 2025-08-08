@@ -345,7 +345,7 @@ class YeuCauChuyenTauController extends Controller
             ->where('yeu_cau_chuyen_tau.ma_yeu_cau', $ma_yeu_cau)
             ->get();
 
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         return view('quan-ly-kho.yeu-cau-chuyen-tau.thong-tin-yeu-cau-chuyen-tau', compact('yeuCau', 'chiTiets', 'doanhNghiep', 'congChucs')); // Pass data to the view
     }
     public function duyetYeuCauChuyenTau(Request $request)
@@ -544,6 +544,9 @@ class YeuCauChuyenTauController extends Controller
         YeuCauChuyenTau::find($request->ma_yeu_cau)->update([
             'ma_cong_chuc' => $request->ma_cong_chuc
         ]);
+        TheoDoiHangHoa::where('cong_viec', 4)
+            ->where('ma_yeu_cau', $request->ma_yeu_cau)
+            ->update(['ma_cong_chuc' => $request->ma_cong_chuc]);
         session()->flash('alert-success', 'Thay đổi công chức thành công');
         return redirect()->back();
     }
@@ -566,6 +569,7 @@ class YeuCauChuyenTauController extends Controller
             ]);
         }
         foreach ($hangHoas as $hangHoa) {
+            $so_seal = NiemPhong::where('so_container', $hangHoa->so_container)->first()->so_seal ?? '';
             TheoDoiTruLuiChiTiet::insert(
                 [
                     'ten_hang' => $hangHoa->ten_hang,
@@ -573,7 +577,7 @@ class YeuCauChuyenTauController extends Controller
                     'so_luong_chua_xuat' => $hangHoa->so_luong,
                     'ma_theo_doi' => $theoDoi->ma_theo_doi,
                     'so_container' => $hangHoa->so_container,
-                    'so_seal' => '',
+                    'so_seal' => $so_seal,
                     'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? "",
                 ]
             );

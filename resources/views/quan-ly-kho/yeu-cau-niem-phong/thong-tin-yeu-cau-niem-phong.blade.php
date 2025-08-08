@@ -289,7 +289,7 @@
                                 <strong>Loại seal</strong>
                             </label>
                             <select class="form-control" id="loai-seal-dropdown-search" name="loai_seal"
-                                placeholder="Chọn loại seal" required>
+                                placeholder="Chọn loại seal">
                                 <option></option>
                                 <option value="1">Seal dây cáp đồng</option>
                                 <option value="2">Seal dây cáp thép</option>

@@ -15,6 +15,7 @@ use App\Exports\BaoCaoTiepNhanHangNgayExport;
 use App\Exports\BaoCaoChiTietXNKTrongNgay;
 use App\Exports\BaoCaoDoanhNghiepXNK;
 use App\Exports\BaoCaoChuyenCuaKhauXuat;
+use App\Exports\BaoCaoHangTieuHuy;
 use App\Exports\BaoCaoHangTonTaiCang;
 use App\Exports\BaoCaoContainerLuuTaiCang;
 use App\Exports\BaoCaoHangHoaChuaThucXuat;
@@ -163,6 +164,8 @@ class BaoCaoController extends Controller
                     $fileName = 'Tiêu hủy hàng: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
                 } elseif ($theoDoiTruLui->cong_viec == 7) {
                     $fileName = 'Kiểm tra hàng: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                } elseif ($theoDoiTruLui->cong_viec == 9) {
+                    $fileName = 'Gỡ seal điện tử: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
                 }
                 $export = new BaoCaoTheoDoiTruLuiExport($theoDoiTruLui->cong_viec, $theoDoiTruLui->ma_yeu_cau, $so_to_khai);
             }
@@ -476,6 +479,16 @@ class BaoCaoController extends Controller
         $fileName = 'Báo cáo hàng chuyển cửa khẩu xuất (Quay về kho) từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
         return Excel::download(new BaoCaoChuyenCuaKhauXuat($tu_ngay, $den_ngay), $fileName);
     }
+    public function baoCaoTieuHuy(Request $request)
+    {
+        $date = $this->formatDateNow();
+        $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
+        $den_ngay_name = $this->formatDateToDMY($request->den_ngay);
+        $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
+        $den_ngay = $this->formatDateToYMD($request->den_ngay);
+        $fileName = 'Báo cáo hàng tiêu hủy từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
+        return Excel::download(new BaoCaoHangTieuHuy($tu_ngay, $den_ngay), $fileName);
+    }
     public function hangTonTaiCang()
     {
         $date = $this->formatDateNow();
@@ -696,10 +709,21 @@ class BaoCaoController extends Controller
     public function getLanTruLui($so_to_khai_nhap)
     {
         $theoDoiTruLuis = TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)
-            ->when(request('cong_viec') == 1, function ($query) {
-                return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
-                    ->where('xuat_hang.trang_thai', '!=', 0);
+            ->leftJoin('xuat_hang', function ($join) {
+                $join->on('xuat_hang.so_to_khai_xuat', '=', 'theo_doi_tru_lui.ma_yeu_cau')
+                    ->where('theo_doi_tru_lui.cong_viec', 1);
             })
+            ->where(function ($query) {
+                $query->where('theo_doi_tru_lui.cong_viec', '!=', 1)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('theo_doi_tru_lui.cong_viec', 1)
+                            ->where('xuat_hang.trang_thai', '!=', 0);
+                    });
+            })
+            ->when(request('cong_viec') == 1, function ($query) {
+                return $query->where('theo_doi_tru_lui.cong_viec', 1);
+            })
+            ->select('theo_doi_tru_lui.*')
             ->get()
             ->groupBy(function ($item) {
                 return $item->cong_viec == 1 ? $item->ngay_them : $item->ma_yeu_cau;
@@ -708,7 +732,7 @@ class BaoCaoController extends Controller
                 return $group->first();
             })
             ->values()
-            ->sortByDesc('ngay_them')
+            ->sortByDesc('ma_theo_doi')
             ->values();
 
         if (!$theoDoiTruLuis) {

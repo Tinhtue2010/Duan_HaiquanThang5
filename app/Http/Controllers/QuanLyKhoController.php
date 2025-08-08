@@ -183,10 +183,10 @@ class QuanLyKhoController extends Controller
                 $nhapHang->so_container = $containers;
                 $containers = $nhapHang->hangHoa
                     ->flatMap(fn($hangHoa) => $hangHoa->hangTrongCont->where('so_luong', '>', 0)
-                    ->pluck('so_container'))
+                        ->pluck('so_container'))
                     ->unique()
                     ->toArray();
-                return response()->json(['data' => $nhapHang,'containers'=> $containers]);
+                return response()->json(['data' => $nhapHang, 'containers' => $containers]);
             }
 
             Log::warning('No data found for so_to_khai_nhap: ' . $so_to_khai_nhap);
@@ -320,8 +320,10 @@ class QuanLyKhoController extends Controller
 
                     $so_to_khai_cont_moi = implode('</br>', $soToKhaiList);
 
-
-                    $so_luong_ton_cont_moi -= $soLuongTrongDon;
+                    $trang_thai = YeuCauChuyenContainer::find($ma_yeu_cau)->trang_thai;
+                    if ($trang_thai == 2) {
+                        $so_luong_ton_cont_moi -= $soLuongTrongDon;
+                    }
                     return [
                         'so_to_khai_nhap' => $firstItem['so_to_khai_nhap'],
                         'so_container_goc' => $firstItem['so_container_goc'],
@@ -460,8 +462,10 @@ class QuanLyKhoController extends Controller
 
                     $so_to_khai_cont_moi .= ($so_to_khai_cont_moi ? '</br>' : '') . $firstItem['so_to_khai_nhap'];
 
-
-                    $so_luong_ton_cont_moi -= $soLuongTrongDon;
+                    $trang_thai = YeuCauTauCont::find($ma_yeu_cau)->trang_thai;
+                    if ($trang_thai == 2) {
+                        $so_luong_ton_cont_moi -= $soLuongTrongDon;
+                    }
                     return [
                         'so_to_khai_nhap' => $firstItem['so_to_khai_nhap'],
                         'so_container_goc' => $firstItem['so_container_goc'] . ' (' . $firstItem['tau_goc'] . ')',

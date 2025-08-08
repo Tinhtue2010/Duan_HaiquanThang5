@@ -24,6 +24,7 @@ class XuatNhapCanh extends Model
         'thoi_gian_nhap_canh',
         'thoi_gian_xuat_canh',
         'ghi_chu',
+        'trang_thai',
     ];
 
     public function chuHang()

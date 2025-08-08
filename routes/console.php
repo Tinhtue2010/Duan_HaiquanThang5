@@ -2,6 +2,8 @@
 
 use App\Models\NiemPhong;
 use App\Models\HangHoa;
+use App\Models\TheoDoiHangHoa;
+use App\Models\TheoDoiTruLui;
 use App\Models\XuatHang;
 use App\Models\YeuCauNiemPhong;
 use App\Models\YeuCauGoSeal;
@@ -9,38 +11,10 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
+
+
 Schedule::call(function () {
     $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-        ->where(function ($query) {
-            if (now()->hour < 1) {
-                $query->whereDate('ngay_yeu_cau', today())
-                    ->orWhereDate('ngay_yeu_cau', today()->subDay());
-            } else {
-                $query->whereDate('ngay_yeu_cau', today());
-            }
-        })
-        ->where('ngay_yeu_cau', today())
-        ->get();
-
-    foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-        $so_container_no_space = str_replace(' ', '', $chiTietYeuCau->so_container); // Remove spaces
-        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        XuatHang::where(function ($query) {
-            if (now()->hour < 9) {
-                $query->whereDate('ngay_dang_ky', today())
-                    ->orWhereDate('ngay_dang_ky', today()->subDay());
-            } else {
-                $query->whereDate('ngay_dang_ky', today());
-            }
-        })
-            ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-            ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
-            ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $chiTietYeuCau->so_seal_moi]);
-    }
-
-
-    $chiTietYeuCaus = YeuCauGoSeal::join('yeu_cau_go_seal_chi_tiet', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
         ->where(function ($query) {
             if (now()->hour < 1) {
                 $query->whereDate('ngay_yeu_cau', today())
@@ -84,20 +58,49 @@ Schedule::call(function () {
     })
     ->everyFiveMinutes();
 
-// Schedule::call(function () {
-//     $nhapHangs = NhapHang::where('trang_thai', 2)->get();
-//     foreach ($nhapHangs as $nhapHang) {
-//         $soContainers = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-//             ->where('hang_hoa.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-//             ->pluck('so_container')
-//             ->unique();
-//         foreach ($soContainers as $soContainer) {
-//             NiemPhong::where('so_container', $soContainer)
-//                 ->where('phuong_tien_vt_nhap', operator: null)
-//                 ->update([
-//                     'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap,
-//                 ]);
-//         }
-//     }
-// })
-//     ->everyThirtyMinutes();
+Schedule::call(function () {
+    $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
+        ->where(function ($query) {
+            if (now()->hour < 1) {
+                $query->whereDate('ngay_yeu_cau', today())
+                    ->orWhereDate('ngay_yeu_cau', today()->subDay());
+            } else {
+                $query->whereDate('ngay_yeu_cau', today());
+            }
+        })
+        ->where('ngay_yeu_cau', today())
+        ->get();
+
+    foreach ($chiTietYeuCaus as $chiTietYeuCau) {
+        $so_container = $chiTietYeuCau->so_container;
+        $so_seal = $chiTietYeuCau->so_seal_moi;
+        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
+        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
+
+        TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', 'theo_doi_tru_lui.ma_theo_doi')
+            ->whereIn('theo_doi_tru_lui_chi_tiet.so_container', [$so_container_no_space, $so_container_with_space])
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('ngay_them', today())
+                        ->orWhereDate('ngay_them', today()->subDay());
+                } else {
+                    $query->whereDate('ngay_them', today());
+                }
+            })
+            ->where('theo_doi_tru_lui.cong_viec', '!=', 1)
+            ->update(['theo_doi_tru_lui_chi_tiet.so_seal' => $so_seal]);
+
+        TheoDoiHangHoa::whereIn('so_container', [$so_container_no_space, $so_container_with_space])
+            ->where(function ($query) {
+                if (now()->hour < 9) {
+                    $query->whereDate('thoi_gian', today())
+                        ->orWhereDate('thoi_gian', today()->subDay());
+                } else {
+                    $query->whereDate('thoi_gian', today());
+                }
+            })
+            ->where('cong_viec', '!=', 1)
+            ->update(['so_seal' => $so_seal]);
+    }
+})
+    ->everyFourHours();

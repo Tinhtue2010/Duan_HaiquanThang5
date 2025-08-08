@@ -31,6 +31,8 @@ class NhapHangSua extends Model
         'ptvt_ban_dau',
         'ma_cong_chuc',
         'ma_cong_chuc_ban_giao',
+        'ten_doan_tau',
+        'loai_sua',
         'created_at',
     ];
     public function hangHoa()

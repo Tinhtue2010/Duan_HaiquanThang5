@@ -7,6 +7,7 @@ use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
 use App\Models\LienHe;
 use App\Models\TaiKhoan;
+use App\Models\ThuKho;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -33,15 +34,25 @@ class TaiKhoanController extends Controller
                 if (!CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()) {
                     session()->flash('alert-danger', 'Tài khoản này chưa được gán cho cán bộ công chức nào');
                     return redirect()->back();
+                } elseif (CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->status != 1) {
+                    session()->flash('alert-danger', 'Cán bộ này đang không công tác trong hệ thống');
+                    return redirect()->back();
                 }
                 return redirect()->route('nhap-hang.quan-ly-nhap-hang');
             } elseif ($user->loai_tai_khoan == "Doanh nghiệp") {
                 if (!DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()) {
                     session()->flash('alert-danger', 'Tài khoản này chưa được gán cho doanh nghiệp nào');
                     return redirect()->back();
+                } elseif (DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->status != 1) {
+                    session()->flash('alert-danger', 'Doanh nghiệp này đang không hoạt động trong hệ thống');
+                    return redirect()->back();
                 }
                 return redirect()->route('nhap-hang.quan-ly-nhap-hang');
             } elseif ($user->loai_tai_khoan == "Thủ kho") {
+                if (ThuKho::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->status != 1) {
+                    session()->flash('alert-danger', 'Thủ kho này đang không công tác trong hệ thống');
+                    return redirect()->back();
+                }
                 return redirect()->route('quan-ly-khac.danh-sach-chi-niem-phong');
             } elseif ($user->loai_tai_khoan == "Admin") {
                 return redirect()->route('quan-ly-khac.danh-sach-hai-quan');

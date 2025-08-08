@@ -85,7 +85,8 @@
                     </h2>
                     <h2 class="text-center text-dark">Phương tiện vận
                         tải:
-                        {{ $nhapHang->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHang->trong_luong }} tấn</h2>
+                        {{ $nhapHang->ptvt_ban_dau }} - Trọng lượng: {{ $nhapHang->trong_luong }} tấn - Đoàn tàu:
+                        {{ $nhapHang->ten_doan_tau ?? '' }}</h2>
                     <!-- Table for displaying added rows -->
                     <table class="table table-bordered mt-5" id="displayTable">
                         <thead class="align-middle" style="vertical-align: middle; text-align: center;">
@@ -275,14 +276,48 @@
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 <h2 class="text-success">Ngày xuất:
                                     {{ \Carbon\Carbon::parse($nhapHang->updated_at)->format('d-m-Y') }}</h2>
+                                <center>
+                                    <div class="col-6">
+                                        <a
+                                            href="{{ route('nhap-hang.sua-to-khai-nhap-cong-chuc', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                            <button class="btn btn-warning px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                Sửa nhập đơn
+                                            </button>
+                                        </a>
+                                    </div>
+                                </center>
                             @elseif(trim($nhapHang->trang_thai) == '4')
                                 <h2 class="text-success">Đã xuất hết hàng</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 </h2>
+                                <center>
+                                    <div class="col-6">
+                                        <a
+                                            href="{{ route('nhap-hang.sua-to-khai-nhap-cong-chuc', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                            <button class="btn btn-warning px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                Sửa nhập đơn
+                                            </button>
+                                        </a>
+                                    </div>
+                                </center>
                             @elseif(trim($nhapHang->trang_thai) == '7')
-                                <h2 class="text-success">Đã bàn giao hồ sơ</h2>
+                                <h2 class="text-success">Đã bàn giao hồ sơ
+                                </h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
                                 </h2>
+                                <center>
+                                    <div class="col-6">
+                                        <a
+                                            href="{{ route('nhap-hang.sua-to-khai-nhap-cong-chuc', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
+                                            <button class="btn btn-warning px-4">
+                                                <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                Sửa nhập đơn
+                                            </button>
+                                        </a>
+                                    </div>
+                                </center>
                             @elseif(trim($nhapHang->trang_thai) == '8')
                                 <h2 class="text-warning">Đã duyệt sửa lần 1</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">

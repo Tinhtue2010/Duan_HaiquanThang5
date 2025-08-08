@@ -238,7 +238,7 @@ class YeuCauTieuHuyController extends Controller
 
         $nhapHangs = NhapHang::whereIn('so_to_khai_nhap', $chiTiets)->get();
 
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $chiTiets = YeuCauTieuHuyChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
         return view('quan-ly-kho.yeu-cau-tieu-huy.thong-tin-yeu-cau-tieu-huy', compact('yeuCau', 'nhapHangs', 'doanhNghiep', 'congChucs', 'chiTiets')); // Pass data to the view
     }
@@ -262,6 +262,7 @@ class YeuCauTieuHuyController extends Controller
 
                     $hangTrongConts = HangTrongCont::join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
                         ->where('hang_hoa.so_to_khai_nhap', $chiTietYeuCau->so_to_khai_nhap)
+                        ->where('hang_trong_cont.so_container', $chiTietYeuCau->so_container)
                         ->select('hang_trong_cont.*', 'hang_hoa.ma_hang')
                         ->get();
                     foreach ($hangTrongConts as $row) {
@@ -284,19 +285,28 @@ class YeuCauTieuHuyController extends Controller
                         ]);
                     }
 
-                    $nhapHang->update([
-                        'trang_thai' => '5'
-                    ]);
-
-
                     // $service = new XuatHangService();
                     // $ly_do = " do tờ khai nhập " . $chiTietYeuCau->so_to_khai_nhap . " đã tiêu hủy";
                     // $service->huyPhieuXuats($chiTietYeuCau->so_to_khai_nhap, $ly_do);
                     // $service->huyYeuCauCuaToKhai($chiTietYeuCau->so_to_khai_nhap, $ly_do);
 
 
-                    $this->themTheoDoiTruLui($chiTietYeuCau->so_to_khai_nhap, $yeuCau);
-                    $this->themTienTrinh($chiTietYeuCau->so_to_khai_nhap, "Đã duyệt yêu cầu tiêu hủy hàng số " . $request->ma_yeu_cau . ", cán bộ công chức phụ trách: " . $congChucPhuTrach->ten_cong_chuc, $congChucPhuTrach->ma_cong_chuc);
+                    $this->themTheoDoiTruLui($chiTietYeuCau->so_to_khai_nhap, $chiTietYeuCau->so_container, $yeuCau);
+                }
+                $soToKhaiNhaps = YeuCauTieuHuyChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_to_khai_nhap')->unique();
+                foreach ($soToKhaiNhaps as $soToKhaiNhap) {
+                    $totalSoLuong = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                        ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                        ->where('nhap_hang.so_to_khai_nhap', $soToKhaiNhap)
+                        ->sum('hang_trong_cont.so_luong');
+                    
+                    if ($totalSoLuong == 0) {
+                        NhapHang::where('so_to_khai_nhap', $soToKhaiNhap)->update([
+                            'trang_thai' => '5'
+                        ]);
+                    }
+                    
+                    $this->themTienTrinh($soToKhaiNhap, "Đã duyệt yêu cầu tiêu hủy hàng số " . $request->ma_yeu_cau . ", cán bộ công chức phụ trách: " . $congChucPhuTrach->ten_cong_chuc, $congChucPhuTrach->ma_cong_chuc);
                 }
 
                 session()->flash('alert-success', 'Duyệt yêu cầu thành công!');
@@ -597,7 +607,7 @@ class YeuCauTieuHuyController extends Controller
                 NhapHang::where('so_to_khai_nhap', $chiTietYeuCau->so_to_khai_nhap)->update([
                     'trang_thai' => '5',
                 ]);
-                $this->themTheoDoiTruLui($chiTietYeuCau->so_to_khai_nhap, $yeuCau);
+                $this->themTheoDoiTruLui($chiTietYeuCau->so_to_khai_nhap, $chiTietYeuCau->so_container, $yeuCau);
                 $this->themTienTrinh($chiTietYeuCau->so_to_khai_nhap, "Đã sửa yêu cầu tiêu hủy số " . $yeuCau->ma_yeu_cau  . ", cán bộ công chức phụ trách: " . $yeuCau->congChuc->ten_cong_chuc, $yeuCau->congChuc->ma_cong_chuc);
             }
             YeuCauTieuHuyChiTiet::insert([
@@ -615,6 +625,9 @@ class YeuCauTieuHuyController extends Controller
         YeuCauTieuHuy::find($request->ma_yeu_cau)->update([
             'ma_cong_chuc' => $request->ma_cong_chuc
         ]);
+        TheoDoiHangHoa::where('cong_viec', 6)
+            ->where('ma_yeu_cau', $request->ma_yeu_cau)
+            ->update(['ma_cong_chuc' => $request->ma_cong_chuc]);
         session()->flash('alert-success', 'Thay đổi công chức thành công');
         return redirect()->back();
     }
@@ -628,13 +641,13 @@ class YeuCauTieuHuyController extends Controller
             'ma_cong_chuc' => $ma_cong_chuc
         ]);
     }
-    public function themTheoDoiTruLui($so_to_khai_nhap, $yeuCau)
+    public function themTheoDoiTruLui($so_to_khai_nhap, $so_container, $yeuCau)
     {
         $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
+            ->where('hang_trong_cont.so_container', $so_container)
             ->get();
-        $nhapHang = NhapHang::find($so_to_khai_nhap);
 
         $theoDoi = TheoDoiTruLui::create([
             'so_to_khai_nhap' => $so_to_khai_nhap,
@@ -650,11 +663,14 @@ class YeuCauTieuHuyController extends Controller
                     'so_luong_xuat' => 0,
                     'so_luong_chua_xuat' => $hangHoa->so_luong,
                     'ma_theo_doi' => $theoDoi->ma_theo_doi,
-                    'so_container' => $hangHoa->so_container,
+                    'so_container' => $so_container,
                     'so_seal' => '',
                     'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ""
                 ]
             );
+            HangTrongCont::find($hangHoa->ma_hang_cont)->update([
+                'so_luong' => '0'
+            ]);
         }
     }
     public function huySuaYeuCau(Request $request)

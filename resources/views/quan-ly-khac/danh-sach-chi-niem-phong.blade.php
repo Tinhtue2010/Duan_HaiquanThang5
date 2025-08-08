@@ -17,10 +17,10 @@
             <div class="card shadow mb-4">
                 <div class="card-header pt-3">
                     <div class="row">
-                        <div class="col-9">
+                        <div class="col-6">
                             <h4 class="font-weight-bold text-primary">Danh sách seal niêm phong</h4>
                         </div>
-                        <div class="col-3">
+                        <div class="col-6">
                             <button data-bs-toggle="modal" data-bs-target="#themModal"
                                 class="btn btn-success float-end">Thêm seal niêm phong</button>
                             <a href="{{ route('quan-ly-khac.xoa-nhanh-chi-niem-phong') }}"><button
@@ -295,7 +295,7 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
-                            return data; // ✅ Ensure raw HTML is returned
+                            return data;
                         }
                     }
                 ],

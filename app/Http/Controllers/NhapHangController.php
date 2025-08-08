@@ -148,7 +148,7 @@ class NhapHangController extends Controller
             'tienTrinhs' => TienTrinh::where('so_to_khai_nhap', $so_to_khai_nhap)
                 ->leftJoin('cong_chuc', 'tien_trinh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
                 ->get(),
-            'congChucs' => CongChuc::where('is_chi_xem', 0)->get(),
+            'congChucs' => CongChuc::where('is_chi_xem', 0)->where('status', 1)->get(),
             'chuHangs' => ChuHang::all(),
             'seals' => Seal::where('trang_thai', 0)->get()
         ]);
@@ -169,6 +169,7 @@ class NhapHangController extends Controller
             'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
             'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
             'trong_luong' => $request->trong_luong,
+            'ten_doan_tau' => $request->ten_doan_tau,
             'container_ban_dau' => $so_containers,
             'created_at' => now(),
         ]);
@@ -207,12 +208,12 @@ class NhapHangController extends Controller
     {
         $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
         if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-            if ($this->kiemTraTinhTrangXuatHang($so_to_khai_nhap)) {
-                return redirect()->back()->with('alert-danger', 'Không thể sửa tờ khai này do đã chọn hàng để xuất');
-            }
+            // if ($this->kiemTraTinhTrangXuatHang($so_to_khai_nhap)) {
+            //     return redirect()->back()->with('alert-danger', 'Không thể sửa tờ khai này do đã chọn hàng để xuất');
+            // }
             $doanhNghiep = $this->getDoanhNghiepHienTai();
 
-            return view('nhap-hang.sua-to-khai-nhap', [
+            return view('nhap-hang.sua-to-khai-nhap-cong-chuc', [
                 'nhapHang' => $nhapHang,
                 'hangHoaRows' => $nhapHang->hangHoa,
                 'xuatXus' => $this->getXuatXu(),
@@ -276,12 +277,15 @@ class NhapHangController extends Controller
                 if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
                     if ($nhapHang->trang_thai == '1') {
                         $this->suaNhapHangDangChoDuyet($request, $nhapHang, $so_containers);
-                    } else {
+                    } else if ($nhapHang->trang_thai == '2') {
                         $this->suaNhapHangDaDuyet($request, so_containers: $so_containers);
+                    } else {
+                        $this->suaNhapHangCongChuc($request, $so_containers);
                     }
                 } else {
                     $this->suaNhapHangCongChuc($request, $so_containers);
                 }
+
 
                 return redirect()
                     ->route('nhap-hang.show', ['so_to_khai_nhap' => $request->so_to_khai_nhap])
@@ -302,20 +306,22 @@ class NhapHangController extends Controller
         foreach ($rowsData as $row) {
             $hangHoa = HangHoa::find($row['ma_hang']);
 
+            //No
             // if ($hangHoa->so_container_khai_bao != $row['so_container'] || $nhapHang->phuong_tien_vt_nhap != $request->phuong_tien_vt_nhap) {
             //     $this->suaXuatHangCont($request, $nhapHang, $row);
             // }
-            $this->suaSoContainerSoLuong($hangHoa, $row);
+
+            // $this->suaSoContainerSoLuong($hangHoa, $row);
 
             HangHoa::find($row['ma_hang'])->update([
-                'ten_hang' => $row['ten_hang'],
-                'loai_hang' => $row['loai_hang'],
-                'xuat_xu' => $row['xuat_xu'],
-                'so_luong_khai_bao' => $row['so_luong'],
+                // 'ten_hang' => $row['ten_hang'],
+                // 'loai_hang' => $row['loai_hang'],
+                // 'xuat_xu' => $row['xuat_xu'],
+                // 'so_luong_khai_bao' => $row['so_luong'],
+                // 'so_container_khai_bao' => $row['so_container'],
                 'don_vi_tinh' => $row['don_vi_tinh'],
                 'don_gia' => $row['don_gia'],
                 'tri_gia' => $row['tri_gia'],
-                // 'so_container_khai_bao' => $row['so_container'],
             ]);
 
             NhapHang::find($request->so_to_khai_nhap)->update([
@@ -324,16 +330,17 @@ class NhapHangController extends Controller
                 'ma_hai_quan' => $request->ma_hai_quan,
                 'ngay_dang_ky' => $formattedDate,
                 'ngay_thong_quan' => $formattedDate,
+                'trong_luong' => $request->trong_luong,
+
                 // 'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
                 // 'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
-                'trong_luong' => $request->trong_luong,
                 // 'container_ban_dau' => $so_containers,
                 // 'created_at' => now(),
             ]);
         }
 
-        $this->xuLyContainer($request);
-        $this->themTienTrinh($request->so_to_khai_nhap, "Công chức đã sửa tờ khai nhập số " . $request->so_to_khai_nhap, $this->getCongChucHienTai()->ma_cong_chuc);
+        // $this->xuLyContainer($request);
+        // $this->themTienTrinh($request->so_to_khai_nhap, "Công chức đã sửa tờ khai nhập số " . $request->so_to_khai_nhap, $this->getCongChucHienTai()->ma_cong_chuc);
     }
     private function suaXuatHangCont($request, $nhapHang, $row)
     {
@@ -411,6 +418,7 @@ class NhapHangController extends Controller
                 'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
                 'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
                 'trong_luong' => $request->trong_luong,
+                'ten_doan_tau' => $request->ten_doan_tau,
                 'container_ban_dau' => $so_containers,
                 'ma_cong_chuc' => $request->ma_cong_chuc,
             ]);
@@ -420,7 +428,7 @@ class NhapHangController extends Controller
                     'ma_hang' => $row['ma_hang'],
                     'ten_hang' => $row['ten_hang'],
                     'loai_hang' => $row['loai_hang'],
-                    'xuat_xu' => $row['xuat_xu'],
+                    'xuat_xu' => $request->xuat_xu,
                     'so_luong_khai_bao' => $row['so_luong'],
                     'don_vi_tinh' => $row['don_vi_tinh'],
                     'don_gia' => $row['don_gia'],
@@ -440,9 +448,19 @@ class NhapHangController extends Controller
                 $hangHoas = HangHoa::where('so_to_khai_nhap', $request->so_to_khai_nhap)->get();
                 $nhapHangSua = NhapHangSua::create($nhapHang->toArray());
                 foreach ($hangHoas as $hangHoa) {
-                    $data = $hangHoa->toArray();
-                    $data['ma_nhap_sua'] = $nhapHangSua->ma_nhap_sua;
-                    HangHoaSua::create($data);
+                    HangHoaSua::insert([
+                        'ma_hang' => $hangHoa->ma_hang,
+                        'ten_hang' => $hangHoa->ten_hang,
+                        'loai_hang' => $hangHoa->loai_hang,
+                        'xuat_xu' => $request->xuat_xu,
+                        'so_luong_khai_bao' => $hangHoa->so_luong_khai_bao,
+                        'don_vi_tinh' => $hangHoa->don_vi_tinh,
+                        'don_gia' => $hangHoa->don_gia,
+                        'tri_gia' => $hangHoa->tri_gia,
+                        'so_container_khai_bao' => $hangHoa->so_container,
+                        'so_to_khai_nhap' => $request->so_to_khai_nhap,
+                        'ma_nhap_sua' => $nhapHangSua->ma_nhap_sua,
+                    ]);
                 }
             }
 
@@ -458,6 +476,7 @@ class NhapHangController extends Controller
                 'phuong_tien_vt_nhap' => $request->phuong_tien_vt_nhap,
                 'ptvt_ban_dau' => $request->phuong_tien_vt_nhap,
                 'trong_luong' => $request->trong_luong,
+                'ten_doan_tau' => $request->ten_doan_tau,
                 'container_ban_dau' => $so_containers,
                 'ma_cong_chuc' => $request->ma_cong_chuc,
                 'created_at' => now(),
@@ -468,7 +487,7 @@ class NhapHangController extends Controller
                     'ma_hang' => $row['ma_hang'],
                     'ten_hang' => $row['ten_hang'],
                     'loai_hang' => $row['loai_hang'],
-                    'xuat_xu' => $row['xuat_xu'],
+                    'xuat_xu' => $request->xuat_xu,
                     'so_luong_khai_bao' => $row['so_luong'],
                     'don_vi_tinh' => $row['don_vi_tinh'],
                     'don_gia' => $row['don_gia'],
@@ -534,8 +553,9 @@ class NhapHangController extends Controller
                     'phuong_tien_vt_nhap' => $nhapHangSua->phuong_tien_vt_nhap,
                     'ptvt_ban_dau' => $nhapHangSua->ptvt_ban_dau,
                     'trong_luong' => $nhapHangSua->trong_luong,
+                    'ten_doan_tau' => $nhapHangSua->ten_doan_tau,
                     'container_ban_dau' => $nhapHangSua->container_ban_dau,
-                    'ma_cong_chuc' => $nhapHangSua->ma_cong_chuc,
+                    // 'ma_cong_chuc' => $nhapHangSua->ma_cong_chuc,
                 ]);
                 foreach ($hangHoaSuas as $hangHoaSua) {
                     $hangHoa = HangHoa::create([
@@ -576,7 +596,7 @@ class NhapHangController extends Controller
         $soLuongSum = $hangHoaRows->sum('so_luong_khai_bao');
         $triGiaSum = $hangHoaRows->sum('tri_gia');
         $tienTrinhs = null;
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $chuHangs = ChuHang::all();
         return view('nhap-hang.thong-tin-nhap-hang', compact('nhapHang', 'hangHoaRows', 'soLuongSum', 'triGiaSum', 'tienTrinhs', 'congChucs', 'chuHangs')); // Pass data to the view
     }

@@ -107,7 +107,7 @@ class NhapCanhController extends Controller
         if (NhapCanh::find($ma_nhap_canh)) {
             $nhapCanh = NhapCanh::find($ma_nhap_canh);
         }
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $maCongChuc = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_cong_chuc ?? '';
         return view('nhap-canh.thong-tin-nhap-canh', compact('nhapCanh', 'congChucs','maCongChuc')); // Pass data to the view
     }

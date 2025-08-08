@@ -156,7 +156,9 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
             } else {
                 $seal = $theoDoiHangHoa->so_seal;
             }
-
+            if ($theoDoiHangHoa->so_luong_xuat == 0) {
+                continue;
+            }
             $result[] = [
                 $stt++,
                 $time,
@@ -171,6 +173,15 @@ class BaoCaoTheoDoiHangHoa implements FromArray, WithEvents, WithDrawings
                 $theoDoiHangHoa->ghi_chu,
             ];
         }
+        $tongLuongTon = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('hang_hoa.ma_hang', $this->ma_hang)
+            ->sum('hang_trong_cont.so_luong');
+        $result[] = [
+            '',
+            '',
+            'SL Tồn',
+            $tongLuongTon == 0 ? '0' : $tongLuongTon,
+        ];
 
         return $result;
     }

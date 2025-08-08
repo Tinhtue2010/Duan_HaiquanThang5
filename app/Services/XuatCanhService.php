@@ -58,7 +58,7 @@ class XuatCanhService
     }
     public function xuLyDuyetThucXuat($xuatHang, $request)
     {
-        if ($xuatHang->trang_thai != "13") {
+        if ($xuatHang->trang_thai != "13" && $xuatHang->trang_thai != "0") {
             if ($xuatHang->trang_thai == '6' || $xuatHang->trang_thai == '5') {
                 $suaXuatHang = XuatHangSua::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->first();
                 XuatHangChiTietSua::where('ma_yeu_cau', $suaXuatHang->ma_yeu_cau)->delete();
@@ -87,7 +87,7 @@ class XuatCanhService
             ->join('ptvt_xuat_canh_cua_phieu', 'ptvt_xuat_canh_cua_phieu.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
             ->where('ptvt_xuat_canh_cua_phieu.so_ptvt_xuat_canh', $so_ptvt_xuat_canh)
             ->whereBetween('xuat_hang.ngay_dang_ky', [today()->subDays(7), today()])
-            ->where('xuat_hang.trang_thai', '2') // Now correctly applied to both date conditions
+            ->where('xuat_hang.trang_thai', '2')
             ->select(
                 'xuat_hang.*',
                 'doanh_nghiep.ten_doanh_nghiep',
@@ -265,7 +265,7 @@ class XuatCanhService
         $this->quayNguocXuatCanh($xuatCanhSua->ma_xuat_canh);
         XuatCanhChiTiet::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)->delete();
 
-        $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_xuat_canh', $xuatCanh->ma_xuat_canh)
+        $xuatCanhChiTietSuas = XuatCanhChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)
             ->get();
         foreach ($xuatCanhChiTietSuas as $xuatCanhChiTietSua) {
             $this->themChiTietXuatCanh($xuatCanh->ma_xuat_canh, $xuatCanhChiTietSua->so_to_khai_xuat);

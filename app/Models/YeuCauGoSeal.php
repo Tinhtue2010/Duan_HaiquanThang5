@@ -16,7 +16,8 @@ class YeuCauGoSeal extends Model
         'ngay_yeu_cau',
         'ngay_hoan_thanh',
         'ghi_chu',
-        'ma_cong_chuc'
+        'ma_cong_chuc',
+        'is_niem_phong'
     ];
 
     public function congChuc()

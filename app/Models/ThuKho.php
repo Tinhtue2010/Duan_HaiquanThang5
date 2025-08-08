@@ -15,6 +15,7 @@ class ThuKho extends Model
         'ma_thu_kho',
         'ten_thu_kho',
         'ma_tai_khoan',
+        'status',
     ];
     public function taiKhoan()
     {

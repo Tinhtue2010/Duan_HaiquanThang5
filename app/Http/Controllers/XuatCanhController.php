@@ -98,7 +98,7 @@ class XuatCanhController extends Controller
 
     public function thongTinXuatCanh($ma_xuat_canh)
     {
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         if (XuatCanh::find($ma_xuat_canh)) {
             $xuatCanh = XuatCanh::find($ma_xuat_canh);
             $chiTiets = XuatCanhChiTiet::join('xuat_hang', 'xuat_hang.so_to_khai_xuat', 'xuat_canh_chi_tiet.so_to_khai_xuat')
@@ -126,7 +126,7 @@ class XuatCanhController extends Controller
                 )
                 ->get();
         }
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $maCongChuc = CongChuc::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_cong_chuc ?? '';
 
         return view('xuat-canh.thong-tin-xuat-canh', compact('xuatCanh', 'chiTiets', 'congChucs','maCongChuc')); // Pass data to the view

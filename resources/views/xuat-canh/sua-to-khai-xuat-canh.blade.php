@@ -160,6 +160,8 @@
     <script>
         $(document).ready(function() {
             calculateTotal();
+            const doanhNghiep = @json($doanhNghiep);
+            const ma_xuat_canh = @json($xuatCanh->ma_xuat_canh);
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
                 let tenThuyenTruong = document.getElementById('thuyen-truong-dropdown-search').value.trim();
@@ -219,6 +221,7 @@
                     type: "GET",
                     data: {
                         so_ptvt_xuat_canh: so_ptvt_xuat_canh,
+                        ma_xuat_canh: ma_xuat_canh,
                     },
 
                     success: function(response) {
@@ -256,6 +259,12 @@
                                     addedDoanhNghieps.add(item.ma_doanh_nghiep);
                                     doanhNghiepDropdown.append(
                                         `<option value="${item.ma_doanh_nghiep}">${item.ten_doanh_nghiep}</option>`
+                                    );
+                                }
+                                if (!addedDoanhNghieps.has(doanhNghiep.ma_doanh_nghiep)) {
+                                    addedDoanhNghieps.add(doanhNghiep.ma_doanh_nghiep);
+                                    doanhNghiepDropdown.append(
+                                        `<option value="${doanhNghiep.ma_doanh_nghiep}">${doanhNghiep.ten_doanh_nghiep}</option>`
                                     );
                                 }
                             });

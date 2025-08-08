@@ -71,7 +71,10 @@ class ThuKhoController extends Controller
                 $ma_thu_kho = $request->ma_thu_kho_moi;
                 $thuKho->update(['ma_thu_kho' => $request->ma_thu_kho_moi]);
             }
-            $thuKho->update(['ten_thu_kho' => $request->ten_thu_kho]);
+            $thuKho->update([
+                'ten_thu_kho' => $request->ten_thu_kho,
+                'status' => $request->status ?? 1,
+            ]);
             if ($request->ma_tai_khoan != '') {
                 $taiKhoan =  TaiKhoan::find($request->ma_tai_khoan);
                 ThuKho::find($ma_thu_kho)->update(['ma_tai_khoan' => $taiKhoan->ma_tai_khoan]);;
@@ -82,5 +85,4 @@ class ThuKhoController extends Controller
         session()->flash('alert-danger', 'Có lỗi xảy ra');
         return redirect()->back();
     }
-
 }

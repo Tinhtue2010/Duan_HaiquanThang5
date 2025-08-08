@@ -31,8 +31,8 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
     }
     public function array(): array
     {
-        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
-        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d-m-Y');
+        $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d/m/y');
+        $den_ngay = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('d/m/y');
 
         $result = [
             ['CHI CỤC HẢI QUAN KHU VỰC VIII', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'],
@@ -59,6 +59,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             ->leftJoin('chu_hang', 'doanh_nghiep.ma_chu_hang', 'chu_hang.ma_chu_hang')
             ->whereBetween('xuat_canh.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->where('xuat_canh.trang_thai', '!=', 0)
+            ->where('xuat_canh.trang_thai', '!=', 6)
             ->where(function ($query) {
                 $query->whereNull('xuat_hang.trang_thai')
                     ->orWhere('xuat_hang.trang_thai', '!=', 0);
@@ -68,6 +69,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                 'xuat_canh.ten_thuyen_truong',
                 'xuat_canh.ngay_dang_ky',
                 'cong_chuc.ten_cong_chuc',
+                'xuat_canh.ma_doanh_nghiep',
                 'doanh_nghiep.ten_doanh_nghiep',
                 'chu_hang.ten_chu_hang',
                 'hang_hoa.loai_hang',
@@ -103,6 +105,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                     'ma_xuat_canh' => $ma_xuat_canh,
                     'ten_thuyen_truong' => $first->ten_thuyen_truong,
                     'ngay_dang_ky' => $first->ngay_dang_ky,
+                    'ma_doanh_nghiep' => $first->ma_doanh_nghiep,
                     'ten_cong_chuc' => $first->ten_cong_chuc,
                     'ten_doanh_nghiep' => $first->ten_doanh_nghiep,
                     'ten_chu_hang' => $first->ten_chu_hang,
@@ -187,6 +190,12 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             $xnc = XuatNhapCanh::where('so_ptvt_xuat_canh', $value['so_ptvt_xuat_canh'])
                 ->where('ngay_them', $value['ngay_dang_ky_nearest'])
                 ->first();
+            if($value['ma_doanh_nghiep'] == 5700605306)
+                $ten_chu_hang = "Đại lý Hải Thủy";
+            else if($value['ma_doanh_nghiep'] == 5701712357)
+                $ten_chu_hang = "Đại lý Hùng Phúc";
+            else 
+                $ten_chu_hang = $value['ten_chu_hang'];
 
             $result[] = [
                 $key + 1,
@@ -194,9 +203,9 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                 $quoc_tich_tau,
                 $value['ten_thuyen_truong'],
                 'Vạn Gia',
-                !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d-m-Y') : null,
+                !empty($nearestDate) ? Carbon::createFromFormat('Y-m-d', $nearestDate)->format('d/m/y') : null,
                 $xnc->thoi_gian_nhap_canh ?? '',
-                Carbon::createFromFormat('Y-m-d', $value['ngay_dang_ky'])->format('d-m-Y'),
+                Carbon::createFromFormat('Y-m-d', $value['ngay_dang_ky'])->format('d/m/y'),
                 $xnc->thoi_gian_xuat_canh ?? '',
                 $value['loai_hang'],
                 $totalThuocLa == 0 ? '0' : $totalThuocLa,
@@ -208,7 +217,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                 $cang_den,
                 $value['ten_cong_chuc'],
                 $value['loai_hang'] ? $value['ten_doanh_nghiep'] : '',
-                $value['loai_hang'] ? $value['ten_chu_hang'] : '',
+                $value['loai_hang'] ? $ten_chu_hang : '',
             ];
 
             $sumThuocLa += $totalThuocLa;

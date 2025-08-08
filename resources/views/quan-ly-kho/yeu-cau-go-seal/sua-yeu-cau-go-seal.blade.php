@@ -25,25 +25,43 @@
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
-                            <div class="col-5">
-                                <div class="form-group">
-                                    <span class="mt-n2 mb-1 fs-5">Số container:</span>
-                                    <select class="form-control" id="container-dropdown-search">
-                                        <option></option>
-                                        @foreach ($soContainers as $soContainer)
-                                            <option value=""></option>
-                                            <option
-                                                value="{{ $soContainer['so_container'] }}|{{ $soContainer['phuong_tien_vt_nhap'] ?? '' }}">
-                                                {{ $soContainer['so_container'] }}
-                                                ({{ $soContainer['phuong_tien_vt_nhap'] ?? '' }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <center>
-                                        <button type="button" id="addRowButton" class="btn btn-primary mt-2">Thêm
-                                            dòng</button>
-                                    </center>
-                                </div>
+                            <div class="form-group">
+                                <center>
+                                    <div class="col-10">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <span class="mt-n2 mb-1 fs-5">Số container:</span>
+                                                <select class="form-control" id="container-dropdown-search">
+                                                    <option></option>
+                                                    @foreach ($soContainers as $soContainer)
+                                                        <option value=""></option>
+                                                        <option value="{{ $soContainer['so_container'] }}">
+                                                            {{ $soContainer['so_container'] }}
+                                                            ({{ $soContainer['phuong_tien_vt_nhap'] ?? '' }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="mt-n2 mb-1 fs-5">Số tàu:</span>
+                                                <input type="text" class="form-control" id="phuong-tien-vt-nhap"
+                                                    placeholder="Nhập số tàu">
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="mt-n2 mb-1 fs-5">Số seal điện tử:</span>
+                                                <input type="text" class="form-control" id="so-seal"
+                                                    placeholder="Nhập số seal điện tử">
+                                            </div>
+                                            <center>
+                                                <button type="button" id="addRowButton" class="btn btn-primary mt-2">Thêm
+                                                    dòng</button>
+                                            </center>
+                                        </div>
+
+                                    </div>
+                                </center>
+
+
                             </div>
                         </div>
                     </div>
@@ -55,6 +73,7 @@
                         <th>STT</th>
                         <th>Số container</th>
                         <th>Tàu</th>
+                        <th>Số seal</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -104,7 +123,7 @@
 
             let rowIndex = 0;
 
-            function addRow(soContainer, phuongTien) {
+            function addRow(soContainer, phuongTien, soSeal) {
                 rowIndex++;
 
                 const newRow = `
@@ -112,6 +131,7 @@
                         <td class="text-center">${rowIndex}</td>
                         <td class="text-center">${soContainer}</td>
                         <td class="text-center">${phuongTien}</td>
+                        <td class="text-center">${soSeal}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
@@ -122,14 +142,15 @@
 
             if (chiTiets && Array.isArray(chiTiets)) {
                 chiTiets.forEach((chiTiet, index) => {
-                    addRow(chiTiet.so_container, chiTiet.phuong_tien_vt_nhap);
+                    addRow(chiTiet.so_container, chiTiet.phuong_tien_vt_nhap, chiTiet.so_seal_cu);
                 });
             }
 
             addRowButton.addEventListener('click', function() {
-                const values = soContainerInput.value.split('|');
-                const soContainer = values[0] ? values[0].trim() : '';
-                const phuongTien = values[1] ? values[1].trim() : '';
+                const values = soContainerInput.value;
+                const soContainer = document.getElementById('container-dropdown-search').value;
+                const phuongTien = document.getElementById('phuong-tien-vt-nhap').value;
+                const soSeal = document.getElementById('so-seal').value;
 
                 if (soContainer === '') {
                     alert('Vui lòng nhập số container!');
@@ -152,6 +173,7 @@
                         <td class="text-center">${rowIndex}</td>
                         <td class="text-center">${soContainer}</td>
                         <td class="text-center">${phuongTien}</td>
+                        <td class="text-center">${soSeal}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
@@ -184,7 +206,8 @@
                     return {
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
                         so_container: row.querySelector('td:nth-child(2)').textContent.trim(),
-                        phuong_tien_vt_nhap: row.querySelector('td:nth-child(3)').textContent.trim()
+                        phuong_tien_vt_nhap: row.querySelector('td:nth-child(3)').textContent.trim(),
+                        so_seal: row.querySelector('td:nth-child(4)').textContent.trim(),
                     };
                 });
                 const rowCount = $('#displayTableYeuCau tbody tr').length;

@@ -47,6 +47,7 @@
                                 <th>STT</th>
                                 <th>Số container</th>
                                 <th>Tàu</th>
+                                <th>Số seal điện tử</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,6 +62,7 @@
                                     <!-- Display index (1-based) -->
                                     <td class="{{ $rowClass }}">{{ $chiTiet->so_container }}</td>
                                     <td class="{{ $rowClass }}">{{ $chiTiet->phuong_tien_vt_nhap }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTiet->so_seal_cu }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -78,6 +80,7 @@
                                 <th>STT</th>
                                 <th>Số container</th>
                                 <th>Tàu</th>
+                                <th>Seal điện tử</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,6 +95,7 @@
                                     <!-- Display index (1-based) -->
                                     <td class="{{ $rowClass }}">{{ $chiTietSua->so_container }}</td>
                                     <td class="{{ $rowClass }}">{{ $chiTietSua->phuong_tien_vt_nhap }}</td>
+                                    <td class="{{ $rowClass }}">{{ $chiTietSua->so_seal_cu }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -159,56 +163,58 @@
                     @csrf
                     <div class="modal-body">
                         <h5>Xác nhận duyệt yêu cầu sửa này ?</h5>
-                        <h5>Công chức: {{ $yeuCau->congChuc->ten_cong_chuc }}</h5>
-                        <h5>Dưới đây là các container mới được thêm vào</h5>
-                        <label class="label-text mb-1" for="">
-                            <strong>Loại seal</strong>
-                        </label>
-                        <select class="form-control" id="loai-seal-dropdown-search" name="loai_seal"
-                            placeholder="Chọn loại seal" required>
-                            <option></option>
-                            <option value="1">Seal dây cáp đồng</option>
-                            <option value="2">Seal dây cáp thép</option>
-                            <option value="3">Seal container</option>
-                            <option value="4">Seal dây nhựa dẹt</option>
-                            <option value="5">Seal định vị điện tử</option>
-                        </select>
+                        @if ($yeuCau->is_niem_phong == 1)
+                            <h5>Công chức: {{ $yeuCau->congChuc->ten_cong_chuc }}</h5>
+                            <h5>Dưới đây là các container mới được thêm vào</h5>
+                            <label class="label-text mb-1" for="">
+                                <strong>Loại seal</strong>
+                            </label>
+                            <select class="form-control" id="loai-seal-dropdown-search" name="loai_seal"
+                                placeholder="Chọn loại seal" required>
+                                <option></option>
+                                <option value="1">Seal dây cáp đồng</option>
+                                <option value="2">Seal dây cáp thép</option>
+                                <option value="3">Seal container</option>
+                                <option value="4">Seal dây nhựa dẹt</option>
+                                <option value="5">Seal định vị điện tử</option>
+                            </select>
 
-                        <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
-                            id="displayTableYeuCau">
-                            <thead class="align-middle">
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Số container</th>
-                                    <th>Loại seal</th>
-                                    <th>Seal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($chiTietThemVao as $index => $chiTiet)
-                                    <tr class="container-row">
-                                        <td>{{ $index }}</td> <!-- Display index (1-based) -->
-                                        <td>{{ $chiTiet->so_container }}</td>
-                                        <td>
-                                            <select class="form-control loai-seal-dropdown-search" name="loai_seal"
-                                                placeholder="Chọn loại seal" required>
-                                                <option></option>
-                                                <option value="1">Seal dây cáp đồng</option>
-                                                <option value="2">Seal dây cáp thép</option>
-                                                <option value="3">Seal container</option>
-                                                <option value="4">Seal dây nhựa dẹt</option>
-                                                <option value="5">Seal định vị điện tử</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-control seal-dropdown-search" name="so_seal">
-                                                <option value="">Chọn seal</option>
-                                            </select>
-                                        </td>
+                            <table class="table table-bordered mt-2" style="vertical-align: middle; text-align: center;"
+                                id="displayTableYeuCau">
+                                <thead class="align-middle">
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Số container</th>
+                                        <th>Loại seal</th>
+                                        <th>Seal</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($chiTietThemVao as $index => $chiTiet)
+                                        <tr class="container-row">
+                                            <td>{{ $index }}</td> <!-- Display index (1-based) -->
+                                            <td>{{ $chiTiet->so_container }}</td>
+                                            <td>
+                                                <select class="form-control loai-seal-dropdown-search" name="loai_seal"
+                                                    placeholder="Chọn loại seal" required>
+                                                    <option></option>
+                                                    <option value="1">Seal dây cáp đồng</option>
+                                                    <option value="2">Seal dây cáp thép</option>
+                                                    <option value="3">Seal container</option>
+                                                    <option value="4">Seal dây nhựa dẹt</option>
+                                                    <option value="5">Seal định vị điện tử</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-control seal-dropdown-search" name="so_seal">
+                                                    <option value="">Chọn seal</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <input type="hidden" name="rows_data" id="rowsDataInput">

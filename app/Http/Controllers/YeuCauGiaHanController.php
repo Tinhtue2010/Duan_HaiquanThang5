@@ -137,7 +137,7 @@ class YeuCauGiaHanController extends Controller
 
         $nhapHangs = NhapHang::whereIn('so_to_khai_nhap', $chiTiets)->get();
 
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $chiTiets = YeuCauGiaHanChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
         return view('quan-ly-kho.yeu-cau-gia-han.thong-tin-yeu-cau-gia-han', compact('yeuCau', 'nhapHangs', 'doanhNghiep', 'congChucs', 'chiTiets')); // Pass data to the view
     }

@@ -45,5 +45,18 @@ class HaiQuanController extends Controller
         return redirect()->back();
     }
 
+    public function updateHaiQuan(Request $request)
+    {
+        $haiQuan = HaiQuan::find($request->ma_hai_quan);
+        if ($haiQuan) {
+            $haiQuan->ten_hai_quan = $request->ten_hai_quan;
+            $haiQuan->save();
+            session()->flash('alert-success', 'Cập nhật thông tin hải quan thành công');
+        } else {
+            session()->flash('alert-danger', 'Hải quan không tồn tại');
+        }
+        return redirect()->back();
+    }
+
 
 }

@@ -17,8 +17,7 @@ class DuyetLanHaiController extends Controller
     }
     public function quanLyDuyetXuatHang()
     {
-
-        $xuatHangs = XuatHang::where('xuat_hang.trang_thai', 14)
+        $xuatHangs = XuatHang::whereIn('xuat_hang.trang_thai', [14,15])
             ->join('doanh_nghiep', 'xuat_hang.ma_doanh_nghiep', 'doanh_nghiep.ma_doanh_nghiep')
             ->select(
                 'xuat_hang.so_to_khai_xuat',

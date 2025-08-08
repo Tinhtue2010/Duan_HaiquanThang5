@@ -30,6 +30,7 @@ class NhapHang extends Model
         'ptvt_ban_dau',
         'ma_cong_chuc',
         'ma_cong_chuc_ban_giao',
+        'ten_doan_tau',
         'created_at',
     ];
     public function chuHang()

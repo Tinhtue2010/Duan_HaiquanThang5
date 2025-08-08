@@ -19,6 +19,7 @@ class YeuCauHangVeKhoChiTiet extends Model
         'so_tau',
         'ngay_dang_ky',
         'ten_hang',
+        'ma_hang',
         'ma_yeu_cau',
         'ten_phuong_tien_vt'
     ];

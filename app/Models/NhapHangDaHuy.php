@@ -30,6 +30,7 @@ class NhapHangDaHuy extends Model
         'trong_luong',
         'phuong_tien_vt_nhap',
         'ptvt_ban_dau',
+        'ten_doan_tau',
         'ma_cong_chuc',
     ];
     public function hangHoaDaHuy()

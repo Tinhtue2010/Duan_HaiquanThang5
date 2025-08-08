@@ -149,23 +149,15 @@ class XuatHangService
             )
             ->get();
     }
-    public function getThongTinHangHoaHienTaiSua($xuatHang)
+    public function getThongTinHangHoaHienTai2($so_to_khai_nhaps)
     {
         $doanhNghiep = $this->getDoanhNghiepHienTai();
-        return NhapHang::with(['hangHoa' => function ($query) {
-            $query->select('so_to_khai_nhap', 'ma_hang', 'ten_hang', 'loai_hang', 'xuat_xu', 'don_vi_tinh', 'don_gia');
-        }, 'hangHoa.hangTrongCont' => function ($query) {
-            $query->select('ma_hang_cont', 'so_luong', 'so_container');
-        }, 'hangHoa.hangTrongCont.xuatHangCont' => function ($query) {
-            $query->select('so_to_khai_xuat', 'ma_hang_cont', 'so_luong_xuat', 'so_to_khai_nhap');
-        }, 'hangHoa.hangTrongCont.xuatHangCont.xuatHang' => function ($query) {
-            $query->select('so_to_khai_xuat', 'trang_thai');
-        }])
-            ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
-            ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+        return NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->leftJoin('xuat_hang_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
             ->leftJoin('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
+            ->whereIn('nhap_hang.so_to_khai_nhap', $so_to_khai_nhaps)
             ->select(
                 'hang_hoa.ma_hang',
                 'hang_hoa.ten_hang',
@@ -196,6 +188,7 @@ class XuatHangService
             )
             ->get();
     }
+
     public function themXuatHang($request)
     {
         $xuatHang = new XuatHang();
@@ -425,14 +418,14 @@ class XuatHangService
 
     public function capNhatTrangThaiPhieuXuat($xuatHang)
     {
-        if ($xuatHang->trang_thai == "1") {
-            $newStatus = '3';
-        } elseif ($xuatHang->trang_thai == "2") {
+        if ($xuatHang->trang_thai == "2") {
             $newStatus = '4';
         } elseif ($xuatHang->trang_thai == "11") {
             $newStatus = '5';
         } elseif ($xuatHang->trang_thai == "12") {
             $newStatus = '6';
+        } elseif ($xuatHang->trang_thai == "13") {
+            $newStatus = '3';
         } else {
             $newStatus = $xuatHang->trang_thai;
         }
@@ -588,19 +581,18 @@ class XuatHangService
 
         $xuatHang->ma_loai_hinh = $suaXuatHang->ma_loai_hinh;
         $trang_thai = "";
-        if ($xuatHang->trang_thai == '3') {
-            $trang_thai = "1";
-        } elseif ($xuatHang->trang_thai == '4') {
+
+        if ($xuatHang->trang_thai == '4') {
             $trang_thai = "2";
         } elseif ($xuatHang->trang_thai == '5') {
             $trang_thai = "11";
-        } elseif ($xuatHang->trang_thai == '6' || $xuatHang->trang_thai == '14') {
+        } elseif ($xuatHang->trang_thai == '6') {
             $trang_thai = "12";
-        } else {
-            session()->flash('alert-danger', 'Có lỗi xảy ra');
-            return redirect()->back();
+        } elseif ($xuatHang->trang_thai == '14' || $xuatHang->trang_thai == '3') {
+            $trang_thai = "13";
+        } elseif ($xuatHang->trang_thai == '1') {
+            $trang_thai = "1";
         }
-        
         $xuatHang->trang_thai = $trang_thai;
         $xuatHang->save();
 
@@ -636,7 +628,6 @@ class XuatHangService
         }
         $suaXuatHang->update([
             'trang_thai' => "2",
-            'ma_cong_chuc' => $congChuc->ma_cong_chuc ?? '',
             'trang_thai_phieu_xuat' =>  $trang_thai
         ]);
 
@@ -884,7 +875,7 @@ class XuatHangService
     public function xuLyDuyetThucXuat($ma_cong_chuc, $so_to_khai_xuat)
     {
         $xuatHang = XuatHang::find($so_to_khai_xuat);
-        if ($xuatHang->trang_thai != "13") {
+        if ($xuatHang->trang_thai != "13" && $xuatHang->trang_thai != "0") {
             $xuatHang->update([
                 'ghi_chu' => '',
                 'trang_thai' => '13',

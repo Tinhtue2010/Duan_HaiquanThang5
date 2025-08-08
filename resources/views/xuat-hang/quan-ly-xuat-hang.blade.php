@@ -73,7 +73,7 @@
                                         @if ($xuatHang->trang_thai == 1)
                                             <td class="text-primary">Đang chờ duyệt</td>
                                         @elseif($xuatHang->trang_thai == 3)
-                                            <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu chờ duyệt</td>
+                                            <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu đã thực xuất hàng</td>
                                         @elseif($xuatHang->trang_thai == 4)
                                             <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu đã duyệt</td>
                                         @elseif($xuatHang->trang_thai == 5)
@@ -81,7 +81,7 @@
                                         @elseif($xuatHang->trang_thai == 6)
                                             <td class="text-warning">Doanh nghiệp yêu cầu sửa phiếu đã duyệt xuất hàng</td>
                                         @elseif($xuatHang->trang_thai == 7)
-                                            <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu chờ duyệt</td>
+                                            <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu đã thực xuất hàng</td>
                                         @elseif($xuatHang->trang_thai == 8)
                                             <td class="text-danger">Doanh nghiệp yêu cầu hủy phiếu đã duyệt</td>
                                         @elseif($xuatHang->trang_thai == 9)
