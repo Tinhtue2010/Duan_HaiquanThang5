@@ -54,7 +54,8 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $taiKhoan->ten_dang_nhap }}</td>
                                         <td>{{ $taiKhoan->loai_tai_khoan }}</td>
-                                        <td>{{ $taiKhoan->created_at }}</td>
+                                        <td>{{ date('d-m-Y', strtotime($taiKhoan->created_at)) }}</td>
+
                                         <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
                                                 data-ma-tai-khoan="{{ $taiKhoan->ma_tai_khoan }}"
                                                 data-ten-dang-nhap="{{ $taiKhoan->ten_dang_nhap }}"
@@ -83,13 +84,16 @@
                     @method('POST')
                     <div class="modal-body">
                         <input hidden id="modalMaTaiKhoanInput" name="ma_tai_khoan">
-                        <p><strong>Tên đăng nhập:</strong> <span id="modalTenDangNhap"></span></p>
-                        <p><strong>Loai tài khoản:</strong> <span id="modalLoaiTaiKhoan"></span></p>
+                        <label for="ten_dang_nhap">Tên đăng nhập</label>
+                        <input type="text" class="form-control" id="modalTenDangNhap" name="ten_dang_nhap"
+                            placeholder="Nhập tên đăng nhập" required>
+
+                        <p><strong>Loại tài khoản:</strong> <span id="modalLoaiTaiKhoan"></span></p>
                         <hr />
                         <label class="mt-1" for="mat_khau"><strong>Mật khẩu</strong> (Nhập mật khẩu mới để thay đổi mật
                             khẩu)</label>
                         <input type="password" class="form-control" id="mat_khau" name="mat_khau"
-                            autocomplete="new-password" required>
+                            autocomplete="new-password">
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Cập nhật</button>
@@ -188,7 +192,7 @@
 
                 // Set the data in the modal
                 $('#modalMaTaiKhoan').text(maTaiKhoan);
-                $('#modalTenDangNhap').text(tenDangNhap);
+                $('#modalTenDangNhap').val(tenDangNhap);
                 $('#modalLoaiTaiKhoan').text(loaiTaiKhoan);
                 document.getElementById('modalMaTaiKhoanInput').value = maTaiKhoan;
 

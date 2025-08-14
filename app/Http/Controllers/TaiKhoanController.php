@@ -116,7 +116,20 @@ class TaiKhoanController extends Controller
     public function updateTaiKhoan(Request $request)
     {
         if (TaiKhoan::find($request->ma_tai_khoan)) {
-            TaiKhoan::find($request->ma_tai_khoan)->update(['mat_khau' => Hash::make($request->mat_khau)]);;
+            $taiKhoan = TaiKhoan::find($request->ma_tai_khoan);
+            if($request->ten_dang_nhap  != $taiKhoan->ten_dang_nhap) {
+                $tk = TaiKhoan::where('ten_dang_nhap', $request->ten_dang_nhap)->first();
+                if($tk) {
+                    session()->flash('alert-danger', 'Tên đăng nhập đã tồn tại.');
+                    return redirect()->back();
+                }
+                TaiKhoan::find($request->ma_tai_khoan)->update(['ten_dang_nhap' => $request->ten_dang_nhap]);
+            }
+            if ($request->mat_khau == '') {
+                TaiKhoan::find($request->ma_tai_khoan)->update(['ten_dang_nhap' => $request->ten_dang_nhap]);
+            } else {
+                TaiKhoan::find($request->ma_tai_khoan)->update(['ten_dang_nhap' => $request->ten_dang_nhap, 'mat_khau' => Hash::make($request->mat_khau)]);
+            }
             session()->flash('alert-success', 'Cập nhật thành công');
             return redirect()->back();
         }
