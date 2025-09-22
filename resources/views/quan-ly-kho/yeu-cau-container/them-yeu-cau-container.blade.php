@@ -215,7 +215,7 @@
     {{-- Modal chọn container --}}
     <div class="modal fade" id="chonHangTheoToKhaiModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-2 modal-xl">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="exampleModalLabel">Chuyển hàng sang container mới</h4>
@@ -482,6 +482,7 @@
 
                 updateRowsData();
                 getYeuCauTableData();
+                document.getElementById("container-dropdown-search").selectedIndex = 0;
                 $('#chonHangTheoToKhaiModal').modal('hide');
             });
 

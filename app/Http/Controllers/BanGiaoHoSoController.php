@@ -93,7 +93,7 @@ class BanGiaoHoSoController extends Controller
             })
             ->whereBetween('ngay_xuat_het', [$tu_ngay, $den_ngay])
             ->where('ma_cong_chuc_ban_giao', $congChuc->ma_cong_chuc)
-            ->where('trang_thai', 4)
+            ->whereIn('trang_thai', [4,7])
             ->get();
 
         return $nhapHangs;

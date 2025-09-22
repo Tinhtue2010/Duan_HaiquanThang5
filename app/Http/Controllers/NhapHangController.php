@@ -39,7 +39,7 @@ class NhapHangController extends Controller
 {
     public function danhSachToKhai()
     {
-        $query = NhapHang::whereIn('trang_thai', ['1', '3']);
+        $query = NhapHang::whereIn('trang_thai', ['1', '3', '10']);
 
         if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->value('ma_doanh_nghiep');
@@ -600,6 +600,25 @@ class NhapHangController extends Controller
         $chuHangs = ChuHang::all();
         return view('nhap-hang.thong-tin-nhap-hang', compact('nhapHang', 'hangHoaRows', 'soLuongSum', 'triGiaSum', 'tienTrinhs', 'congChucs', 'chuHangs')); // Pass data to the view
     }
+    public function toKhaiDaQua14Ngay()
+    {
+        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+            $nhapHangs = NhapHang::where('ngay_tiep_nhan', '<=', now()->subDays(14))
+                ->where('ngay_tiep_nhan', '>=', Carbon::create(2025, 8, 15))
+                ->orderBy('ngay_tiep_nhan', 'asc')
+                ->where('trang_thai', '2')
+                ->get();
+        } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+            $maDoanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep;
+            $nhapHangs = NhapHang::where('ngay_tiep_nhan', '<=', now()->subDays(14))
+                ->where('trang_thai', '2')
+                ->where('ngay_tiep_nhan', '>=', Carbon::create(2025, 8, 15))
+                ->where('ma_doanh_nghiep', $maDoanhNghiep)
+                ->orderBy('ngay_tiep_nhan', 'asc')
+                ->get();
+        }
+        return view('nhap-hang.to-khai-da-qua-14-ngay', compact('nhapHangs'));
+    }
 
     public function viTriHangHienTai($so_to_khai_nhap)
     {
@@ -668,6 +687,7 @@ class NhapHangController extends Controller
                     }
                     $nhapHang->update([
                         'trang_thai' => '2',
+                        'ngay_tiep_nhan' => now(),
                         'ma_cong_chuc' => $congChuc->ma_cong_chuc,
                     ]);
 
@@ -687,24 +707,29 @@ class NhapHangController extends Controller
         return redirect()->route('nhap-hang.quan-ly-nhap-hang');
     }
 
-    public function huyToKhai(Request $request, $so_to_khai_nhap)
+    public function yeuCauHuyToKhai(Request $request, $so_to_khai_nhap)
+    {
+        $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
+        if ($nhapHang->trang_thai == 1) {
+            $huyNhapHang = $this->thucHienHuy($so_to_khai_nhap);
+            return redirect()->route('nhap-hang.show-huy', ['id_huy' => $huyNhapHang->id_huy])
+                ->with('alert-success', 'Hủy tờ khai thành công!');
+        } else {
+            $nhapHang->update(['ghi_chu' => $request->ghi_chu, 'trang_thai' => '10']);
+            return redirect()->back()->with('alert-success', 'Yêu cầu hủy tờ khai thành công!');
+        }
+    }
+    public function thuHoiHuyToKhai(Request $request, $so_to_khai_nhap)
+    {
+        $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
+        $nhapHang->update(['trang_thai' => '2']);
+        return redirect()->back()->with('alert-success', 'Thu hồi hủy tờ khai thành công!');
+    }
+    public function duyetHuyToKhai($so_to_khai_nhap)
     {
         try {
-            return DB::transaction(function () use ($request, $so_to_khai_nhap) {
-                $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
-                $nhapHang->update(['ghi_chu' => $request->ghi_chu, 'trang_thai' => '0']);
-
-                $huyNhapHang = $this->themNhapHangDaHuy($nhapHang);
-                $this->diChuyenHangHoaDaHuy($so_to_khai_nhap, $huyNhapHang->id_huy);
-                $this->xoaThongTinToKhaiNhapDaHuy($so_to_khai_nhap, $nhapHang);
-
-                if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
-                    $congChuc = $this->getCongChucHienTai();
-                    $this->themTienTrinh($so_to_khai_nhap, "Cán bộ công chức đã hủy tờ khai nhập số " . $so_to_khai_nhap, $congChuc->ma_cong_chuc);
-                } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
-                    $this->themTienTrinh($so_to_khai_nhap, "Doanh nghiệp đã hủy tờ khai nhập số " . $so_to_khai_nhap, '');
-                }
-
+            return DB::transaction(function () use ($so_to_khai_nhap) {
+                $huyNhapHang = $this->thucHienHuy($so_to_khai_nhap);
                 return redirect()->route('nhap-hang.show-huy', ['id_huy' => $huyNhapHang->id_huy])
                     ->with('alert-success', 'Hủy tờ khai thành công!');
             });
@@ -717,6 +742,23 @@ class NhapHangController extends Controller
         }
     }
 
+    private function thucHienHuy($so_to_khai_nhap)
+    {
+        $nhapHang = NhapHang::findOrFail($so_to_khai_nhap);
+        $nhapHang->update(['trang_thai' => '0']);
+
+        $huyNhapHang = $this->themNhapHangDaHuy($nhapHang);
+        $this->diChuyenHangHoaDaHuy($so_to_khai_nhap, $huyNhapHang->id_huy);
+        $this->xoaThongTinToKhaiNhapDaHuy($so_to_khai_nhap, $nhapHang);
+
+        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+            $congChuc = $this->getCongChucHienTai();
+            $this->themTienTrinh($so_to_khai_nhap, "Cán bộ công chức đã hủy tờ khai nhập số " . $so_to_khai_nhap, $congChuc->ma_cong_chuc);
+        } elseif (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
+            $this->themTienTrinh($so_to_khai_nhap, "Doanh nghiệp đã hủy tờ khai nhập số " . $so_to_khai_nhap, '');
+        }
+        return $huyNhapHang;
+    }
     private function kiemTraTinhTrangXuatHang($so_to_khai_nhap)
     {
         return XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')

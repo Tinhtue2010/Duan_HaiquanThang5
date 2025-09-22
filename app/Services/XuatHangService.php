@@ -132,6 +132,7 @@ class XuatHangService
                 'nhap_hang.ngay_dang_ky',
                 'nhap_hang.ngay_thong_quan',
                 'nhap_hang.so_to_khai_nhap',
+                'nhap_hang.ngay_tiep_nhan',
             )
             ->groupBy(
                 'hang_hoa.ma_hang',
@@ -146,6 +147,7 @@ class XuatHangService
                 'nhap_hang.ngay_dang_ky',
                 'nhap_hang.ngay_thong_quan',
                 'nhap_hang.so_to_khai_nhap',
+                'nhap_hang.ngay_tiep_nhan',
             )
             ->get();
     }
@@ -720,6 +722,20 @@ class XuatHangService
             ->get()
             ->pluck('PTVTXuatCanh.ten_phuong_tien_vt')
             ->filter()
+            ->implode('; ');
+    }
+    public function getToKhaiQuaHan($so_to_khai_xuat)
+    {
+        $now = Carbon::now();
+        $cutoffDate = Carbon::parse('2025-08-15');
+
+        return XuatHangCont::join('nhap_hang', 'nhap_hang.so_to_khai_nhap', '=', 'xuat_hang_cont.so_to_khai_nhap')
+            ->select('nhap_hang.so_to_khai_nhap') // Explicitly select what you need
+            ->where('xuat_hang_cont.so_to_khai_xuat', $so_to_khai_xuat)
+            ->where('nhap_hang.ngay_tiep_nhan', '>', $cutoffDate)
+            ->where('nhap_hang.ngay_tiep_nhan', '<=', $now->copy()->subDays(15))
+            ->distinct()
+            ->pluck('so_to_khai_nhap')
             ->implode('; ');
     }
     public function getTongSoLuongHangXuat($so_to_khai_xuat)

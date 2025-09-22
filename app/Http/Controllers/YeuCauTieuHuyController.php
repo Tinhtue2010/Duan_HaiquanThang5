@@ -147,6 +147,7 @@ class YeuCauTieuHuyController extends Controller
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.so_to_khai_nhap', $row['so_to_khai_nhap'])
             ->where('hang_trong_cont.so_container', $row['so_container'])
+            ->where('hang_trong_cont.so_luong', '>', 0)
             ->select(
                 'hang_trong_cont.so_container',
                 'hang_hoa.ten_hang',
@@ -299,13 +300,13 @@ class YeuCauTieuHuyController extends Controller
                         ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                         ->where('nhap_hang.so_to_khai_nhap', $soToKhaiNhap)
                         ->sum('hang_trong_cont.so_luong');
-                    
+
                     if ($totalSoLuong == 0) {
                         NhapHang::where('so_to_khai_nhap', $soToKhaiNhap)->update([
                             'trang_thai' => '5'
                         ]);
                     }
-                    
+
                     $this->themTienTrinh($soToKhaiNhap, "Đã duyệt yêu cầu tiêu hủy hàng số " . $request->ma_yeu_cau . ", cán bộ công chức phụ trách: " . $congChucPhuTrach->ten_cong_chuc, $congChucPhuTrach->ma_cong_chuc);
                 }
 
@@ -584,6 +585,20 @@ class YeuCauTieuHuyController extends Controller
             $chiTiet = YeuCauTieuHuyChiTiet::where('so_to_khai_nhap', $soToKhai)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->first();
+                
+            $theoDoiHangHoas = TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 6)
+                ->get();
+
+            foreach ($theoDoiHangHoas as $theoDoi) {
+                HangTrongCont::where('ma_hang', $theoDoi->ma_hang)
+                    ->where('so_container', $theoDoi->so_container)
+                    ->update([
+                        'so_luong' => $theoDoi->so_luong_ton,
+                    ]);
+            }
+
             TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 6)

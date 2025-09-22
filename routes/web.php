@@ -53,6 +53,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/quan-ly-nhap-hang', [NhapHangController::class, 'danhSachToKhai'])->name('quan-ly-nhap-hang');
         Route::get('/to-khai-da-nhap-hang', [NhapHangController::class, 'toKhaiDaNhapHang'])->name('to-khai-da-nhap-hang');
         Route::get('/to-khai-nhap-da-huy', [NhapHangController::class, 'toKhaiDaHuy'])->name('to-khai-da-huy');
+        Route::get('/to-khai-da-qua-14-ngay', [NhapHangController::class, 'toKhaiDaQua14Ngay'])->name('to-khai-da-qua-14-ngay');
         Route::post('/submit-to-khai-nhap', [NhapHangController::class, 'themToKhaiNhapSubmit'])->name('submit-to-khai-nhap');
         Route::get('/nhap-to-khai-nhap', [NhapHangController::class, 'themToKhaiNhap'])->name('nhap-to-khai-nhap');
         Route::get('/thong-tin-nhap-hang/{so_to_khai_nhap}', [NhapHangController::class, 'thongTinToKhai'])->name('show');
@@ -64,7 +65,9 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/sua-to-khai-nhap-da-duyet/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhapCongChuc'])->name('sua-to-khai-nhap-cong-chuc');
         Route::get('/sua-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhap'])->name('sua-to-khai-nhap');
         Route::post('/submit-sua-to-khai-nhap', [NhapHangController::class, 'suaToKhaiNhapSubmit'])->name('submit-sua-to-khai-nhap');
-        Route::post('/huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'huyToKhai'])->name('huy-to-khai-nhap');
+        Route::post('/yc-huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'yeuCauHuyToKhai'])->name('yc-huy-to-khai-nhap');
+        Route::post('/duyet-huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'duyetHuyToKhai'])->name('duyet-huy-to-khai-nhap');
+        Route::post('/thu-hoi-huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'thuHoiHuyToKhai'])->name('thu-hoi-huy-to-khai-nhap');
 
         Route::get('/export-tokhai/{so_to_khai_nhap}', [NhapHangController::class, 'exportToKhaiNhap'])->name('export-to-khai');
         Route::post('/upload-file-nhap', [NhapHangController::class, 'uploadFileNhapAjax'])->name('upload-file-nhap');
@@ -397,6 +400,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/huy-yeu-cau-gia-han', [YeuCauGiaHanController::class, 'huyYeuCauGiaHan'])->name(name: 'huy-yeu-cau-gia-han');
         Route::get('/sua-yeu-cau-gia-han/{ma_yeu_cau}', [YeuCauGiaHanController::class, 'suaYeuCauGiaHan'])->name('sua-yeu-cau-gia-han');
         Route::post('/sua-yeu-cau-gia-han-submit', [YeuCauGiaHanController::class, 'suaYeuCauGiaHanSubmit'])->name(name: 'sua-yeu-cau-gia-han-submit');
+        Route::get('/download-yeu-cau-gia-han/{ma_yeu_cau}', [YeuCauGiaHanController::class, 'downloadFile'])->name('download-yeu-cau-gia-han');
 
         Route::get('/get-to-khai-items', [QuanLyKhoController::class, 'getToKhaiItems'])->name('getToKhaiItems');
         Route::get('/get-so_luong-trong-container/{soContainerMoi}', [QuanLyKhoController::class, 'getSoLuongTrongContainer'])->name('getSoLuongTrongContainer');
@@ -407,6 +411,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/kiem-tra-container-dang-chuyen', [QuanLyKhoController::class, 'kiemTraContainerDangChuyen'])->name('kiemTraContainerDangChuyen');
         Route::get('/kiem-tra-container-dang-chuyen-sua', [QuanLyKhoController::class, 'kiemTraContainerDangChuyenSua'])->name('kiemTraContainerDangChuyenSua');
         Route::get('/get-hang-trong-to-khai', [QuanLyKhoController::class, 'getHangTrongToKhai'])->name('getHangTrongToKhai');
+        Route::get('/get-hang-trong-to-khai-2', [QuanLyKhoController::class, 'getHangTrongToKhai2'])->name('getHangTrongToKhai2');
 
         Route::get('/get-ten-ptvt', [QuanLyKhoController::class, 'getTenPTVT'])->name('getTenPTVT');
         Route::get('/get-seals', [QuanLyKhoController::class, 'getSeals'])->name('getSeals');
@@ -571,6 +576,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleAdmin::class])->group(function 
         Route::post('/action-3', [LoaiHinhController::class, 'action3'])->name('action-3');
         Route::post('/action-4', [LoaiHinhController::class, 'action4'])->name('action-4');
         Route::post('/action-5', [LoaiHinhController::class, 'action5'])->name('action-5');
+        Route::post('/action-6', [LoaiHinhController::class, 'action6'])->name('action-6');
 
         Route::get('/quan-ly-doanh-nghiep-ql/{ma_doanh_nghiep}', [DoanhNghiepController::class, 'danhSachDoanhNghiepQL'])->name('danh-sach-doanh-nghiep-ql');
         Route::post('/them-doanh-nghiep-ql', [DoanhNghiepController::class, 'themDoanhNghiepQL'])->name('them-doanh-nghiep-ql');

@@ -175,7 +175,6 @@ class XuatHangController extends Controller
             TheoDoiHangHoa::where('cong_viec', 1)
                 ->where('ma_yeu_cau', $row["so_to_khai_xuat"])
                 ->update(['ma_cong_chuc' =>  $request->ma_cong_chuc]);
-
         }
         session()->flash('alert-success', 'Thay đổi công chức phụ trách thành công!');
         return redirect()->route('xuat-hang.to-khai-da-xuat-hang');
@@ -303,6 +302,7 @@ class XuatHangController extends Controller
 
     public function thongTinXuatHang($so_to_khai_xuat)
     {
+        $soToKhaiQuaHans = [];
         $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         if (XuatHang::find($so_to_khai_xuat)) {
             $xuatHang = XuatHang::find($so_to_khai_xuat);
@@ -313,11 +313,29 @@ class XuatHangController extends Controller
                 ->pluck('PTVTXuatCanh.ten_phuong_tien_vt')
                 ->filter()
                 ->implode('; ');
+            if ($xuatHang->trang_thai == '1') {
+                $so_to_khai_nhaps = XuatHangCont::where('so_to_khai_xuat', $so_to_khai_xuat)
+                    ->pluck('so_to_khai_nhap')
+                    ->unique()
+                    ->toArray();
+                foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+                    $nhapHang = NhapHang::find($so_to_khai_nhap);
+                    if ($nhapHang->ngay_tiep_nhan) {
+                        $ngayThongQuan = Carbon::parse($nhapHang->ngay_tiep_nhan);
+                        $now = Carbon::now();
+                        if ($ngayThongQuan > Carbon::parse('2025-08-15')) {
+                            if ($ngayThongQuan->diffInDays($now) > 15) {
+                                $soToKhaiQuaHans[] = $so_to_khai_nhap;
+                            }
+                        }
+                    }
+                }
+            }
         }
         $soLuongSum = $hangHoaRows->sum('so_luong_xuat');
         $triGiaSum = $hangHoaRows->sum('tri_gia');
 
-        return view('xuat-hang.thong-tin-xuat-hang', compact('xuatHang', 'hangHoaRows', 'soLuongSum', 'triGiaSum', 'congChucs', 'ptvts')); // Pass data to the view
+        return view('xuat-hang.thong-tin-xuat-hang', compact('xuatHang', 'hangHoaRows', 'soLuongSum', 'triGiaSum', 'congChucs', 'ptvts', 'soToKhaiQuaHans')); // Pass data to the view
     }
 
 
@@ -358,6 +376,7 @@ class XuatHangController extends Controller
 
     public function xemYeuCauSua($so_to_khai_xuat, $ma_yeu_cau)
     {
+        $soToKhaiQuaHans = [];
         $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
         $xuatHang = XuatHang::find($so_to_khai_xuat);
 
@@ -377,6 +396,25 @@ class XuatHangController extends Controller
         $triGiaSum = $hangHoaRows->sum('tri_gia');
         $suaSoLuongSum = $suaHangHoaRows->sum('so_luong_xuat');
         $suaTriGiaSum = $suaHangHoaRows->sum('tri_gia');
+
+        if ($xuatHang->trang_thai == '1' || $xuatHang->trang_thai == '3' || $xuatHang->trang_thai == '4' || $xuatHang->trang_thai == '5' || $xuatHang->trang_thai == '6') {
+
+            $so_to_khai_nhaps = XuatHangChiTietSua::where('ma_yeu_cau', $ma_yeu_cau)
+                ->pluck('so_to_khai_nhap')
+                ->unique()
+                ->toArray();
+
+            foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
+                $nhapHang = NhapHang::find($so_to_khai_nhap);
+                if ($nhapHang) {
+                    $ngayThongQuan = Carbon::parse($nhapHang->ngay_thong_quan);
+                    $now = Carbon::now();
+                    if ($ngayThongQuan->diffInDays($now) > 15) {
+                        $soToKhaiQuaHans[] = $so_to_khai_nhap;
+                    }
+                }
+            }
+        }
         return view('xuat-hang.xem-yeu-cau-sua', compact(
             'xuatHang',
             'hangHoaRows',
@@ -387,7 +425,8 @@ class XuatHangController extends Controller
             'suaSoLuongSum',
             'suaTriGiaSum',
             'ptvts',
-            'suaPTVTs'
+            'suaPTVTs',
+            'soToKhaiQuaHans'
         ));
     }
 
@@ -756,7 +795,7 @@ class XuatHangController extends Controller
                 NhapHang::find($so_to_khai_nhap)
                     ->update([
                         'ma_cong_chuc_ban_giao' => $xuatHang->ma_cong_chuc ?? '',
-                ]);
+                    ]);
             }
         }
         TheoDoiHangHoa::where('cong_viec', 1)
@@ -840,7 +879,8 @@ class XuatHangController extends Controller
             )
             ->get();
         foreach ($xuatHangs as $export) {
-            $export->ptvts = $this->xuatHangService->getPTVTXuatCanhCuaPhieu($export->so_to_khai_xuat);
+            // $export->ptvts = $this->xuatHangService->getPTVTXuatCanhCuaPhieu($export->so_to_khai_xuat);
+            $export->to_khai_qua_han = $this->xuatHangService->getToKhaiQuaHan($export->so_to_khai_xuat);
         }
         return response()->json(['xuatHangs' => $xuatHangs]);
     }

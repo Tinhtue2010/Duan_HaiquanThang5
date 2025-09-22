@@ -171,7 +171,7 @@
                 function getYeuCauTableData() {
                     let rowsData = $("#rowsDataInput").val();
                     $.ajax({
-                        url: "/get-hang-trong-to-khai", // Laravel route
+                        url: "/get-hang-trong-to-khai-2", // Laravel route
                         type: "GET",
                         contentType: "application/json",
                         data: {

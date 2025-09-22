@@ -94,7 +94,9 @@ class LoaiHinhController extends Controller
     }
     public function action3(Request $request)
     {
-        $this->checkXuatHetHang();
+        $this->checkLechTau();
+        // $this->khoiPhucNhapHang();
+
     }
 
     public function action4(Request $request)
@@ -109,7 +111,53 @@ class LoaiHinhController extends Controller
         $this->fixCCXuatHet();
         dd($stt);
     }
+    public function action6(Request $request)
+    {
+        $hangTrongConts = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $request->so_to_khai_nhap)
+            ->get();
+        foreach ($hangTrongConts as $hangTrongCont) {
+            $so_luong_xuat = XuatHang::join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+                ->where('xuat_hang_cont.ma_hang_cont', $hangTrongCont->ma_hang_cont)
+                ->where('xuat_hang.trang_thai', '!=', 0)
+                ->sum('xuat_hang_cont.so_luong_xuat');
+            $so_luong_hien_tai = $hangTrongCont->so_luong_khai_bao - $so_luong_xuat;
+            HangTrongCont::find($hangTrongCont->ma_hang_cont)->update([
+                'so_luong' => $so_luong_hien_tai,
+                'is_da_chuyen_cont' => 0
+            ]);
+        }
+    }
+    public function checkLechTau()
+    {
+        $so_to_khai_nhaps = [];
+        $nhapHangs = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+            ->join('niem_phong', 'niem_phong.so_container', '=', 'hang_trong_cont.so_container')
+            ->where('hang_trong_cont.so_luong', '!=', 0)
+            ->where('trang_thai', 2)
+            ->where('nhap_hang.ngay_thong_quan', '>', '2025-07-01')
+            ->groupBy('nhap_hang.so_to_khai_nhap')
+            ->select('nhap_hang.phuong_tien_vt_nhap as phuong_tien_vt_nhap_1', 'niem_phong.phuong_tien_vt_nhap as phuong_tien_vt_nhap_2', 'nhap_hang.so_to_khai_nhap')
+            ->get();
+        foreach ($nhapHangs as $nhapHang) {
+            if ($nhapHang->phuong_tien_vt_nhap_1 != $nhapHang->phuong_tien_vt_nhap_2) {
+                $so_to_khai_nhaps[] = $nhapHang->so_to_khai_nhap;
+            }
+        }
+        dd($so_to_khai_nhaps);
+    }
+    public function fillTiepNhan(Request $request)
+    {
+        $nhapHangs = NhapHang::join('tien_trinh', 'tien_trinh.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
+            ->where('tien_trinh.ten_cong_viec', 'like', '%đã duyệt tờ khai,%')
+            ->get();
 
+        foreach ($nhapHangs as $nhapHang) {
+            NhapHang::find($nhapHang->so_to_khai_nhap)->update(['ngay_tiep_nhan' => $nhapHang->ngay_thuc_hien]);
+        }
+    }
     public function xoaTheoDoiHang(Request $request)
     {
         // $this->fixPhanQuyenBaoCao();
@@ -118,7 +166,7 @@ class LoaiHinhController extends Controller
         // $this->fixSoContKhaiBao();
         // $this->sealXuyenNgay();
 
-        
+
         // $nhapHangs = NhapHang::where('ngay_xuat_het', '>', '2025-07-01')->get();
         // foreach ($nhapHangs as $nhapHang) {
         //     $so_to_khai_nhap = $nhapHang->so_to_khai_nhap;
@@ -608,7 +656,7 @@ class LoaiHinhController extends Controller
 
     public function khoiPhucNhapHang()
     {
-        $nhapHang = NhapHangDaHuy::find(405);
+        $nhapHang = NhapHangDaHuy::find(479);
         $nhapHangKP = NhapHang::create(
             [
                 'so_to_khai_nhap' => $nhapHang->so_to_khai_nhap,

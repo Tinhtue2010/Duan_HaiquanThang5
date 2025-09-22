@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
@@ -70,6 +71,8 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
             ->where('xuat_hang.trang_thai', '!=', '0')
             ->whereBetween('xuat_canh.ngay_duyet', [$this->tu_ngay, $this->den_ngay])
             ->select(
+                'nhap_hang.trang_thai',
+                'nhap_hang.ngay_xuat_het',
                 'nhap_hang.so_to_khai_nhap',
                 'doanh_nghiep.ten_doanh_nghiep',
                 'chu_hang.ten_chu_hang',
@@ -106,6 +109,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $groupedData[$combinationKey] = [
                     'base_data' => $nhapHang,
                     'ngay_duyet_formatted' => $ngayXuatCanh,
+                    'ngay_duyet' => $nhapHang->ngay_duyet,
+                    'ngay_xuat_het' => $nhapHang->ngay_xuat_het,
+                    'trang_thai' => $nhapHang->trang_thai,
                     'loai_hang_data' => array_fill_keys($loaiHangArr, 0),
                     'phuong_tien_list' => [],
                     'total_so_luong_ton' => 0,
@@ -145,8 +151,33 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
 
         // Build result array
         foreach ($groupedData as $data) {
+            $is_xuat_het = '';
             $baseData = $data['base_data'];
             $loaiHangData = $data['loai_hang_data'];
+            if ($data['ngay_xuat_het'] != null && $data['ngay_duyet'] != null) {
+                $ngayXuatHet = Carbon::parse(time: $data['ngay_xuat_het']);
+                $ngayDuyet = Carbon::parse($data['ngay_duyet']);
+                if ($ngayDuyet->eq($ngayXuatHet) && ($data['trang_thai'] == 4 || $data['trang_thai'] == 7)) {
+                    $is_xuat_het = 'x';
+                } else {
+                    $is_xuat_het = '';
+                }
+            } else {
+                $is_xuat_het = '';
+            }
+
+            if ($is_xuat_het == 'x') {
+                $so_luong_container_het = NhapHang::query()
+                    ->join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                    ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+                    ->where('nhap_hang.so_to_khai_nhap', $baseData->so_to_khai_nhap)
+                    ->whereNotNull('hang_trong_cont.so_container')
+                    ->where('hang_trong_cont.is_da_chuyen_cont', 0)
+                    ->distinct()
+                    ->count('hang_trong_cont.so_container');
+            } else {
+                $so_luong_container_het = 0;
+            }
 
             $result[] = [
                 $stt++,
@@ -158,9 +189,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 $loaiHangData['Cigar'],
                 $loaiHangData['Rượu'],
                 $loaiHangData['Khác'],
-                $data['container_het'],
+                $so_luong_container_het,
                 $data['so_xuong'],
-                ($data['total_so_luong_ton'] == 0) ? 'x' : '',
+                $is_xuat_het,
                 $data['ngay_duyet_formatted'],
                 implode('; ', $data['phuong_tien_list']),
                 '',
@@ -170,7 +201,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 ''
             ];
 
-            $sumSoContainerHet += $data['container_het'];
+            $sumSoContainerHet += $so_luong_container_het;
             $sumSoXuong += $data['so_xuong'];
         }
 
@@ -189,9 +220,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
             // $sumSoXuong,
             // $sumSoContainerHet
         ];
-        $result[] = [[''],['']];
+        $result[] = [[''], ['']];
 
-        $result[] = [['CÔNG CHỨC HẢI QUAN'],[''],[''],[''],[Auth::user()->CongChuc->ten_cong_chuc ?? '']];
+        $result[] = [['CÔNG CHỨC HẢI QUAN'], [''], [''], [''], [Auth::user()->CongChuc->ten_cong_chuc ?? '']];
 
 
         return $result;

@@ -35,18 +35,14 @@ class ChuHangController extends Controller
         return redirect()->back();
     }
 
-    // public function updateChuHang(Request $request)
-    // {
-    //     if (ChuHang::find($request->ma_chu_hang)) {
-    //         $taiKhoan =  TaiKhoan::find($request->ma_tai_khoan);
-    //         if ($taiKhoan->exists()) {
-    //             ChuHang::find($request->ma_chu_hang)->update(['ma_tai_khoan' => $taiKhoan->ma_tai_khoan]);;
-    //             session()->flash('alert-success', 'Cập nhật thành công');
-    //             return redirect()->back();
-    //         }
-    //     }
-    //     session()->flash('alert-danger', 'Có lỗi xảy ra');
-    //     return redirect()->back();
-    // }
-
+    public function updateChuHang(Request $request)
+    {
+        if (ChuHang::find($request->ma_chu_hang)) {
+            ChuHang::find($request->ma_chu_hang)->update(['ten_chu_hang' => $request->ten_chu_hang]);;
+            session()->flash('alert-success', 'Cập nhật thành công');
+            return redirect()->back();
+        }
+        session()->flash('alert-danger', 'Có lỗi xảy ra');
+        return redirect()->back();
+    }
 }

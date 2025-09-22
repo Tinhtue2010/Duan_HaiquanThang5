@@ -1,6 +1,6 @@
 @extends('layout.user-layout')
 
-@section('title', 'Quản lý nhập hàng')
+@section('title', 'Quản lý tờ khai')
 
 @section('content')
     <div id="layoutSidenav_content">
@@ -8,23 +8,10 @@
             <div class="card shadow mb-4">
                 <div class="card-header pt-3">
                     <div class="row">
-                        @if (session('alert-success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert" id="myAlert">
-                                <strong>{{ session('alert-success') }}</strong>
-                            </div>
-                        @elseif(session('alert-danger'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert" id="myAlert">
-                                <strong>{{ session('alert-danger') }}</strong>
-                            </div>
-                        @endif
-                        <div class="col-7">
-                            <h4 class="font-weight-bold text-primary">Danh sách tờ khai nhập</h4>
+                        <div class="col-9">
+                            <h4 class="font-weight-bold text-primary">Danh sách tờ khai nhập đã quá 14 ngày, từ ngày 15/8/2025</h4>
                         </div>
-                        <div class="col-5">
-                            @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp')
-                                <a href="{{ route('nhap-hang.nhap-to-khai-nhap') }}"><button
-                                        class="btn btn-success float-end">Nhập tờ khai</button></a>
-                            @endif
+                        <div class="col-3">
                         </div>
                     </div>
                 </div>
@@ -48,11 +35,14 @@
                                     Ngày đăng ký
                                 </th>
                                 <th>
+                                    Ngày tạo
+                                </th>
+                                <th>
                                     Trạng thái
                                 </th>
                             </thead>
                             <tbody class="clickable-row">
-                                @foreach ($data as $index => $nhapHang)
+                                @foreach ($nhapHangs as $index => $nhapHang)
                                     <tr class="clickable-row"
                                         onclick="window.location='{{ route('nhap-hang.show', $nhapHang->so_to_khai_nhap) }}'">
                                         <td>{{ $index + 1 }}</td>
@@ -61,14 +51,11 @@
                                         </td>
                                         <td>{{ $nhapHang->chuHang ? $nhapHang->chuHang->ten_chu_hang : 'Unknown' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }}</td>
-                                        @if (trim($nhapHang->trang_thai) == '1')
-                                            <td class="text-primary">Đang chờ duyệt</td>
-                                        @elseif (trim($nhapHang->trang_thai) == '3')
-                                            <td class="text-warning">Doanh nghiệp yêu cầu sửa tờ khai</td>
-                                        @elseif (trim($nhapHang->trang_thai) == '10')
-                                            <td class="text-danger">Doanh nghiệp yêu cầu hủy tờ khai</td>
-                                        @else
-                                            <td class="text-dark">{{ $nhapHang->trang_thai }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($nhapHang->created_at)->format('d-m-Y') }}</td>
+                                        @if (trim($nhapHang->trang_thai) == '0')
+                                            <td class="text-danger">Đã hủy</td>
+                                        @elseif (trim($nhapHang->trang_thai) == '2')
+                                            <td class="text-success">Đã duyệt</td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -93,40 +80,6 @@
                 },
                 stateSave: true,
                 dom: '<"clear"><"row"<"col"l><"col"f>>rt<"row"<"col"i><"col"p>><"row"<"col"B>>',
-                columnDefs: [{
-                    orderable: false,
-                    targets: -1
-                }],
-                initComplete: function() {
-                    $('.dataTables_filter input[type="search"]').css({
-                        width: '350px',
-                        display: 'inline-block',
-                        height: '40px'
-                    });
-                    var column = this.api().column(5); // Status column index
-                    var select = $(
-                        '<select class="form-control"><option value="">TẤT CẢ</option></select>'
-                    )
-
-                    select.append('<option class="text-primary" value="ĐANG CHỜ DUYỆT">ĐANG CHỜ DUYỆT</option>');
-                    select.append('<option class="text-warning" value="DOANH NGHIỆP YÊU CẦU SỬA">DOANH NGHIỆP YÊU CẦU SỬA</option>');
-                    select.append('<option class="text-danger" value="DOANH NGHIỆP YÊU CẦU HỦY">DOANH NGHIỆP YÊU CẦU HỦY</option>');
-
-                    $(column.header()).empty().append(select);
-
-                    select.on('change', function() {
-                        var val = $.fn.dataTable.util.escapeRegex($(this).val().trim());
-                        localStorage.setItem('nhapHang1', val);
-                        column.search(val ? val : '', false, true).draw();
-                    });
-
-                    var savedFilter = localStorage.getItem('nhapHang1');
-                    if (savedFilter) {
-                        select.val(savedFilter);
-                        column.search(savedFilter ? savedFilter : '', false, true).draw();
-                    }
-
-                },
                 buttons: [{
                         extend: 'excel',
                         exportOptions: {

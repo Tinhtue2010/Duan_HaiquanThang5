@@ -724,10 +724,12 @@ class YeuCauTauContController extends Controller
     }
     public function tienHanhChuyenCont($hangTrongCont, $yeuCauTauContHangHoa, $sumSoLuong)
     {
+        //Nếu đã có HangTrongCont có so_container, ma_hang trùng tồn tại
         $isExisted = HangTrongCont::where('so_container', $yeuCauTauContHangHoa->so_container_moi)
             ->where('ma_hang', $hangTrongCont->ma_hang)
             ->exists();
 
+        //Nếu số lượng hàng cont mới bằng cont hiện tại
         if ($hangTrongCont->so_luong == $yeuCauTauContHangHoa->so_luong && $hangTrongCont->so_luong == $sumSoLuong) {
             $hangTrongCont->so_container = $yeuCauTauContHangHoa->so_container_moi;
             $hangTrongContMoi =  $hangTrongCont;
@@ -761,6 +763,7 @@ class YeuCauTauContController extends Controller
         }
 
         $hangTrongCont->save();
+        //Xử lý âm hàng
         if ($hangTrongCont->so_luong < 0) {
             $hangTrongCont->so_luong = 0;
         }
@@ -817,7 +820,9 @@ class YeuCauTauContController extends Controller
         }
     }
 
-
+    //Thường lỗi khi Doanh nghiệp tạo yc-> Xuất hàng-> Hủy yêu cầu
+    //Duyệt qua từng cont trong yêu cầu:
+    //Chuyển về tàu cũ
     public function quayNguocYeuCau($yeuCau)
     {
         $chiTietYeuCaus = YeuCauTauContChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->get();
@@ -829,22 +834,30 @@ class YeuCauTauContController extends Controller
             NiemPhong::where('so_container', $chiTietYeuCau->so_container)->update([
                 'phuong_tien_vt_nhap' => $chiTietYeuCau->tau_goc,
             ]);
+
+            //Duyệt qua từng dòng hàng hóa
+            //Lấy số lượng đã chuyển trừ số lượng hiện tại (Vì khi chuyển cont có thể chỉ chuyển 1 phần hàng của 1 dòng hàng)
+            //Bên đông lạnh thường không chuyển hết hàng
+
             $yeuCauTauContHangHoas = YeuCauTauContHangHoa::where('ma_chi_tiet', $chiTietYeuCau->ma_chi_tiet)->get();
 
             foreach ($yeuCauTauContHangHoas as $yeuCauTauContHangHoa) {
                 $hangTrongContMain = HangTrongCont::find($yeuCauTauContHangHoa->ma_hang_cont);
                 $ycHangTrongContKhacs = YCTauContMaHangContMoi::where('ma_yeu_cau_hang_hoa', $yeuCauTauContHangHoa->ma_yeu_cau_hang_hoa)->get();
                 $tongSoLuongDaChuyen = 0;
+                //Nếu SL 0 thì là thành chưa chuyển cont
                 if ($hangTrongContMain->so_luong == 0) {
                     $hangTrongContMain->is_da_chuyen_cont = 0;
                 }
+                //Hàng được chuyển sang 2 cont khác nhau
+                //Nếu thế thì chỉ chuyển số cont, số lượng giữ nguyên
                 if ($ycHangTrongContKhacs->isEmpty()) {
                     $hangTrongCont = HangTrongCont::find($yeuCauTauContHangHoa->ma_hang_cont);
                     $hangTrongCont->so_container = $chiTietYeuCau->so_container_goc;
                     $hangTrongCont->save();
                 } else {
+                    //
                     foreach ($ycHangTrongContKhacs as $ycHangTrongContKhac) {
-
                         $hangTrongContKhac = HangTrongCont::find($ycHangTrongContKhac->ma_hang_cont);
                         $tongSoLuongDaChuyen += $ycHangTrongContKhac->so_luong;
 
@@ -859,22 +872,6 @@ class YeuCauTauContController extends Controller
                     $hangTrongContMain->so_luong += $tongSoLuongDaChuyen;
                     $hangTrongContMain->save();
                 }
-            }
-        }
-
-        $chiTietYeuCaus = YeuCauTauContChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->get();
-        foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-            NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->update([
-                'phuong_tien_vt_nhap' => $chiTietYeuCau->tau_goc
-            ]);
-            NiemPhong::where('so_container', $chiTietYeuCau->so_container)->update([
-                'phuong_tien_vt_nhap' => $chiTietYeuCau->tau_goc,
-            ]);
-            $yeuCauHangHoas = YeuCauTauContHangHoa::where('ma_chi_tiet', $chiTietYeuCau->ma_chi_tiet)->get();
-            foreach ($yeuCauHangHoas as $yeuCauHangHoa) {
-                $hangTrongCont = HangTrongCont::find($yeuCauHangHoa->ma_hang_cont);
-                $hangTrongCont->so_container = $yeuCauHangHoa->so_container_cu;
-                $hangTrongCont->save();
             }
         }
     }
@@ -1035,36 +1032,18 @@ class YeuCauTauContController extends Controller
 
                     $this->xuLySeal($chiTietYeuCau->so_container_dich, now(), $chiTietYeuCau->tau_dich);
 
+                    //YeuCauTauContHangHoa là thông tin từng dòng hàng hóa được chuyển đến cont nào 
                     $yeuCauContainerHangHoas = YeuCauTauContHangHoa::where('ma_chi_tiet', $chiTietYeuCau->ma_chi_tiet)->get();
                     foreach ($yeuCauContainerHangHoas as $yeuCauContainerHangHoa) {
                         if ($yeuCauContainerHangHoa->so_container_moi == '') {
                             continue;
                         }
                         $hangTrongCont = HangTrongCont::find($yeuCauContainerHangHoa->ma_hang_cont);
-                        $so_seal = NiemPhong::where('so_container', $hangTrongCont->so_container)->first()->so_seal ?? '';
 
                         $sumSoLuong = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', 'hang_trong_cont.ma_hang')
                             ->where('hang_hoa.ma_hang', $hangTrongCont->ma_hang)
                             ->sum('hang_trong_cont.so_luong');
-                        $hangTrongContMoi = $this->tienHanhChuyenCont($hangTrongCont, $yeuCauContainerHangHoa, $sumSoLuong);
-
-                        // $ptvtNhanHang = NhapHang::find($chiTietYeuCau->so_to_khai_nhap)->phuong_tien_vt_nhap;
-                        // $ptvtChoHang = NiemPhong::where('so_container',  $hangTrongContMoi->so_container)->first()->phuong_tien_vt_nhap ?? '';
-
-                        // TheoDoiHangHoa::insert([
-                        //     'so_to_khai_nhap' => $chiTietYeuCau->so_to_khai_nhap,
-                        //     'ma_hang'  => $hangTrongContMoi->ma_hang,
-                        //     'thoi_gian'  => now(),
-                        //     'so_luong_xuat'  => $hangTrongContMoi->so_luong,
-                        //     'so_luong_ton'  => $hangTrongContMoi->so_luong,
-                        //     'phuong_tien_cho_hang' => $ptvtChoHang,
-                        //     'cong_viec' => 2,
-                        //     'phuong_tien_nhan_hang' => '',
-                        //     'so_container' => $hangTrongContMoi->so_container,
-                        //     'so_seal' => $so_seal,
-                        //     'ma_cong_chuc' => $request->ma_cong_chuc ?? '',
-                        //     'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
-                        // ]);
+                        $this->tienHanhChuyenCont($hangTrongCont, $yeuCauContainerHangHoa, $sumSoLuong);
                     }
                 }
 

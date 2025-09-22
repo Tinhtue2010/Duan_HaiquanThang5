@@ -87,6 +87,9 @@
                                 <th>
                                     Tên xuồng
                                 </th>
+                                <th>
+                                    Tờ khai quá hạn
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -196,6 +199,7 @@
                                     <td>${convertDateFormat(item.ngay_dang_ky)} </td>
                                     <td>${item.tong_so_luong}</td>
                                     <td>${item.ten_phuong_tien_vt}</td>
+                                    <td class="text-danger">${item.to_khai_qua_han}</td>
                                 </tr>
                             `);
                             });

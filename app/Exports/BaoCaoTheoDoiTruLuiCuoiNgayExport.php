@@ -4,9 +4,9 @@ namespace App\Exports;
 
 use App\Models\DoanhNghiep;
 use App\Models\HangHoa;
-use App\Models\HangTrongCont;
+use App\Models\TheoDoiHangHoa;
 use App\Models\NhapHang;
-use App\Models\PTVTXuatCanhCuaPhieu;
+use App\Models\CongChuc;
 use App\Models\TheoDoiTruLui;
 use App\Models\NiemPhong;
 use App\Models\XuatHang;
@@ -39,6 +39,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
     protected $ten_hai_quan;
     protected $stt;
     protected $result;
+    protected $ten_cong_chuc;
     protected $theoDoiTruLuis;
     protected $lan_phieu;
     protected $lanArray = [];
@@ -82,7 +83,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
         $date = DateTime::createFromFormat('Y-m-d', $ngay_dang_ky);
 
         $this->ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
-
+            
         $this->theoDoiTruLuis = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
             ->when(request('cong_viec') == 1, function ($query) {
                 return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
@@ -90,14 +91,21 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             })
             ->get()
             ->groupBy(function ($item) {
-                return $item->cong_viec . '-' . $item->ma_yeu_cau; // Group by both fields combined
+                return $item->cong_viec . '-' . $item->ma_yeu_cau;
             })
             ->map(function ($group) {
                 return $group->first();
             })
             ->values()
-            ->sortBy('ma_theo_doi')
+            ->sort(function ($a, $b) {
+                $dateComparison = strcmp($a->ngay_them, $b->ngay_them);
+                if ($dateComparison === 0) {
+                    return strcmp($a->ma_theo_doi, $b->ma_theo_doi);
+                }
+                return $dateComparison;
+            })
             ->values();
+
 
         $this->result = [
             [''],
@@ -197,6 +205,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             ->where('xuat_hang.trang_thai', '!=', '0',)
             ->where('xuat_hang.so_to_khai_xuat', $soToKhaiXuat)
             ->select(
+                'xuat_hang.ma_cong_chuc',
                 'xuat_hang.ngay_dang_ky',
                 'xuat_hang_cont.phuong_tien_vt_nhap',
                 'xuat_hang_cont.*',
@@ -255,6 +264,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                             $shouldIncrement = true;
                             if (in_array($xuatHang->so_to_khai_xuat, $soToKhaiXuatTrongPhieus)) {
                                 $this->lanArray[] = $this->lan_phieu + 1; // +1 because we increment after
+
                             }
                         }
                     } else {
@@ -317,6 +327,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         '',
                     ];
                 }
+                $this->ten_cong_chuc = CongChuc::find($item->ma_cong_chuc)->ten_cong_chuc ?? '';
                 $this->sum += $item->so_luong_xuat;
             }
 
@@ -402,6 +413,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                     foreach ($congViecTrongPhieus as $congViec) {
                         if ($congViec['cong_viec'] == 1 && $congViec['ma_yeu_cau'] == $truLui->ma_yeu_cau) {
                             $this->lanArray[] = $this->lan_phieu + 1; // +1 because we increment after
+
                             break;
                         }
                     }
@@ -412,6 +424,12 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 foreach ($congViecTrongPhieus as $congViec) {
                     if ($congViec['cong_viec'] == $truLui->cong_viec && $congViec['ma_yeu_cau'] == $truLui->ma_yeu_cau) {
                         $this->lanArray[] = $this->lan_phieu + 1; // +1 because we increment after
+                        $ma_cong_chuc = TheoDoiHangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)
+                            ->where('ma_yeu_cau', $truLui->ma_yeu_cau)
+                            ->where('cong_viec', $truLui->cong_viec)
+                            ->first()
+                            ->ma_cong_chuc ?? '';
+                        $this->ten_cong_chuc = CongChuc::find($ma_cong_chuc)->ten_cong_chuc ?? '';
                         break;
                     }
                 }
@@ -660,6 +678,18 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 $sheet->setCellValue('G' . $lastStart, "LẦN " . implode(',',  $this->lanArray));
                 $sheet->getStyle('G' . $lastStart)->getFont()->setSize(22); // Increased font size
 
+                // $sheet->mergeCells('B' . ($lastStart + 8) . ':C' . ($lastStart + 8));
+                // $sheet->setCellValue('B' . ($lastStart + 8), $this->ten_cong_chuc);
+                // $sheet->getStyle('B' . ($lastStart + 8))->getFont()->getColor()->setRGB('DDDDDD'); // hex for gray
+
+                // $sheet->getStyle('B' . ($lastStart + 8) . ':C' . ($lastStart + 8))->applyFromArray([
+                //     'font' => ['bold' => true],
+                //     'alignment' => [
+                //         'horizontal' => Alignment::HORIZONTAL_CENTER,
+                //         'vertical' => Alignment::VERTICAL_CENTER,
+                //     ]
+                // ]);
+
                 $first = 0;
                 for ($row = $secondTableStart; $row <= $lastStart - 3; $row++) {
                     if ($first == 1) {
@@ -684,6 +714,8 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
 
                 // Set left alignment for number columns
                 // $sheet->getStyle('A13:A'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $finalRow = $sheet->getHighestRow();
+                $sheet->getPageSetup()->setPrintArea('A1:L' . $finalRow);
             },
         ];
     }

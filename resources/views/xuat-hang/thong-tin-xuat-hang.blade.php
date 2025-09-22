@@ -103,7 +103,8 @@
                         {{ $xuatHang->loaiHinh ? $xuatHang->loaiHinh->ten_loai_hinh : '' }}
                         ({{ $xuatHang->loaiHinh->ma_loai_hinh }})
                     </h2>
-                    <h2 class="text-center text-dark">Số: {{ $xuatHang->so_to_khai_xuat }}, đoàn tàu: {{ $xuatHang->ten_doan_tau ?? '' }} , ngày
+                    <h2 class="text-center text-dark">Số: {{ $xuatHang->so_to_khai_xuat }}, đoàn tàu:
+                        {{ $xuatHang->ten_doan_tau ?? '' }} , ngày
                         {{ \Carbon\Carbon::parse($xuatHang->ngay_dang_ky)->format('d-m-Y') }}
                     </h2>
                     <h2 class="text-center text-dark"> Phương tiện xuất cảnh: {{ $ptvts }}</h2>
@@ -525,7 +526,7 @@
                                 <h2 class="text-warning">Đã duyệt sửa lần 1</h2>
                                 <h4 class="text-dark">Phiếu đã thực xuất cần duyệt 2 lần</h4>
                                 <h4 class="text-dark">(Tài khoản lãnh đạo sẽ duyệt lần 2)</h4>
-                                
+
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">
                                 @if ($xuatHang->ghi_chu)
                                     <h3 class="text-dark">Ghi chú: {{ $xuatHang->ghi_chu }}</h3>
@@ -635,8 +636,16 @@
                 <form action="{{ route('xuat-hang.updateDuyetToKhai') }}" method="POST">
                     <div class="modal-body">
                         <p class="fw-bold">Xác nhận duyệt phiếu xuất này ?</p>
+                        @if (!empty($soToKhaiQuaHans))
+                            <p class="text-danger"><strong>Cảnh báo:</strong> Các tờ khai sau đã quá 15 ngày:</p>
+                            <ul class="text-danger">
+                                @foreach ($soToKhaiQuaHans as $toKhai)
+                                    <li>{{ $toKhai }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
                         <div class="form-group">
-                            <label class="label-text mb-1 mt-2" for="">Cán bộ công chức phụ trách</label>
+                            <label class="label-text mb-1 mt-2" for=""><strong>Cán bộ công chức phụ trách</strong></label>
                             <select class="form-control" id="cong-chuc-dropdown-search" name="ma_cong_chuc" required>
                                 <option></option>
                                 @foreach ($congChucs as $congChuc)

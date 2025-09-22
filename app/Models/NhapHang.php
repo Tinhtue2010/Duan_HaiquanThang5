@@ -20,6 +20,7 @@ class NhapHang extends Model
         'ma_loai_hinh',
         'ngay_thong_quan',
         'ngay_dang_ky',
+        'ngay_tiep_nhan',
         'ngay_xuat_het',
         'so_ngay_gia_han',
         'trang_thai',

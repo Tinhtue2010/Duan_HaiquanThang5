@@ -15,6 +15,8 @@ class YeuCauHangVeKhoChiTiet extends Model
     ];
     protected $fillable = [
         'so_to_khai_nhap',
+        'so_to_khai_moi',
+        'ma_hai_quan',
         'so_container',
         'so_tau',
         'ngay_dang_ky',

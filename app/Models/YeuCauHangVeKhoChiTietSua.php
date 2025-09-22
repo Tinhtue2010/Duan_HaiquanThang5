@@ -15,10 +15,13 @@ class YeuCauHangVeKhoChiTietSua extends Model
     ];
     protected $fillable = [
         'so_to_khai_nhap',
+        'so_to_khai_moi',
+        'ma_hai_quan',
         'so_container',
         'so_tau',
         'ngay_dang_ky',
         'ten_hang',
         'ma_sua_yeu_cau',
         'ten_phuong_tien_vt'
-    ];}
+    ];
+}

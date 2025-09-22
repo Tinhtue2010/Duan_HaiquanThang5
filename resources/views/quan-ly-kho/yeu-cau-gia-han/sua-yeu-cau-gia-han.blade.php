@@ -23,7 +23,8 @@
                             <div class="col-5">
                                 <div class="form-group">
                                     <span class="mt-n2 mb-1 fs-5">Số tờ khai nhập:</span></br>
-                                    <span><em class="fs-6"> (Danh sách sẽ không hiện những tờ khai nhập có yêu cầu gia hạn <em class="text-primary">đang chờ duyệt</em> )</em></span>
+                                    <span><em class="fs-6"> (Danh sách sẽ không hiện những tờ khai nhập có yêu cầu gia hạn
+                                            <em class="text-primary">đang chờ duyệt</em> )</em></span>
                                     <select class="form-control " id="so-to-khai-nhap-dropdown-search"
                                         name="so_to_khai_nhap">
                                         <option></option>
@@ -73,18 +74,34 @@
                     <h4 class="modal-title" id="exampleModalLabel">Xác nhận sửa yêu cầu</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    Xác nhận sửa yêu cầu này?
-                </div>
-                <div class="modal-footer">
-                    <form action="{{ route('quan-ly-kho.sua-yeu-cau-gia-han-submit') }}" method="POST" id="mainForm">
-                        @csrf
+                <form action="{{ route('quan-ly-kho.sua-yeu-cau-gia-han-submit') }}" method="POST" id="mainForm">
+                    @csrf
+                    <div class="modal-body">
+                        Xác nhận sửa yêu cầu này?
+                        <br>
+                        <label class="mb-1"><strong>Chọn file đính kèm:</strong></label>
+                        <br>
+                        <div class="file-upload">
+                            <input type="file" name="file" class="file-upload-input" id="fileInput">
+                            <button type="button" class="file-upload-btn">
+                                <svg class="file-upload-icon" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Chọn File
+                            </button>
+                            <span class="file-name" id="fileName">{{ $yeuCau->file_name ? $yeuCau->file_name : '' }}</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
                         <input type="hidden" name="rows_data" id="rowsDataInput">
                         <input type="hidden" name="ma_yeu_cau" value="{{ $ma_yeu_cau }}">
                         <button type="submit" class="btn btn-success">Sửa yêu cầu</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -228,6 +245,21 @@
                     dropdownParent: $('#chonHangTheoToKhaiModal .modal-body'),
                 });
             });
+        });
+    </script>
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const fileUpload = document.querySelector('.file-upload');
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                fileName.textContent = this.files[0].name;
+                fileUpload.classList.add('file-selected');
+            } else {
+                fileName.textContent = '';
+                fileUpload.classList.remove('file-selected');
+            }
         });
     </script>
 @stop

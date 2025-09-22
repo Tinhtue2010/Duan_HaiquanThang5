@@ -867,24 +867,17 @@ class YeuCauNiemPhongController extends Controller
             ->merge($kiemTra)
             ->unique();
 
-
         $containersChuaHetHang = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
             ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->where('nhap_hang.trang_thai', 2)
+            ->whereIn('nhap_hang.trang_thai', [2,4])
             ->whereIn('container.so_container', $containers)
-            ->select('container.so_container')
-            ->get()
-            ->toArray();
-        $containersChuaHetHang = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
-            ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->where('nhap_hang.trang_thai', 2)
-            ->whereIn('container.so_container', $containers)
+            ->where('nhap_hang.ma_doanh_nghiep', $ma_doanh_nghiep)
             ->select('container.so_container', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
             ->groupBy('container.so_container')
             ->having('total_so_luong', '>', 0)
             ->pluck('container.so_container');
+
 
         $soContainers = Container::leftJoin('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
             ->leftJoin('niem_phong', 'niem_phong.so_container', '=', 'hang_trong_cont.so_container')

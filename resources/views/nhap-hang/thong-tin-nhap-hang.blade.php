@@ -6,8 +6,8 @@
     @php
         use Carbon\Carbon;
         use App\Models\DoanhNghiep;
-        $ngayThongQuan = Carbon::parse($nhapHang->ngay_thong_quan);
-        $ngayDen = Carbon::parse($nhapHang->ngay_thong_quan);
+        $ngayThongQuan = Carbon::parse($nhapHang->ngay_tiep_nhan);
+        $ngayDen = Carbon::parse($nhapHang->ngay_tiep_nhan);
 
         $daysPassedFromThongQuan = (int) abs(Carbon::now()->floatDiffInDays($ngayThongQuan, false));
         $daysPassedFromNhapHang = (int) abs(Carbon::now()->floatDiffInDays($ngayDen, false));
@@ -51,7 +51,7 @@
                     @endif
                 </div>
                 <div class="col-8">
-                    @if (trim($nhapHang->trang_thai) == '2')
+                    @if (trim($nhapHang->trang_thai) == '2' || trim($nhapHang->trang_thai) == '1')
                         <a
                             href="{{ route('nhap-hang.vi-tri-hang-hien-tai', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
                             <button class="btn btn-primary float-end">Thông tin hàng hiện tại</button>
@@ -214,9 +214,9 @@
                             @elseif(trim($nhapHang->trang_thai) == '2')
                                 <h2 class="text-success">Đã nhập hàng</h2>
                                 <img class="status-icon mb-2" src="{{ asset('images/icons/success.png') }}">
-                                <h2 class="text-success">Ngày đến:
-                                    {{ \Carbon\Carbon::parse($nhapHang->ngay_thong_quan)->format('d-m-Y') }}</h2>
-                                <h2 class="">Đã {{ $daysPassedFromNhapHang }} ngày kể từ ngày thông quan
+                                <h2 class="text-success">Ngày tiếp nhận:
+                                    {{ \Carbon\Carbon::parse($nhapHang->ngay_tiep_nhan)->format('d-m-Y') }}</h2>
+                                <h2 class="">Đã {{ $daysPassedFromNhapHang }} ngày kể từ ngày tiếp nhận
                                 </h2>
                                 @if ($nhapHang->loai_hinh == 'G21')
                                     @if ($daysLeft >= 0)
@@ -336,6 +336,49 @@
                                         </div>
                                     </center>
                                 </div>
+                            @elseif(trim($nhapHang->trang_thai) == '10')
+                                <h2 class="text-danger">Doanh nghiệp yêu cầu hủy tờ khai </h2>
+                                <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức')
+                                    <center>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#duyetHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Hủy nhập đơn
+                                                    </button>
+                                                </a>
+                                            </div>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#thuHoiHuyModal"
+                                                        class="btn btn-danger px-4">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/cancel.png') }}">
+                                                        Thu hồi yêu cầu
+                                                    </button>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </center>
+                                @else
+                                    <center>
+                                        <div class="col-6">
+                                            <a href="#">
+                                                <button data-bs-toggle="modal" data-bs-target="#thuHoiHuyModal"
+                                                    class="btn btn-danger px-4">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/cancel.png') }}">
+                                                    Thu hồi yêu cầu
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </center>
+                                @endif
+                                <h3 class="text-dark mt-3">Lý do hủy: {{ $nhapHang->ghi_chu }}</h3>
                             @elseif(trim($nhapHang->trang_thai) == '0')
                                 <h2 class="text-danger">Tờ khai đã hủy</h2>
                                 <img class="status-icon" src="{{ asset('images/icons/cancel2.png') }}">
@@ -427,7 +470,8 @@
                         <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy tờ khai</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form action="{{ route('nhap-hang.huy-to-khai-nhap', $nhapHang->so_to_khai_nhap) }}" method="POST">
+                    <form action="{{ route('nhap-hang.yc-huy-to-khai-nhap', $nhapHang->so_to_khai_nhap) }}"
+                        method="POST">
                         @csrf
                         <div class="modal-body text-danger">
                             <p class="text-danger">Xác nhận hủy tờ khai này?</p>
@@ -436,6 +480,52 @@
                         </div>
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {{-- Duyệt Hủy --}}
+        <div class="modal fade" id="duyetHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận hủy tờ khai</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('nhap-hang.duyet-huy-to-khai-nhap', $nhapHang->so_to_khai_nhap) }}"
+                        method="POST">
+                        @csrf
+                        <div class="modal-body text-danger">
+                            <p class="text-danger">Xác nhận hủy tờ khai này?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {{-- Thu hồi Hủy --}}
+        <div class="modal fade" id="thuHoiHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger" id="exampleModalLabel">Xác nhận thu hồi hủy tờ khai</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('nhap-hang.thu-hoi-huy-to-khai-nhap', $nhapHang->so_to_khai_nhap) }}"
+                        method="POST">
+                        @csrf
+                        <div class="modal-body text-danger">
+                            <p class="text-danger">Xác nhận thu hồi yêu cầu hủy của tờ khai này?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">Xác nhận</button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                         </div>
                     </form>

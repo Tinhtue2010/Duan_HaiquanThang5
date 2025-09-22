@@ -143,7 +143,7 @@
                             <div class="custom-line mb-2"></div>
                         </center>
                         <a
-                            href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat,'ma_yeu_cau' => $suaXuatHang->ma_yeu_cau]) }}">
+                            href="{{ route('xuat-hang.export-to-khai-xuat', ['so_to_khai_xuat' => $xuatHang->so_to_khai_xuat, 'ma_yeu_cau' => $suaXuatHang->ma_yeu_cau]) }}">
                             <button class="btn btn-success float-end me-1">In phiếu xuất</button>
                         </a>
                         <div class="row mt-4">
@@ -334,7 +334,14 @@
                     <div class="modal-body">
                         Xác nhận duyệt yêu cầu sửa này ?
                         <div class="form-group">
-
+                            @if (!empty($soToKhaiQuaHans))
+                                <p class="text-danger"><strong>Cảnh báo:</strong> Các tờ khai sau đã quá 15 ngày:</p>
+                                <ul class="text-danger">
+                                    @foreach ($soToKhaiQuaHans as $toKhai)
+                                        <li>{{ $toKhai }}</li>
+                                    @endforeach
+                                </ul>
+                            @endif
                         </div>
                     </div>
                     <div class="modal-footer">

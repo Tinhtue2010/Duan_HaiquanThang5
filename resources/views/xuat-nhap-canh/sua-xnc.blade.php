@@ -47,14 +47,14 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-2">
                                     <div class="form-group mt-3">
                                         <label class="label-text mb-2 fw-bold" for="so-the">Số thẻ</label>
                                         <input type="number" class="form-control" id="so-the" name="so_the"
                                             value="{{ $xuatNhapCanh->so_the }}" placeholder="Nhập số thẻ" required>
                                     </div>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-2">
                                     <div class="form-group mt-3">
                                         <label class="label-text mb-2 fw-bold" for="so-luong-may">Tổng số lượng máy</label>
                                         <input type="number" class="form-control" id="so-luong-may" name="so_luong_may"
@@ -62,7 +62,7 @@
                                             required>
                                     </div>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-2">
                                     <div class="form-group mt-3">
                                         <label class="label-text mb-2 fw-bold" for="so-luong-may">
                                             Tổng trọng tải (Tấn)</label>
@@ -72,6 +72,27 @@
                                     </div>
                                 </div>
 
+                                <div class="col-3">
+                                    <div class="form-group mt-3">
+                                        <label class="label-text mb-2 fw-bold" for="so-luong-may">Đại lý</label>
+                                        <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
+                                            <option></option>
+                                            @foreach ($chuHangs as $chuHang)
+                                                @if ($chuHang->ma_chu_hang == $xuatNhapCanh->ma_chu_hang)
+                                                    <option value="{{ $chuHang->ma_chu_hang }}" selected>
+                                                        {{ $chuHang->ten_chu_hang }}
+                                                        ({{ $chuHang->ma_chu_hang }})
+                                                    </option>
+                                                @else
+                                                    <option value="{{ $chuHang->ma_chu_hang }}">
+                                                        {{ $chuHang->ten_chu_hang }}
+                                                        ({{ $chuHang->ma_chu_hang }})
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-4">
@@ -184,6 +205,7 @@
             let ptvtXuatCanh = document.getElementById('ptvt-xc-dropdown-search');
             let soThe = document.getElementById('so-the');
             let soLuongMay = document.getElementById('so-luong-may');
+            let maChuHang = document.getElementById('chu-hang-dropdown-search');
             let thoiGianNhapCanh = document.getElementById('thoi-gian-nhap-canh');
             let thoiGianXuatCanh = document.getElementById('thoi-gian-xuat-canh');
             let ghiChu = document.getElementById('ghi-chu');
@@ -194,6 +216,7 @@
                 document.getElementById('so_the_hidden').value = soThe.value.trim();
                 document.getElementById('so_luong_may_hidden').value = soLuongMay.value.trim();
                 document.getElementById('tong_trong_tai_hidden').value = tongTrongTai.value.trim();
+                document.getElementById('ma_chu_hang_hidden').value = maChuHang.value.trim();
                 document.getElementById('thoi_gian_xuat_canh_hidden').value = thoiGianXuatCanh.value.trim();
                 document.getElementById('thoi_gian_nhap_canh_hidden').value = thoiGianNhapCanh.value.trim();
                 document.getElementById('ghi_chu_hidden').value = ghiChu.value.trim();

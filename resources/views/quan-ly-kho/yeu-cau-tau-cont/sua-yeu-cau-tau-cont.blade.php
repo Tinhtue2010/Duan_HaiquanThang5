@@ -138,7 +138,7 @@
     {{-- Modal chọn container --}}
     <div class="modal fade" id="chonHangTheoToKhaiModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-2 modal-xl">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="exampleModalLabel">Chuyển hàng sang container mới</h4>
@@ -617,6 +617,22 @@
                 fileName.textContent = '';
                 fileUpload.classList.remove('file-selected');
             }
+        });
+    </script>
+    <script>
+        // JavaScript solution to prevent modal closing on scrollbar click
+        $(document).ready(function() {
+            $('#chonHangTheoToKhaiModal').on('click', function(e) {
+                // Only close modal if clicking directly on the backdrop (modal itself)
+                if (e.target === this) {
+                    $(this).modal('hide');
+                }
+            });
+
+            // Prevent modal from closing when clicking on scrollbar area
+            $('#chonHangTheoToKhaiModal .modal-body').on('click', function(e) {
+                e.stopPropagation();
+            });
         });
     </script>
 @stop

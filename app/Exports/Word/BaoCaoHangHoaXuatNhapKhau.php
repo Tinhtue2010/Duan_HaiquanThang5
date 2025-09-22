@@ -447,7 +447,7 @@ class BaoCaoHangHoaXuatNhapKhau
             ->groupBy('hang_hoa.so_to_khai_nhap')
             ->select(
                 DB::raw('SUM(xuat_hang_cont.so_luong_xuat) as total_so_luong_xuat'),
-                DB::raw('SUM(xuat_hang_cont.tri_gia) as total_tri_gia'),
+                DB::raw('SUM(hang_hoa.don_gia * xuat_hang_cont.so_luong_xuat) as total_tri_gia'),
                 DB::raw('COUNT(DISTINCT xuat_hang_cont.so_container) as total_so_container')
             );
 

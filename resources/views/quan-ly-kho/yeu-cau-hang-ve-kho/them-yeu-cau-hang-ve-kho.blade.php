@@ -20,39 +20,55 @@
                 <div class="col-12">
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
-                            <div class="col-5">
-                                <div class="form-group">
-                                    <span class="fs-5">Tên phương tiện vận tải:</span></br>
-                                    {{-- <select class="form-control" id="ptvt-xc-dropdown-search" name="so_ptvt_xuat_canh"
-                                        id="so_ptvt_xuat_canh">
-                                        <option></option>
-                                        @foreach ($ptvtXuatCanhs as $ptvtXuatCanh)
-                                            <option value="{{ $ptvtXuatCanh->so_ptvt_xuat_canh }}">
-                                                {{ $ptvtXuatCanh->ten_phuong_tien_vt }} (Số:
-                                                {{ $ptvtXuatCanh->so_ptvt_xuat_canh }})
-                                            </option>
-                                        @endforeach
-                                    </select> --}}
-                                    <input class="form-control mt-2" id="ten_phuong_tien_vt" maxlength="50"
-                                        name="ten_phuong_tien_vt" placeholder="Nhập tên phương tiện vận tải" required>
+                            <div class="col-6">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="fs-5 fw-bold fs-6">Tên phương tiện vận tải:</label>
+                                        <input class="form-control mt-2" id="ten_phuong_tien_vt" maxlength="50"
+                                            name="ten_phuong_tien_vt" placeholder="Nhập tên phương tiện vận tải" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="mt-2 fw-bold fs-6">Số tờ khai nhập:</label>
+                                        <select class="form-control mt-2" id="so-to-khai-nhap-dropdown-search"
+                                            name="so_to_khai_nhap">
+                                            <option></option>
+                                            @foreach ($toKhaiNhaps as $toKhaiNhap)
+                                                <option value="{{ $toKhaiNhap->so_to_khai_nhap }}">
+                                                    {{ $toKhaiNhap->so_to_khai_nhap }} (Ngày đăng ký:
+                                                    {{ \Carbon\Carbon::parse($toKhaiNhap->ngay_dang_ky)->format('d-m-Y') }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="form-group mt-2">
-                                    <span class="mt-n2 mb-1 fs-5">Số tờ khai nhập:</span></br>
-                                    <select class="form-control " id="so-to-khai-nhap-dropdown-search"
-                                        name="so_to_khai_nhap">
-                                        <option></option>
-                                        @foreach ($toKhaiNhaps as $toKhaiNhap)
-                                            <option value="{{ $toKhaiNhap->so_to_khai_nhap }}">
-                                                {{ $toKhaiNhap->so_to_khai_nhap }} (Ngày đăng ký:
-                                                {{ \Carbon\Carbon::parse($toKhaiNhap->ngay_dang_ky)->format('d-m-Y') }})
-                                            </option>
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <center>
-                                        <button id="addRowButton" class="btn btn-primary mt-2">Chọn</button>
-                                    </center>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="label-text mb-1 fw-bold fs-6" for="ma_hai_quan">Hải quan cửa khẩu nơi
+                                            hàng hóa chuyển đến (Quay về kho)</label>
+                                        <select class="form-control" id="hai-quan-dropdown-search" name="ma_hai_quan">
+                                            @foreach ($haiQuans as $haiQuan)
+                                                <option></option>
+                                                <option value="{{ $haiQuan->ma_hai_quan }}">
+                                                    {{ $haiQuan->ten_hai_quan }}
+                                                    ({{ $haiQuan->ma_hai_quan }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="label-text fw-bold fs-6" for="">Số tờ khai mới</label> <span
+                                            class="text-danger missing-input-text"></span>
+                                        <input type="text" class="form-control mt-4" id="so_to_khai_moi" maxlength="15"
+                                            name="so_to_khai_moi" placeholder="Nhập số tờ khai mới" required>
+                                    </div>
                                 </div>
+
+
+                                <center>
+                                    <button id="addRowButton" class="btn btn-primary mt-2">Chọn</button>
+                                </center>
+
+
                             </div>
                         </div>
                     </div>
@@ -67,6 +83,9 @@
                         <th>Tên hàng</th>
                         <th>Phương tiện vận tải</th>
                         <th style="display: none;">Mã PTVT</th>
+                        <th>Hải quan chuyển đến</th>
+                        <th style="display: none;">Mã HQ</th>
+                        <th>Số tờ khai mới</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -155,13 +174,17 @@
 
             // Add a new row
             addRowButton.addEventListener('click', function() {
-                const dropdown = document.getElementById('so-to-khai-nhap-dropdown-search');
+                const soToKhaiDropdown = document.getElementById('so-to-khai-nhap-dropdown-search');
+                const haiQuanDropdown = document.getElementById('hai-quan-dropdown-search');
                 const ptvt_xc = document.getElementById('ten_phuong_tien_vt');
-                // const selectedText = ptvt_xc.options[ptvt_xc.selectedIndex].text;
+                const soToKhaiMoi = document.getElementById('so_to_khai_moi').value;
+                const maHaiQuan = document.getElementById('hai-quan-dropdown-search').value;
+                const selectedOption = haiQuanDropdown.options[haiQuanDropdown.selectedIndex];
+                const tenHaiQuan = selectedOption ? selectedOption.textContent.trim() : '';
 
-                const soToKhaiNhap = dropdown.value;
+                const soToKhaiNhap = soToKhaiDropdown.value;
                 const PTVTXC_Value = ptvt_xc.value;
-                const selectedText = PTVTXC_Value;
+
                 if (soToKhaiNhap === '') {
                     alert('Vui lòng chọn số tờ khai nhập');
                     return;
@@ -219,6 +242,9 @@
                             <td>${item.so_container}</td>
                             <td>${item.hang_hoa}</td>
                             <td>${PTVTXC_Value}</td>
+                            <td>${tenHaiQuan}</td>
+                            <td hidden>${maHaiQuan}</td>
+                            <td>${soToKhaiMoi}</td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                             </td>
@@ -252,7 +278,9 @@
                         stt: row.querySelector('td:nth-child(1)').textContent.trim(),
                         so_to_khai_nhap: row.querySelector('td:nth-child(2)').textContent.trim(),
                         so_container: row.querySelector('td:nth-child(3)').textContent.trim(),
-                        ten_phuong_tien_vt: row.querySelector('td:nth-child(5)').textContent.trim()
+                        ten_phuong_tien_vt: row.querySelector('td:nth-child(5)').textContent.trim(),
+                        ma_hai_quan: row.querySelector('td:nth-child(7)').textContent.trim(),
+                        so_to_khai_moi: row.querySelector('td:nth-child(8)').textContent.trim()
                     };
                 });
                 const rowCount = $('#displayTableYeuCau tbody tr').length;

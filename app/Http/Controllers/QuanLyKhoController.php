@@ -608,6 +608,37 @@ class QuanLyKhoController extends Controller
         $data = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.so_to_khai_nhap', $request->so_to_khai_nhap)
+            ->where('hang_trong_cont.so_luong', '>', 0)
+            ->select(
+                'hang_trong_cont.so_container',
+                'hang_hoa.ten_hang',
+                'hang_trong_cont.so_luong'
+            )
+            ->get()
+            ->groupBy('so_container');
+
+        $result = $data->map(function ($items, $so_container) {
+            $hang_hoa_info = $items->map(function ($item) {
+                return "{$item->ten_hang} - Số lượng: {$item->so_luong}";
+            })->implode('<br>');
+
+            return [
+                'so_container' => $so_container,
+                'hang_hoa' => $hang_hoa_info,
+            ];
+        });
+
+        // Convert to an array if needed
+        $formattedResult = $result->values()->toArray();
+
+        return response()->json($formattedResult);
+    }
+    public function getHangTrongToKhai2(Request $request)
+    {
+        $so_to_khai_nhap = $request->so_to_khai_nhap;
+        $data = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.so_to_khai_nhap', $request->so_to_khai_nhap)
             ->select(
                 'hang_trong_cont.so_container',
                 'hang_hoa.ten_hang',

@@ -48,7 +48,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
             [''],
             [''],
             [''],
-            ['STT', 'Thời gian hoàn thành giám sát', 'Tên hàng', 'Số lượng tái xuất (Kiện)', 'Số lượng tồn (Kiện)', 'Phương tiện chở hàng', 'Mô tả công việc', 'Phương tiện nhận hàng XK', 'Số container', 'Số seal/chì hải quan', 'Công chức giám sát(Ký tên, đóng dấu công chức)', 'Ghi chú'],
+            ['STT', 'Thời gian giám sát', 'Tên hàng', 'Số lượng tái xuất (Kiện)', 'Số lượng tồn (Kiện)', 'Phương tiện chở hàng', 'Mô tả công việc', 'Phương tiện nhận hàng XK', 'Số container', 'Số seal/chì hải quan', 'Công chức giám sát', 'Ghi chú'],
         ];
 
         $theoDoiCuoiCung = TheoDoiHangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)
@@ -70,7 +70,7 @@ class BaoCaoTheoDoiHangHoaTong implements FromArray, WithEvents, WithDrawings
             $hour = $datetime->format('H'); // 24-hour format
             $minute = $datetime->format('i'); // Minute with leading zero
             $date = $datetime->format('d/m/Y'); // Day/Month/Year format
-            $time = 'Hồi ' . $hour . ' giờ ' . $minute . ' Ngày ' . $date;
+            $time = 'Ngày ' . $date;
 
             $is_xuat_het = false;
             if ($this->nhapHang->trang_thai == 4 || $this->nhapHang->trang_thai == 7) {

@@ -12,6 +12,9 @@
                             <h4 class="font-weight-bold text-primary">Danh sách tờ khai nhập đã nhập hàng</h4>
                         </div>
                         <div class="col-6">
+                            <a href="{{ route('nhap-hang.to-khai-da-qua-14-ngay') }}" class="btn btn-primary float-end">
+                                Xem tờ khai đã quá 14 ngày
+                            </a>
                         </div>
                     </div>
                 </div>

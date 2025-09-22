@@ -48,19 +48,16 @@
                     <h2 class="text-center text-dark">
                         Số thẻ: {{ $xuatNhapCanh->so_the ?? '' }}
                     </h2>
-                    @if ($xuatNhapCanh->is_hang_nong == 1)
-                        <h2 class="text-center text-dark">
+                    <h2 class="text-center text-dark">
+                        @if ($xuatNhapCanh->is_hang_nong == 1)
                             Loại hàng: Hàng nóng
-                        </h2>
-                    @elseif($xuatNhapCanh->is_hang_lanh == 1)
-                        <h2 class="text-center text-dark">
+                        @elseif($xuatNhapCanh->is_hang_lanh == 1)
                             Loại hàng: Hàng lạnh
-                        </h2>
-                    @else
-                        <h2 class="text-center text-dark">
+                        @else
                             Chưa chọn loại hàng
-                        </h2>
-                    @endif
+                        @endif
+                        , đại lý: {{ $xuatNhapCanh->chuHang->ten_chu_hang ?? '' }}
+                    </h2>
                     <hr />
                     <div class="row mt-4 justify-content-center">
                         <div class="col-1"></div>

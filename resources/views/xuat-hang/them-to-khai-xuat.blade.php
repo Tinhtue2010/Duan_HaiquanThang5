@@ -40,8 +40,8 @@
                                         <option></option>
                                         @foreach ($nhapHangs as $nhapHang)
                                             <option value="{{ $nhapHang->so_to_khai_nhap }}">
-                                                {{ $nhapHang->so_to_khai_nhap }} (Ngày đăng ký:
-                                                {{ \Carbon\Carbon::parse($nhapHang->ngay_dang_ky)->format('d-m-Y') }} )
+                                                {{ $nhapHang->so_to_khai_nhap }} (Ngày thông quan:
+                                                {{ \Carbon\Carbon::parse($nhapHang->ngay_thong_quan)->format('d-m-Y') }} )
                                             </option>
                                         @endforeach
                                     </select>
@@ -404,9 +404,10 @@
                 document.getElementById("totalQty").textContent = total;
             }
 
+            // Modified xacNhanBtn click handler with date validation
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
-                //Table 2
+                // Table 2 validation (existing code)
                 let invalidEntry = false;
                 const rows2 = Array.from(tableBody.querySelectorAll('tr'));
                 const rowsData2 = rows2.map(row => {
@@ -422,8 +423,7 @@
                 }
                 ptvtRowsDataInput.value = JSON.stringify(rowsData2);
 
-
-                //Table 1
+                // Table 1 validation and date checking
                 const rows = $('#xuatHangCont tbody tr')
                     .map(function() {
                         const cells = $(this).find('td');
@@ -439,16 +439,80 @@
                         };
                     })
                     .get();
-                document.getElementById('so_to_khai_nhap_hidden').value = document.getElementById(
-                    'so-to-khai-nhap-dropdown-search').value.trim();
-                document.getElementById('ma_loai_hinh_hidden').value = document.getElementById(
-                    'loai-hinh-dropdown-search').value.trim();
-                document.getElementById('ten_doan_tau_hidden').value = document.getElementById(
-                    'ten_doan_tau').value.trim();
+
                 if (rows.length === 0) {
                     alert('Vui lòng chọn ít nhất một hàng hóa để xuất.');
                     return false;
                 }
+
+                // NEW: Check if any row has ngay_thong_quan older than 15 days
+                let hasExpiredRows = false;
+                const currentDate = new Date();
+                const expiredRows = [];
+                const processedToKhai = new Set(); // Track processed declarations to avoid duplicates
+
+                $('#xuatHangCont tbody tr').each(function() {
+                    const soToKhaiNhap = $(this).find('td:eq(1)').text().trim();
+
+                    // Skip if we've already processed this declaration
+                    if (processedToKhai.has(soToKhaiNhap)) {
+                        return;
+                    }
+
+                    // Find the corresponding container data to get ngay_thong_quan
+                    const containerData = @json($containers).find(container =>
+                        container.so_to_khai_nhap === soToKhaiNhap
+                    );
+
+                    if (containerData && containerData.ngay_tiep_nhan) {
+                        const ngayThongQuan = new Date(containerData.ngay_tiep_nhan);
+                        const daysDifference = Math.floor((currentDate - ngayThongQuan) / (1000 *
+                            60 * 60 * 24));
+                        console.log(daysDifference)
+                        const referenceDate = new Date(2025, 7,
+                        15); // JS months are 0-based → 7 = August
+
+                        if (ngayThongQuan > referenceDate) {
+                            if (soToKhaiNhap.startsWith('5') && daysDifference > 15) {
+                                hasExpiredRows = true;
+                                expiredRows.push({
+                                    soToKhai: soToKhaiNhap,
+                                    ngayThongQuan: ngayThongQuan.toLocaleDateString(
+                                        'vi-VN'),
+                                    daysDifference: daysDifference
+                                });
+                            }
+                        }
+
+                        // Mark this declaration as processed
+                        processedToKhai.add(soToKhaiNhap);
+                    }
+                });
+
+                // If there are expired rows, show warning and prevent submission
+                if (hasExpiredRows) {
+                    let warningMessage =
+                        'Các tờ khai sau đây đã đến 15 ngày trở lên kể từ ngày tiếp nhận:\n\n';
+                    expiredRows.forEach(row => {
+                        warningMessage +=
+                            `- Tờ khai: ${row.soToKhai}, Ngày tiếp nhận: ${row.ngayThongQuan}\n`;
+                    });
+                    // warningMessage += '\nKhông thể xuất hàng cho các tờ khai từ 15 ngày trở lên.';
+
+                    alert(warningMessage);
+                    // return false;
+                }
+
+                // Continue with existing validation
+                document.getElementById('so_to_khai_nhap_hidden').value = document.getElementById(
+                    'so-to-khai-nhap-dropdown-search').value.trim();
+                document.getElementById(
+                    'ma_loai_hinh_hidden').value = document.getElementById(
+                    'loai-hinh-dropdown-search').value.trim();
+                document.getElementById(
+                    'ten_doan_tau_hidden').value = document.getElementById(
+                    'ten_doan_tau').value.trim();
+
                 $('#rowsDataInput').val(JSON.stringify(rows));
 
                 let dropdownValue = document.getElementById('loai-hinh-dropdown-search').value;
@@ -462,8 +526,6 @@
                     alert('Vui lòng nhập tên đoàn tàu');
                     return false;
                 }
-
-
 
                 $('#xacNhanModal').modal('show');
             });

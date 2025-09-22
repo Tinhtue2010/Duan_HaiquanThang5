@@ -62,6 +62,8 @@
                                 <th>Ngày tờ khai</th>
                                 <th>Tên hàng</th>
                                 <th>Phương tiện vận tải</th>
+                                <th>Hải quan cửa khẩu nơi hàng hóa chuyển đến (quay về kho)</th>
+                                <th>Số tờ khai mới</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,6 +76,8 @@
                                     <td>{{ \Carbon\Carbon::parse($chiTiet->ngay_dang_ky)->format('d-m-Y') }}</td>
                                     <td>{!! $chiTiet->ten_hang !!}</td>
                                     <td>{{ $chiTiet->ten_phuong_tien_vt }}</td>
+                                    <td>{{ $chiTiet->ten_hai_quan }}</td>
+                                    <td>{{ $chiTiet->so_to_khai_moi }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -85,7 +89,8 @@
                     <div class="float-end mb-2 d-flex align-items-center justify-content-center">
                         @if ($suaYeuCau->file_name)
                             {{ $suaYeuCau->file_name }}
-                            <a href="{{ route('quan-ly-kho.download-yeu-cau-hang-ve-kho', [$suaYeuCau->ma_yeu_cau, true]) }}">
+                            <a
+                                href="{{ route('quan-ly-kho.download-yeu-cau-hang-ve-kho', [$suaYeuCau->ma_yeu_cau, true]) }}">
                                 <button class="btn btn-success float-end mx-1">Xem file đính kèm</button>
 
                             </a>
@@ -104,6 +109,8 @@
                                 <th>Ngày tờ khai</th>
                                 <th>Tên hàng</th>
                                 <th>Phương tiện vận tải</th>
+                                <th>Hải quan cửa khẩu nơi hàng hóa chuyển đến (quay về kho)</th>
+                                <th>Số tờ khai mới</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,6 +123,8 @@
                                     <td>{{ \Carbon\Carbon::parse($chiTietSuaYeuCau->ngay_dang_ky)->format('d-m-Y') }}</td>
                                     <td>{!! $chiTietSuaYeuCau->ten_hang !!}</td>
                                     <td>{{ $chiTietSuaYeuCau->ten_phuong_tien_vt }}</td>
+                                    <td>{{ $chiTietSuaYeuCau->ten_hai_quan }}</td>
+                                    <td>{{ $chiTietSuaYeuCau->so_to_khai_moi }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

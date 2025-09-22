@@ -25,6 +25,13 @@
                     </a>
                 </div>
                 <div class="col-6">
+                    @if ($yeuCau->file_name)
+                        <a href="{{ route('quan-ly-kho.download-yeu-cau-gia-han', [$yeuCau->ma_yeu_cau]) }}">
+                            <button class="btn btn-success float-end mx-1">Xem file đính kèm</button>
+                        </a>
+                    @else
+                        <button class="btn btn-secondary float-end mx-1" disabled>Không có file đính kèm</button>
+                    @endif
                 </div>
             </div>
 

@@ -12,6 +12,7 @@ use App\Models\YeuCauGiaHan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class YeuCauGiaHanController extends Controller
 {
@@ -111,7 +112,9 @@ class YeuCauGiaHanController extends Controller
                 ]);
                 $this->themTienTrinh($row['so_to_khai_nhap'], "Doanh nghiệp đã yêu cầu gia hạn tờ khai số " . $yeuCau->ma_yeu_cau, '');
             }
-
+            if ($request->file('file')) {
+                $this->luuFile($request, $yeuCau);
+            }
             DB::commit();
             session()->flash('alert-success', 'Thêm yêu cầu thành công!');
             return redirect()->route('quan-ly-kho.thong-tin-yeu-cau-gia-han', ['ma_yeu_cau' => $yeuCau->ma_yeu_cau]);
@@ -260,7 +263,8 @@ class YeuCauGiaHanController extends Controller
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereIn('nhap_hang.so_to_khai_nhap', $toKhaiTrongPhieu)
                 ->get();
-            return view('quan-ly-kho.yeu-cau-gia-han.sua-yeu-cau-gia-han', data: compact('toKhaiNhaps', 'doanhNghiep', 'chiTiets', 'ma_yeu_cau'));
+            $yeuCau = YeuCauGiaHan::find( $ma_yeu_cau);
+            return view('quan-ly-kho.yeu-cau-gia-han.sua-yeu-cau-gia-han', data: compact('toKhaiNhaps', 'doanhNghiep', 'chiTiets', 'ma_yeu_cau', 'yeuCau'));
         }
         return redirect()->back();
     }
@@ -317,5 +321,42 @@ class YeuCauGiaHanController extends Controller
             'ngay_thuc_hien' => now(),
             'ma_cong_chuc' => $ma_cong_chuc
         ]);
+    }
+
+    public function luuFile($request, $yeuCau)
+    {
+        if ($yeuCau->file_name) {
+            Storage::delete('public/' . $yeuCau->file->path);
+        }
+
+        $file = $request->file('file');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+
+        while (Storage::exists('public/yeu_cau_gia_han/' . $fileName)) {
+            $fileInfo = pathinfo(path: $fileName);
+            $fileName = $fileInfo['filename'] . '_' . time() . '.' . $fileInfo['extension'];
+        }
+
+        $filePath = $file->storeAs('yeu_cau_gia_han', $fileName, 'public');
+
+        $yeuCau->file_name = $fileName;
+        $yeuCau->file_path = $filePath;
+        $yeuCau->save();
+    }
+    public function downloadFile($maYeuCau, $xemSua = false)
+    {
+        if ($xemSua) {
+            // $yeuCau = YeuCauGiaHanSua::findOrFail($maYeuCau);
+        } else {
+            $yeuCau = YeuCauGiaHan::findOrFail($maYeuCau);
+        }
+
+        if (!$yeuCau->file_name) {
+            session()->flash('alert-danger', 'Không tìm thấy file trong hệ thống');
+            return redirect()->back();
+        }
+
+        $filePath = storage_path('app/public/' . $yeuCau->file_path);
+        return response()->download($filePath, $yeuCau->file_name);
     }
 }

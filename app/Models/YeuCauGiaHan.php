@@ -16,7 +16,9 @@ class YeuCauGiaHan extends Model
         'ngay_yeu_cau',
         'ngay_hoan_thanh',
         'ghi_chu',
-        'ma_cong_chuc'
+        'ma_cong_chuc',
+        'file_name',
+        'file_path'
     ];
     public function doanhNghiep()
     {
@@ -25,4 +27,5 @@ class YeuCauGiaHan extends Model
     public function congChuc()
     {
         return $this->belongsTo(CongChuc::class, 'ma_cong_chuc', 'ma_cong_chuc');
-    }}
+    }
+}

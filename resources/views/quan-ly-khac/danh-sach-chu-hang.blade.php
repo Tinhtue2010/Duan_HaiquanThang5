@@ -46,8 +46,7 @@
                             <tbody class="clickable-row">
                                 @foreach ($data as $index => $chuHang)
                                     <tr data-ma-chu-hang="{{ $chuHang->ma_chu_hang }}"
-                                        data-ten-chu-hang="{{ $chuHang->ten_chu_hang }}"
-                                        >
+                                        data-ten-chu-hang="{{ $chuHang->ten_chu_hang }}">
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $chuHang->ma_chu_hang }}</td>
                                         <td>{{ $chuHang->ten_chu_hang }}</td>
@@ -78,10 +77,12 @@
                     @method('POST')
                     <div class="modal-body">
                         <p><strong>Mã đại lý:</strong> <span id="modalMaChuHang"></span></p>
-                        <p><strong>Tên đại lý:</strong> <span id="modalTenChuHang"></span></p>
+                        <label class="mt-1" for="ten_dang_nhap"><strong>Tên đại lý</strong></label>
+                        <input type="text" class="form-control" name="ten_chu_hang" id="modalTenChuHang">
                         <input hidden id="modalMaChuHangInput" name="ma_chu_hang">
                     </div>
                     <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Cập nhật</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </div>
                 </form>
@@ -185,7 +186,7 @@
 
                 // Set the data in the modal
                 $('#modalMaChuHang').text(maChuHang);
-                $('#modalTenChuHang').text(tenChuHang);
+                document.getElementById('modalTenChuHang').value = tenChuHang;
                 document.getElementById('modalMaChuHangInput').value = maChuHang;
 
 
@@ -200,7 +201,7 @@
             const modalTenChuHang = document.getElementById('modalTenChuHangXoa');
             const modalMaChuHang = document.getElementById('modalMaChuHangXoa');
 
-            
+
             deleteButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     // Get data from the clicked button

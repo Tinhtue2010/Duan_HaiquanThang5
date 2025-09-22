@@ -54,6 +54,8 @@
                                 <th>Ngày tờ khai</th>
                                 <th>Tên hàng</th>
                                 <th>Phương tiện vận tải</th>
+                                <th>Hải quan cửa khẩu nơi hàng hóa chuyển đến (quay về kho)</th>
+                                <th>Số tờ khai mới</th>
                                 @if ($yeuCau->trang_thai == '2')
                                     <th>Thao tác</th>
                                 @endif
@@ -70,6 +72,8 @@
                                     <td>{{ \Carbon\Carbon::parse($chiTiet->ngay_dang_ky)->format('d-m-Y') }}</td>
                                     <td>{!! $chiTiet->ten_hang !!}</td>
                                     <td>{{ $chiTiet->ten_phuong_tien_vt }}</td>
+                                    <td>{{ $chiTiet->ten_hai_quan }}</td>
+                                    <td>{{ $chiTiet->so_to_khai_moi }}</td>
                                     @if ($yeuCau->trang_thai == '2')
                                         <td>
                                             <a

@@ -37,6 +37,7 @@ class XuatNhapCanhController extends Controller
     {
         return view('xuat-nhap-canh.them-xnc', [
             'PTVTXuatCanhs' => PTVTXuatCanh::where('trang_thai', '2')->get(),
+            'chuHangs' => ChuHang::all(),
         ]);
     }
 
@@ -52,6 +53,7 @@ class XuatNhapCanhController extends Controller
                     'is_hang_nong' => $request->is_hang_nong,
                     'so_luong_may' => $request->so_luong_may,
                     'tong_trong_tai' => $request->tong_trong_tai,
+                    'ma_chu_hang' => $request->ma_chu_hang,
                     'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
                     'thoi_gian_xuat_canh' => $request->thoi_gian_xuat_canh,
                     'ma_cong_chuc' => $this->getCongChucHienTai()->ma_cong_chuc,
@@ -125,6 +127,7 @@ class XuatNhapCanhController extends Controller
         return view('xuat-nhap-canh.sua-xnc', [
             'PTVTXuatCanhs' => PTVTXuatCanh::where('trang_thai', '2')->get(),
             'xuatNhapCanh' => $xuatNhapCanh,
+            'chuHangs' => ChuHang::all(),
         ]);
     }
     public function suaXNCSubmit(Request $request)
@@ -140,6 +143,7 @@ class XuatNhapCanhController extends Controller
                     'is_hang_nong' => $request->is_hang_nong,
                     'so_luong_may' => $request->so_luong_may,
                     'tong_trong_tai' => $request->tong_trong_tai,
+                    'ma_chu_hang' => $request->ma_chu_hang,
                     'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
                     'thoi_gian_xuat_canh' => $request->thoi_gian_xuat_canh,
                     'ghi_chu' => $request->ghi_chu,
@@ -153,6 +157,7 @@ class XuatNhapCanhController extends Controller
                     'is_hang_nong' => $request->is_hang_nong,
                     'so_luong_may' => $request->so_luong_may,
                     'tong_trong_tai' => $request->tong_trong_tai,
+                    'ma_chu_hang' => $request->ma_chu_hang,
                     'thoi_gian_nhap_canh' => $request->thoi_gian_nhap_canh,
                     'thoi_gian_xuat_canh' => $request->thoi_gian_xuat_canh,
                     'ghi_chu' => $request->ghi_chu,

@@ -227,7 +227,7 @@
     {{-- Modal chọn container --}}
     <div class="modal fade" id="chonHangTheoToKhaiModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-2 modal-xl">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="exampleModalLabel">Chuyển hàng sang container mới</h4>
@@ -252,7 +252,7 @@
                                 </div>
 
                                 <lable class="fs-5 mt-2">
-                                    <strong>Số container mới (Người dùng có thể nhập số container mới trong ô
+                                    <strong>Số container mới (Có thể nhập số container mới trong ô
                                         "Nhập để tìm kiếm"):
                                     </strong>
                                 </lable>
@@ -522,6 +522,7 @@
                     `;
                     $('#displayTableChiTiet tbody').append(newRow);
                 });
+                document.getElementById("container-dropdown-search").selectedIndex = 0;
 
                 updateRowsData();
                 getYeuCauTableData();

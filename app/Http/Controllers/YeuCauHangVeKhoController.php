@@ -9,7 +9,7 @@ use App\Models\DoanhNghiep;
 use App\Models\HangTrongCont;
 use App\Models\TheoDoiTruLui;
 use App\Models\NhapHang;
-use App\Models\XuatHang;
+use App\Models\HaiQuan;
 use App\Models\XuatHangCont;
 use App\Models\NiemPhong;
 use App\Models\TienTrinh;
@@ -114,12 +114,15 @@ class YeuCauHangVeKhoController extends Controller
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
-
-            return view('quan-ly-kho.yeu-cau-hang-ve-kho.them-yeu-cau-hang-ve-kho', data: compact('toKhaiNhaps', 'doanhNghiep'));
+            $haiQuans = HaiQuan::all();
+            return view('quan-ly-kho.yeu-cau-hang-ve-kho.them-yeu-cau-hang-ve-kho', data: compact('toKhaiNhaps', 'doanhNghiep', 'haiQuans'));
         }
         return redirect()->back();
     }
 
+    /*
+    Khi thêm sẽ thêm 1 chi tiết đối với mỗi so_to_khai_nhap
+    */
     public function themYeuCauHangVeKhoSubmit(Request $request)
     {
         try {
@@ -140,6 +143,8 @@ class YeuCauHangVeKhoController extends Controller
 
                 YeuCauHangVeKhoChiTiet::insert([
                     'so_to_khai_nhap' => $row['so_to_khai_nhap'],
+                    'so_to_khai_moi' => $row['so_to_khai_moi'],
+                    'ma_hai_quan' => $row['ma_hai_quan'],
                     'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
                     'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                     'ten_hang' => $firstResult['hang_hoa'] ?? '',
@@ -167,6 +172,7 @@ class YeuCauHangVeKhoController extends Controller
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.so_to_khai_nhap', $row['so_to_khai_nhap'])
             ->where('hang_trong_cont.so_container', $row['so_container'])
+            ->where('hang_trong_cont.so_luong', '>', 0)
             ->select(
                 'hang_trong_cont.so_container',
                 'hang_hoa.ten_hang',
@@ -203,9 +209,14 @@ class YeuCauHangVeKhoController extends Controller
             ->select('nhap_hang.*')
             ->get();
         $congChucs = CongChuc::where('is_chi_xem', 0)->where('status', 1)->get();
-        $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
+        $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)
+            ->leftJoin('hai_quan', 'yeu_cau_hang_ve_kho_chi_tiet.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+            ->get();
         return view('quan-ly-kho.yeu-cau-hang-ve-kho.thong-tin-yeu-cau-hang-ve-kho', compact('yeuCau', 'nhapHangs', 'doanhNghiep', 'congChucs', 'chiTiets')); // Pass data to the view
     }
+    /*
+    Khi duyệt sẽ cho các hàng trong container trong nhapHang 
+    */
     public function duyetYeuCauHangVeKho(Request $request)
     {
         try {
@@ -332,7 +343,6 @@ class YeuCauHangVeKhoController extends Controller
         $yeuCau->trang_thai = '4';
         $yeuCau->ghi_chu = $request->ghi_chu;
         $yeuCau->save();
-
         $soToKhaiNhaps = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_to_khai_nhap');
         foreach ($soToKhaiNhaps as $soToKhaiNhap) {
             $this->themTienTrinh($soToKhaiNhap, "Doanh nghiệp đề nghị hủy yêu cầu đưa hàng về kho hàng số " . $request->ma_yeu_cau, '');
@@ -405,9 +415,12 @@ class YeuCauHangVeKhoController extends Controller
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
-            $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->get();
+            $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)
+                ->leftJoin('hai_quan', 'yeu_cau_hang_ve_kho_chi_tiet.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+                ->get();
             $yeuCau = YeuCauHangVeKho::find($ma_yeu_cau);
-            return view('quan-ly-kho.yeu-cau-hang-ve-kho.sua-yeu-cau-hang-ve-kho', data: compact('toKhaiNhaps', 'doanhNghiep', 'chiTiets', 'yeuCau'));
+            $haiQuans = HaiQuan::all();
+            return view('quan-ly-kho.yeu-cau-hang-ve-kho.sua-yeu-cau-hang-ve-kho', data: compact('toKhaiNhaps', 'doanhNghiep', 'chiTiets', 'yeuCau', 'haiQuans'));
         }
         return redirect()->back();
     }
@@ -445,6 +458,8 @@ class YeuCauHangVeKhoController extends Controller
 
             YeuCauHangVeKhoChiTiet::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
+                'so_to_khai_moi' => $row['so_to_khai_moi'],
+                'ma_hai_quan' => $row['ma_hai_quan'],
                 'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
@@ -477,6 +492,8 @@ class YeuCauHangVeKhoController extends Controller
             YeuCauHangVeKhoChiTietSua::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                 'so_container' => $row['so_container'],
+                'so_to_khai_moi' => $row['so_to_khai_moi'],
+                'ma_hai_quan' => $row['ma_hai_quan'],
                 'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
@@ -491,12 +508,16 @@ class YeuCauHangVeKhoController extends Controller
         $yeuCau = YeuCauHangVeKho::where('ma_yeu_cau', $request->ma_yeu_cau)
             ->leftJoin('cong_chuc', 'yeu_cau_hang_ve_kho.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
             ->first();
-        $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
+        $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)
+            ->leftJoin('hai_quan', 'yeu_cau_hang_ve_kho_chi_tiet.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+            ->get();
 
         $suaYeuCau = YeuCauSua::where('ma_yeu_cau', $request->ma_yeu_cau)
             ->where('loai_yeu_cau', 5)
             ->first();
-        $chiTietSuas = YeuCauHangVeKhoChiTietSua::where('ma_sua_yeu_cau', $suaYeuCau->ma_sua_yeu_cau)->get();
+        $chiTietSuas = YeuCauHangVeKhoChiTietSua::where('ma_sua_yeu_cau', $suaYeuCau->ma_sua_yeu_cau)
+            ->leftJoin('hai_quan', 'yeu_cau_hang_ve_kho_chi_tiet_sua.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
+            ->get();
         $doanhNghiep = DoanhNghiep::find($yeuCau->ma_doanh_nghiep);
         return view('quan-ly-kho.yeu-cau-hang-ve-kho.xem-sua-yeu-cau-hang-ve-kho', compact('yeuCau', 'chiTiets', 'suaYeuCau', 'chiTietSuas', 'doanhNghiep'));
     }
@@ -538,9 +559,23 @@ class YeuCauHangVeKhoController extends Controller
             return redirect()->back();
         }
     }
+    
     public function quayNguocYeuCau($soToKhaiCanQuayNguoc, $yeuCau)
     {
         foreach ($soToKhaiCanQuayNguoc as $soToKhai) {
+            //Hồi số lượng từ TheoDoiHangHoa vì không có cột số lượng, mã hàng trong chiTiet
+            $theoDoiHangHoas = TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+                ->where('cong_viec', 5)
+                ->get();
+            foreach( $theoDoiHangHoas as $theoDoi) {
+                HangTrongCont::where('ma_hang',$theoDoi->ma_hang)
+                ->where('so_container',$theoDoi->so_container)
+                ->update([
+                    'so_luong' => $theoDoi->so_luong_ton,
+                ]);
+            }
+            //Xóa TheoDoiHangHoa
             TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 5)
@@ -580,6 +615,8 @@ class YeuCauHangVeKhoController extends Controller
             }
             YeuCauHangVeKhoChiTiet::insert([
                 'so_to_khai_nhap' => $chiTietYeuCau->so_to_khai_nhap,
+                'so_to_khai_moi' => $chiTietYeuCau->so_to_khai_moi,
+                'ma_hai_quan' => $chiTietYeuCau->ma_hai_quan,
                 'so_container' => $chiTietYeuCau->so_container,
                 'so_tau' => $chiTietYeuCau->so_tau,
                 'ngay_dang_ky' => $chiTietYeuCau->ngay_dang_ky,

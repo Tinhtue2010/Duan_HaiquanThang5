@@ -61,6 +61,14 @@
                 <h5>Fix xuất hết</h5>
                 <button class="btn btn-primary" type="submit">Done</button>
             </form>
+            <hr>
+            <form action="{{ route('quan-ly-khac.action-6') }}" method="POST">
+                @csrf
+                @method('POST')
+                <h5>Fix sai số lượng</h5>
+                <input type="text" class="form-control" name="so_to_khai_nhap">
+                <button class="btn btn-primary mt-2" type="submit">Done</button>
+            </form>
         </div>
     </div>
 @stop
