@@ -43,6 +43,7 @@ use App\Exports\BaoCaoTraCuuContainer;
 use App\Exports\PhanCongNhiemVuGiamSat;
 use App\Exports\TheoDoiXuatNhapCanh;
 use App\Exports\BaoCaoThoiGianToKhai;
+use App\Exports\BaoCaoDoanTau;
 use App\Models\ChuHang;
 use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
@@ -587,6 +588,11 @@ class BaoCaoController extends Controller
     {
         $fileName = 'Báo cáo tra cứu container.xlsx';
         return Excel::download(new BaoCaoTraCuuContainer(), $fileName);
+    }
+    public function baoCaoDoanTau(Request $request)
+    {
+        $fileName = 'Báo cáo đoàn tàu.xlsx';
+        return Excel::download(new BaoCaoDoanTau(), $fileName);
     }
 
 

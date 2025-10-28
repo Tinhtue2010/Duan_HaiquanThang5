@@ -13,7 +13,8 @@ use App\Models\LoaiHinh;
 use App\Models\NhapHang;
 use App\Models\PTVTXuatCanh;
 use App\Models\PTVTXuatCanhCuaPhieuSua;
-use App\Models\PTVTXuatCanhCuaPhieuTruocSua;
+use App\Models\ChoTKQuaHan;
+use App\Models\ChoTKTamDung;
 use App\Models\XuatHang;
 use App\Models\XuatHangCont;
 use App\Models\ChiTietXuatCanh;
@@ -75,13 +76,15 @@ class XuatHangController extends Controller
     {
         $containers = $this->xuatHangService->getThongTinHangHoaHienTai();
         $loaiHinhs = LoaiHinh::all();
+        $choTKQuaHans = ChoTKQuaHan::all()->pluck('so_to_khai_nhap')->toArray();
+        $choTKTamDungs = ChoTKTamDung::all()->pluck('so_to_khai_nhap')->toArray();
         $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
         $ptvtXuatCanhs = PTVTXuatCanh::where('trang_thai', '2')->get();
         $nhapHangs = NhapHang::where('ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
             ->where('trang_thai', '2')
             ->get();
 
-        return view('xuat-hang.them-to-khai-xuat', data: compact('containers', 'loaiHinhs', 'nhapHangs', 'doanhNghiep', 'ptvtXuatCanhs')); // Pass the data to the view
+        return view('xuat-hang.them-to-khai-xuat', data: compact('containers', 'loaiHinhs', 'nhapHangs', 'doanhNghiep', 'ptvtXuatCanhs','choTKQuaHans','choTKTamDungs')); // Pass the data to the view
     }
 
     public function themToKhaiXuatSubmit(Request $request)
@@ -194,6 +197,7 @@ class XuatHangController extends Controller
         $loaiHinhs = LoaiHinh::all();
         $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
         $ptvtXuatCanhs = PTVTXuatCanh::where('trang_thai', 2)->get();
+        $choTKTamDungs = ChoTKTamDung::all()->pluck('so_to_khai_nhap')->toArray();
 
         if (in_array($xuatHang->trang_thai, ['3', '4', '5', '6'])) {
             $xuatHang = XuatHangSua::where('so_to_khai_xuat', $so_to_khai_xuat)
@@ -236,7 +240,7 @@ class XuatHangController extends Controller
         foreach ($containers as $container) {
             $container->so_luong_xuat = $xuatHangContMap[$container->ma_hang_cont] ?? 0;
         }
-        return view('xuat-hang.sua-to-khai-xuat', data: compact('containers', 'loaiHinhs', 'doanhNghiep', 'ptvtXuatCanhs', 'xuatHang', 'ptvts', 'PTVTcount', 'nhapHangs', 'xuatHangConts')); // Pass the data to the view
+        return view('xuat-hang.sua-to-khai-xuat', data: compact('containers', 'loaiHinhs', 'doanhNghiep', 'ptvtXuatCanhs', 'xuatHang', 'ptvts', 'PTVTcount', 'nhapHangs', 'xuatHangConts','choTKTamDungs')); // Pass the data to the view
     }
 
     public function suaToKhaiXuatSubmit(Request $request)

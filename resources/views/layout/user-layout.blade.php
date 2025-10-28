@@ -315,6 +315,11 @@
                             </a>
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_ban_giao === 1)
                                 <div class="sb-sidenav-menu-heading">Quản lý khác</div>
+                                <a class="nav-link" href="/quan-ly-doan-tau">
+                                    <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                            src="{{ asset('images/icons/product-type.png') }}"></div>
+                                    Danh sách đoàn tàu
+                                </a>
                                 <a class="nav-link" href="/quan-ly-ban-giao-ho-so">
                                     <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                             src="{{ asset('images/icons/report.png') }}"></div>
@@ -326,6 +331,13 @@
                                     Quản lý liên hệ
                                 </a>
                             @endif
+                            {{-- @if (Auth::user()->congChuc->ma_cong_chuc == 'T20-HQ11-0015') --}}
+                            <a class="nav-link" href="/quan-ly-tk-tam-dung">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/product-type.png') }}"></div>
+                                Danh sách tờ khai tạm dừng
+                            </a>
+                            {{-- @endif --}}
                         @elseif (Auth::user()->loai_tai_khoan === 'Thủ kho')
                             <div class="sb-sidenav-menu-heading">Quản lý seal niêm phong</div>
                             <a class="nav-link" href="/quan-ly-chi-niem-phong">
@@ -376,6 +388,11 @@
                                 Quản lý đăng nhập
                             </a>
                             <div class="sb-sidenav-menu-heading">Quản lý khác</div>
+                            <a class="nav-link" href="/quan-ly-tk-qua-han">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/product-type.png') }}"></div>
+                                Danh sách tờ khai cho quá hạn
+                            </a>
                             <a class="nav-link" href="/quan-ly-loai-hang">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/product-type.png') }}"></div>

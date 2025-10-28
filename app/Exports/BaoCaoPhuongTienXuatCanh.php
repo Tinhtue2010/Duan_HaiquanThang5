@@ -60,10 +60,15 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             ->whereBetween('xuat_canh.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->where('xuat_canh.trang_thai', '!=', 0)
             ->where('xuat_canh.trang_thai', '!=', 6)
+            ->where('xuat_canh.trang_thai', '!=', 5)
             ->where(function ($query) {
                 $query->whereNull('xuat_hang.trang_thai')
                     ->orWhere('xuat_hang.trang_thai', '!=', 0);
             })
+            // ->where(function ($query) {
+            //     $query->whereNotNull('xuat_canh_chi_tiet.ma_xuat_canh')
+            //         ->orWhere('xuat_canh.ma_doanh_nghiep_chon', 0);
+            // })
             ->select(
                 'xuat_canh.ma_xuat_canh',
                 'xuat_canh.ten_thuyen_truong',
@@ -190,11 +195,11 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             $xnc = XuatNhapCanh::where('so_ptvt_xuat_canh', $value['so_ptvt_xuat_canh'])
                 ->where('ngay_them', $value['ngay_dang_ky_nearest'])
                 ->first();
-            if($value['ma_doanh_nghiep'] == 5700605306)
+            if ($value['ma_doanh_nghiep'] == 5700605306)
                 $ten_chu_hang = "Đại lý Hải Thủy";
-            else if($value['ma_doanh_nghiep'] == 5701712357)
+            else if ($value['ma_doanh_nghiep'] == 5701712357)
                 $ten_chu_hang = "Đại lý Hùng Phúc";
-            else 
+            else
                 $ten_chu_hang = $value['ten_chu_hang'];
 
             $result[] = [
@@ -217,7 +222,9 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                 $cang_den,
                 $value['ten_cong_chuc'],
                 $value['loai_hang'] ? $value['ten_doanh_nghiep'] : '',
+                // $value['ten_doanh_nghiep'],
                 $value['loai_hang'] ? $ten_chu_hang : '',
+                // $ten_chu_hang,
             ];
 
             $sumThuocLa += $totalThuocLa;

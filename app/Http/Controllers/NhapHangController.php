@@ -305,25 +305,28 @@ class NhapHangController extends Controller
 
         foreach ($rowsData as $row) {
             $hangHoa = HangHoa::find($row['ma_hang']);
-
+            if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+                $this->suaSoContainerSoLuong($hangHoa, $row);
+                HangHoa::find($row['ma_hang'])->update([
+                    'so_luong_khai_bao' => $row['so_luong'],
+                ]);
+            }
             //No
             // if ($hangHoa->so_container_khai_bao != $row['so_container'] || $nhapHang->phuong_tien_vt_nhap != $request->phuong_tien_vt_nhap) {
             //     $this->suaXuatHangCont($request, $nhapHang, $row);
             // }
 
-            // $this->suaSoContainerSoLuong($hangHoa, $row);
 
             HangHoa::find($row['ma_hang'])->update([
                 // 'ten_hang' => $row['ten_hang'],
                 // 'loai_hang' => $row['loai_hang'],
                 // 'xuat_xu' => $row['xuat_xu'],
-                // 'so_luong_khai_bao' => $row['so_luong'],
                 // 'so_container_khai_bao' => $row['so_container'],
+                // 'so_luong_khai_bao' => $row['so_luong'],
                 'don_vi_tinh' => $row['don_vi_tinh'],
                 'don_gia' => $row['don_gia'],
                 'tri_gia' => $row['tri_gia'],
             ]);
-
             NhapHang::find($request->so_to_khai_nhap)->update([
                 'ma_chu_hang' => $request->ma_chu_hang,
                 'ma_loai_hinh' => $request->ma_loai_hinh,
@@ -433,7 +436,7 @@ class NhapHangController extends Controller
                     'don_vi_tinh' => $row['don_vi_tinh'],
                     'don_gia' => $row['don_gia'],
                     'tri_gia' => $row['tri_gia'],
-                    'so_container_khai_bao' => $row['so_container'],
+                    'so_container_khai_bao' => trim($row['so_container']),
                     'so_to_khai_nhap' => $request->so_to_khai_nhap,
                     'ma_nhap_sua' => $nhapHangSua->ma_nhap_sua,
                 ]);
@@ -492,7 +495,7 @@ class NhapHangController extends Controller
                     'don_vi_tinh' => $row['don_vi_tinh'],
                     'don_gia' => $row['don_gia'],
                     'tri_gia' => $row['tri_gia'],
-                    'so_container_khai_bao' => $row['so_container'],
+                    'so_container_khai_bao' => trim($row['so_container']),
                     'so_to_khai_nhap' => $request->so_to_khai_nhap,
                     'ma_nhap_sua' => $nhapHangSua->ma_nhap_sua,
                 ]);
@@ -1031,7 +1034,7 @@ class NhapHangController extends Controller
             'don_gia' => $row['don_gia'],
             'tri_gia' => $row['tri_gia'],
             'so_to_khai_nhap' => $request->so_to_khai_nhap,
-            'so_container_khai_bao' => $row['so_container'],
+            'so_container_khai_bao' => trim($row['so_container']),
             'so_seal' => $row['so_seal'],
         ]);
     }

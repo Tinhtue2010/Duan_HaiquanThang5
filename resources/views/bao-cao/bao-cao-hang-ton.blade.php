@@ -793,7 +793,17 @@
                             @endif
                         </div>
                         <div class="card p-3 ms-3 col-5">
-
+                            @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' &&
+                                    Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 30)->first()?->phan_quyen == 1)
+                                <h4>Báo cáo đoàn tàu</h4>
+                                <div class="form-group">
+                                    <form action="{{ route('export.bao-cao-doan-tau') }}" method="GET">
+                                        <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
+                                                cáo</button>
+                                        </center>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

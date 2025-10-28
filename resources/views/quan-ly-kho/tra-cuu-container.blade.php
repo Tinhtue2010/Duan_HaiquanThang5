@@ -42,7 +42,7 @@
                             </thead>
                             <tbody class="clickable-row">
                                 @foreach ($containers as $key => $container)
-                                    @if (!is_null($container->so_container) && $container->so_container != '')
+                                    @if (!is_null($container->so_container) && $container->so_container != '' && $container->total_so_luong > 0)
                                         <tr
                                             onclick="window.location='{{ route('quan-ly-kho.to-khai-trong-container', ['so_container' => $container->so_container]) }}'">
                                             <td>{{ $key + 1 }}</td>

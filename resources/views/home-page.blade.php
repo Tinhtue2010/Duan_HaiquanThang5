@@ -7,10 +7,10 @@
     <div class="container mt-4">
         <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
-                <div class="carousel-item active">
+                {{-- <div class="carousel-item active">
                     <img src="{{ asset('images/img/10.jpg') }}" class="d-block w-100" alt="Banner 1">
-                </div>
-                <div class="carousel-item">
+                </div> --}}
+                <div class="carousel-item active">
                     <img src="{{ asset('images/32.jpg') }}" class="d-block w-100" alt="Banner 2">
                 </div>
                 <div class="carousel-item">

@@ -401,6 +401,7 @@ class QuanLyKhoController extends Controller
                         ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                         ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
                         ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                        ->where('hang_trong_cont.so_luong', '!=', 0)
                         ->distinct()
                         ->pluck('nhap_hang.so_to_khai_nhap')
                         ->implode('</br>');
@@ -455,6 +456,7 @@ class QuanLyKhoController extends Controller
                         ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                         ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
                         ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                        ->where('hang_trong_cont.so_luong', '!=', 0)
                         ->distinct()
                         ->pluck('nhap_hang.so_to_khai_nhap')
                         ->slice(0, -1) // Exclude the last item
@@ -473,7 +475,9 @@ class QuanLyKhoController extends Controller
                         'total_so_luong_chuyen' => $group->sum('so_luong_chuyen'),
                         'so_luong_ton_cont_moi' => $so_luong_ton_cont_moi,
                         'so_to_khai_cont_moi' => $so_to_khai_cont_moi,
-                        'so_luong_sau_chuyen' => $group->sum('so_luong_chuyen')  + $so_luong_ton_cont_moi
+                        'so_luong_sau_chuyen' => $group->sum('so_luong_chuyen')  + $so_luong_ton_cont_moi,
+                        'tauGoc' => $firstItem['tau_goc'],
+                        'tauDich' => $firstItem['tau_dich'],
                     ];
                 })
                 ->values();
@@ -494,6 +498,7 @@ class QuanLyKhoController extends Controller
                     $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                         ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                         ->where('hang_trong_cont.so_container', $firstItem['so_container_dich'])
+                        ->where('hang_trong_cont.so_luong', '!=', 0)
                         ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                         ->distinct()
                         ->pluck('nhap_hang.so_to_khai_nhap')
@@ -508,7 +513,9 @@ class QuanLyKhoController extends Controller
                         'total_so_luong_chuyen' => $group->sum('so_luong_chuyen'),
                         'so_luong_ton_cont_moi' => $so_luong_ton_cont_moi,
                         'so_to_khai_cont_moi' => $so_to_khai_cont_moi,
-                        'so_luong_sau_chuyen' => $group->sum('so_luong_chuyen')  + $so_luong_ton_cont_moi
+                        'so_luong_sau_chuyen' => $group->sum('so_luong_chuyen')  + $so_luong_ton_cont_moi,
+                        'tauGoc' => $firstItem['tau_goc'],
+                        'tauDich' => $firstItem['tau_dich'],
                     ];
                 })
                 ->values();

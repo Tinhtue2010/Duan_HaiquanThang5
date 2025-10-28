@@ -225,7 +225,8 @@ class BaoCaoPhuongTienXuatCanhSuaHuy implements FromArray, WithEvents
                     $value['loai_hang'] ? $value['ten_doanh_nghiep'] : '',
                     $value['loai_hang'] ? $value['ten_chu_hang'] : '',
                     '',
-                    $content
+                    $content,
+                    $value['ma_xuat_canh'],
                 ];
             }
 

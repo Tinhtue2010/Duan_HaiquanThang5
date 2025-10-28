@@ -412,7 +412,7 @@ class BaoCaoHangHoaXuatNhapKhau
         $table->addCell(500)->addText($stt++, [], ['alignment' => 'center']);
         $table->addCell(3000)->addText('TỔNG CỘNG', [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($totalTotalSoLuong, [], ['alignment' => 'center']);
-        $table->addCell(3000)->addText($tongSoContainerx, [], ['alignment' => 'center']);
+        $table->addCell(3000)->addText($tongSoContainer, [], ['alignment' => 'center']);
         $table->addCell(3000)->addText($tongTriGiax, [], ['alignment' => 'center']);
 
 
@@ -535,48 +535,44 @@ class BaoCaoHangHoaXuatNhapKhau
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
             ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->where('nhap_hang.trang_thai', '2')
-            ->whereBetween('nhap_hang.created_at', [
-                Carbon::parse($tu_ngay)->startOfDay(),
-                Carbon::parse($den_ngay)->endOfDay()
-            ])
+            ->where('hang_trong_cont.so_luong', '>', 0)
             ->groupBy('nhap_hang.so_to_khai_nhap')
             ->select(
                 DB::raw('SUM(hang_trong_cont.so_luong * hang_hoa.don_gia) as total_tri_gia'),
-                DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'),
-                DB::raw('COUNT(DISTINCT hang_trong_cont.so_container) as total_so_container')
-            );
-
-        return DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
-            ->mergeBindings($subQuery->getQuery())
-            ->select(
-                DB::raw('SUM(total_tri_gia) as total_tri_gia'),
-                DB::raw('SUM(total_so_luong) as total_so_luong'),
-                DB::raw('SUM(total_so_container) as total_so_container')
-            )
-            ->first();
-    }
-
-    public function getTongContainerHienTai($tu_ngay, $den_ngay)
-    {
-        $subQuery = HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', '2')
-            ->whereBetween('nhap_hang.created_at', [
-                Carbon::parse($tu_ngay)->startOfDay(),
-                Carbon::parse($den_ngay)->endOfDay()
-            ])
-            ->groupBy('nhap_hang.so_to_khai_nhap')
-            ->select(
-                DB::raw('COUNT(DISTINCT hang_trong_cont.so_container) as total_so_container')
+                DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong')
             );
 
         $result = DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
             ->mergeBindings($subQuery->getQuery())
             ->select(
-                DB::raw('SUM(total_so_container) as total_so_container')
+                DB::raw('SUM(total_tri_gia) as total_tri_gia'),
+                DB::raw('SUM(total_so_luong) as total_so_luong')
             )
             ->first();
 
-        return $result ? $result->total_so_container : 0;
+        // Count distinct containers separately
+        $totalContainers = HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
+            ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_luong', '>', 0)
+            ->distinct()
+            ->count('hang_trong_cont.so_container');
+
+        $result->total_so_container = $totalContainers;
+
+        return $result;
+    }
+
+    public function getTongContainerHienTai($tu_ngay, $den_ngay)
+    {
+        $result = HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_luong', '>', 0)
+            ->distinct()
+            ->count('hang_trong_cont.so_container');
+
+        return $result;
     }
 }

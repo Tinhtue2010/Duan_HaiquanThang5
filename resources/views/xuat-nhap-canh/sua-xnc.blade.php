@@ -23,11 +23,9 @@
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
                             <div class="row">
-                                <div class="col-3">
+                                <div class="col-4">
                                     <div class="form-group mt-3">
                                         <label for="ptvtxc" class="mb-2 fw-bold">Phương tiện vận tải nhập cảnh</label>
-
-
                                         <select class="form-control" id="ptvt-xc-dropdown-search"
                                             onchange="handleChange(this)" name="ptvtxc">
                                             <option></option>
@@ -47,7 +45,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-2">
+                                <div class="col-3">
                                     <div class="form-group mt-3">
                                         <label class="label-text mb-2 fw-bold" for="so-the">Số thẻ</label>
                                         <input type="number" class="form-control" id="so-the" name="so_the"
@@ -71,29 +69,38 @@
                                             required>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="col-3">
-                                    <div class="form-group mt-3">
-                                        <label class="label-text mb-2 fw-bold" for="so-luong-may">Đại lý</label>
-                                        <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
-                                            <option></option>
-                                            @foreach ($chuHangs as $chuHang)
-                                                @if ($chuHang->ma_chu_hang == $xuatNhapCanh->ma_chu_hang)
-                                                    <option value="{{ $chuHang->ma_chu_hang }}" selected>
-                                                        {{ $chuHang->ten_chu_hang }}
-                                                        ({{ $chuHang->ma_chu_hang }})
-                                                    </option>
-                                                @else
-                                                    <option value="{{ $chuHang->ma_chu_hang }}">
-                                                        {{ $chuHang->ten_chu_hang }}
-                                                        ({{ $chuHang->ma_chu_hang }})
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                    </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="label-text mb-2 fw-bold" for="so-luong-may">Đại lý</label>
+                                    <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
+                                        <option></option>
+                                        @foreach ($chuHangs as $chuHang)
+                                            @if ($chuHang->ma_chu_hang == $xuatNhapCanh->ma_chu_hang)
+                                                <option value="{{ $chuHang->ma_chu_hang }}" selected>
+                                                    {{ $chuHang->ten_chu_hang }}
+                                                    ({{ $chuHang->ma_chu_hang }})
+                                                </option>
+                                            @else
+                                                <option value="{{ $chuHang->ma_chu_hang }}">
+                                                    {{ $chuHang->ten_chu_hang }}
+                                                    ({{ $chuHang->ma_chu_hang }})
+                                                </option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="label-text mb-2 fw-bold" for="">Ngày thêm</label>
+                                    <input type="text" id="ngay-them" class="form-control datepicker"
+                                        placeholder="dd/mm/yyyy" name="ngay_them"
+                                        value="{{ \Carbon\Carbon::parse($xuatNhapCanh->ngay_them)->format('d/m/Y') }}"
+                                         readonly>
                                 </div>
                             </div>
+
+
                             <div class="row">
                                 <div class="col-4">
                                     <div class="radio-group">
@@ -146,9 +153,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-2">
-
-                </div>
             </div>
 
             <center>
@@ -175,6 +179,7 @@
                         @csrf
                         <input type="hidden" name="so_ptvt_xuat_canh" id="so_ptvt_xuat_canh_hidden">
                         <input type="hidden" name="so_the" id="so_the_hidden">
+                        <input type="hidden" name="ngay_them" id="ngay_them_hidden">
                         <input type="hidden" name="is_hang_lanh" id="is_hang_lanh_hidden">
                         <input type="hidden" name="is_hang_nong" id="is_hang_nong_hidden">
                         <input type="hidden" name="ma_chu_hang" id="ma_chu_hang_hidden">
@@ -204,6 +209,7 @@
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             let ptvtXuatCanh = document.getElementById('ptvt-xc-dropdown-search');
             let soThe = document.getElementById('so-the');
+            let ngayThem = document.getElementById('ngay-them');
             let soLuongMay = document.getElementById('so-luong-may');
             let maChuHang = document.getElementById('chu-hang-dropdown-search');
             let thoiGianNhapCanh = document.getElementById('thoi-gian-nhap-canh');
@@ -214,6 +220,7 @@
             nhapYeuCauButton.addEventListener('click', function() {
                 document.getElementById('so_ptvt_xuat_canh_hidden').value = ptvtXuatCanh.value.trim();
                 document.getElementById('so_the_hidden').value = soThe.value.trim();
+                document.getElementById('ngay_them_hidden').value = ngayThem.value.trim();
                 document.getElementById('so_luong_may_hidden').value = soLuongMay.value.trim();
                 document.getElementById('tong_trong_tai_hidden').value = tongTrongTai.value.trim();
                 document.getElementById('ma_chu_hang_hidden').value = maChuHang.value.trim();

@@ -187,8 +187,8 @@
                             <option value=""></option>
                             @foreach ($ptvtXuatCanhs as $ptvtXuatCanh)
                                 <option value="{{ $ptvtXuatCanh->so_ptvt_xuat_canh }}">
-                                    {{ $ptvtXuatCanh->ten_phuong_tien_vt }} (Số:
-                                    {{ $ptvtXuatCanh->so_ptvt_xuat_canh }})
+                                    {{ $ptvtXuatCanh->ten_phuong_tien_vt }} 
+                                    {{-- (Số: {{ $ptvtXuatCanh->so_ptvt_xuat_canh }}) --}}
                                 </option>
                             @endforeach
                         </select>
@@ -470,6 +470,41 @@
                     alert('Vui lòng chọn ít nhất một hàng hóa để xuất.');
                     return false;
                 }
+
+                // Check for paused rows
+                let hasPausedRows = false;
+                const pausedRows = [];
+                const processedToKhai = new Set();
+                const tamDungToKhai = {{ json_encode($choTKTamDungs) }};
+
+                $('#xuatHangCont tbody tr').each(function() {
+                    const soToKhaiNhap = $(this).find('td:eq(1)').text().trim();
+                    if (processedToKhai.has(soToKhaiNhap)) {
+                        return;
+                    }
+
+                    const soToKhaiNum = Number(soToKhaiNhap);
+                    if (tamDungToKhai.includes(soToKhaiNum)) {
+                        hasPausedRows = true;
+                        pausedRows.push({
+                            soToKhai: soToKhaiNum,
+                        });
+                        processedToKhai.add(soToKhaiNum);
+                        return;
+                    }
+                });
+
+                if (hasPausedRows) {
+                    let warningMessage =
+                        'Các tờ khai sau đã bị tạm dừng:\n\n';
+                    pausedRows.forEach(row => {
+                        warningMessage +=
+                            `- Tờ khai: ${row.soToKhai}\n`;
+                    });
+                    alert(warningMessage);
+                    return false;
+                }
+
                 $('#rowsDataInput').val(JSON.stringify(rows));
 
                 let dropdownValue = document.getElementById('loai-hinh-dropdown-search').value;

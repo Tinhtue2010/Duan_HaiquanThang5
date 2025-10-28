@@ -166,8 +166,8 @@
                             <option value=""></option>
                             @foreach ($ptvtXuatCanhs as $ptvtXuatCanh)
                                 <option value="{{ $ptvtXuatCanh->so_ptvt_xuat_canh }}">
-                                    {{ $ptvtXuatCanh->ten_phuong_tien_vt }} (Số:
-                                    {{ $ptvtXuatCanh->so_ptvt_xuat_canh }})
+                                    {{ $ptvtXuatCanh->ten_phuong_tien_vt }}
+                                    {{-- (Số: {{ $ptvtXuatCanh->so_ptvt_xuat_canh }}) --}}
                                 </option>
                             @endforeach
                         </select>
@@ -400,11 +400,9 @@
                     total += isNaN(quantity) ? 0 : quantity;
                 });
 
-                // Update the total in <tfoot>
                 document.getElementById("totalQty").textContent = total;
             }
 
-            // Modified xacNhanBtn click handler with date validation
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             nhapYeuCauButton.addEventListener('click', function() {
                 // Table 2 validation (existing code)
@@ -445,35 +443,38 @@
                     return false;
                 }
 
-                // NEW: Check if any row has ngay_thong_quan older than 15 days
                 let hasExpiredRows = false;
+                let hasPausedRows = false;
                 const currentDate = new Date();
                 const expiredRows = [];
-                const processedToKhai = new Set(); // Track processed declarations to avoid duplicates
+                const pausedRows = [];
+                const processedToKhai = new Set();
 
+                // If there are expired rows, show warning and prevent submission
+                const unBlockedToKhai = {{ json_encode($choTKQuaHans) }};
+                const tamDungToKhai = {{ json_encode($choTKTamDungs) }};
                 $('#xuatHangCont tbody tr').each(function() {
                     const soToKhaiNhap = $(this).find('td:eq(1)').text().trim();
-
-                    // Skip if we've already processed this declaration
                     if (processedToKhai.has(soToKhaiNhap)) {
                         return;
                     }
 
-                    // Find the corresponding container data to get ngay_thong_quan
                     const containerData = @json($containers).find(container =>
                         container.so_to_khai_nhap === soToKhaiNhap
                     );
 
                     if (containerData && containerData.ngay_tiep_nhan) {
                         const ngayThongQuan = new Date(containerData.ngay_tiep_nhan);
+                        const loaiHang = containerData.loai_hang;
+
                         const daysDifference = Math.floor((currentDate - ngayThongQuan) / (1000 *
                             60 * 60 * 24));
-                        console.log(daysDifference)
                         const referenceDate = new Date(2025, 7,
-                        15); // JS months are 0-based → 7 = August
+                            15); // JS months are 0-based → 7 = August
 
                         if (ngayThongQuan > referenceDate) {
-                            if (soToKhaiNhap.startsWith('5') && daysDifference > 15) {
+                            if (soToKhaiNhap.startsWith('5') && daysDifference > 15 && loaiHang !==
+                                "Đông lạnh") {
                                 hasExpiredRows = true;
                                 expiredRows.push({
                                     soToKhai: soToKhaiNhap,
@@ -483,27 +484,53 @@
                                 });
                             }
                         }
-
-                        // Mark this declaration as processed
                         processedToKhai.add(soToKhaiNhap);
+                    }
+
+
+                    const soToKhaiNum = Number(soToKhaiNhap);
+                    if (tamDungToKhai.includes(soToKhaiNum)) {
+                        hasPausedRows = true;
+                        pausedRows.push({
+                            soToKhai: soToKhaiNum,
+                        });
+                        processedToKhai.add(soToKhaiNum);
+                        return;
                     }
                 });
 
-                // If there are expired rows, show warning and prevent submission
-                if (hasExpiredRows) {
-                    let warningMessage =
-                        'Các tờ khai sau đây đã đến 15 ngày trở lên kể từ ngày tiếp nhận:\n\n';
-                    expiredRows.forEach(row => {
-                        warningMessage +=
-                            `- Tờ khai: ${row.soToKhai}, Ngày tiếp nhận: ${row.ngayThongQuan}\n`;
-                    });
-                    // warningMessage += '\nKhông thể xuất hàng cho các tờ khai từ 15 ngày trở lên.';
+                // if (hasExpiredRows) {
+                //     const blockedExpiredRows = expiredRows.filter(row => {
+                //         const soToKhaiNum = Number(row.soToKhai);
+                //         return !unBlockedToKhai.includes(soToKhaiNum);
+                //     });
 
+                //     if (blockedExpiredRows.length > 0) {
+                //         let warningMessage =
+                //             'Các tờ khai sau đây đã đến 15 ngày trở lên kể từ ngày tiếp nhận:\n\n';
+
+                //         blockedExpiredRows.forEach(row => {
+                //             warningMessage +=
+                //                 `- Tờ khai: ${row.soToKhai}, Ngày tiếp nhận: ${row.ngayThongQuan}\n`;
+                //         });
+
+                //         // warningMessage += '\nKhông thể xuất hàng cho các tờ khai từ 15 ngày trở lên.';
+                //         // alert(warningMessage);
+                //         // return false; // Prevent export
+                //     }
+                // }
+                if (hasPausedRows) {
+                    let warningMessage =
+                        'Các tờ khai sau đã bị tạm dừng:\n\n';
+                    pausedRows.forEach(row => {
+                        warningMessage +=
+                            `- Tờ khai: ${row.soToKhai}\n`;
+                    });
                     alert(warningMessage);
-                    // return false;
+                    return false;
                 }
 
-                // Continue with existing validation
+
                 document.getElementById('so_to_khai_nhap_hidden').value = document.getElementById(
                     'so-to-khai-nhap-dropdown-search').value.trim();
                 document.getElementById(

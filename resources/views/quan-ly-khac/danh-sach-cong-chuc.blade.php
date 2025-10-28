@@ -76,61 +76,70 @@
                             </thead>
                             <tbody class="clickable-row">
                                 @foreach ($data as $index => $congChuc)
-                                    <tr data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
-                                        data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}"
-                                        data-ten-dang-nhap="{{ $congChuc->ten_dang_nhap }}"
-                                        data-ma-tai-khoan="{{ $congChuc->ma_tai_khoan }}"
-                                        data-is-nhap-hang="{{ $congChuc->is_nhap_hang }}"
-                                        data-is-xuat-hang="{{ $congChuc->is_xuat_canh }}"
-                                        data-is-xuat-canh="{{ $congChuc->is_xuat_canh }}"
-                                        data-is-yeu-cau="{{ $congChuc->is_yeu_cau }}"
-                                        data-is-ban-giao="{{ $congChuc->is_ban_giao }}"
-                                        data-is-chi-xem="{{ $congChuc->is_chi_xem }}"
-                                        data-status="{{ $congChuc->status }}">
+                                    @if ($congChuc->ma_cong_chuc != 0)
+                                        <tr data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
+                                            data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}"
+                                            data-ten-dang-nhap="{{ $congChuc->ten_dang_nhap }}"
+                                            data-ma-tai-khoan="{{ $congChuc->ma_tai_khoan }}"
+                                            data-is-nhap-hang="{{ $congChuc->is_nhap_hang }}"
+                                            data-is-xuat-hang="{{ $congChuc->is_xuat_canh }}"
+                                            data-is-xuat-canh="{{ $congChuc->is_xuat_canh }}"
+                                            data-is-yeu-cau="{{ $congChuc->is_yeu_cau }}"
+                                            data-is-ban-giao="{{ $congChuc->is_ban_giao }}"
+                                            data-is-chi-xem="{{ $congChuc->is_chi_xem }}"
+                                            data-status="{{ $congChuc->status }}">
 
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $congChuc->ma_cong_chuc }}</td>
-                                        <td>{{ $congChuc->ten_cong_chuc }}</td>
-                                        <td>{{ $congChuc->ten_dang_nhap }}</td>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $congChuc->ma_cong_chuc }}</td>
+                                            <td>{{ $congChuc->ten_cong_chuc }}</td>
+                                            <td>{{ $congChuc->ten_dang_nhap }}</td>
 
-                                        <td>
-                                            <input type="checkbox" {{ $congChuc->is_nhap_hang ? 'checked' : '' }} disabled>
-                                        </td>
-                                        <td><input type="checkbox" {{ $congChuc->is_xuat_hang ? 'checked' : '' }} disabled>
-                                        </td>
-                                        <td><input type="checkbox" {{ $congChuc->is_xuat_canh ? 'checked' : '' }} disabled>
-                                        </td>
-                                        <td><input type="checkbox" {{ $congChuc->is_yeu_cau ? 'checked' : '' }} disabled>
-                                        </td>
-                                        <td><input type="checkbox" {{ $congChuc->is_ban_giao ? 'checked' : '' }} disabled>
-                                        </td>
-                                        <td><input type="checkbox" {{ $congChuc->is_chi_xem ? 'checked' : '' }} disabled>
-                                        </td>
-                                        <td>
-                                            @if ($congChuc->status == 1)
-                                                <p class="text-success">Đang công tác</p>
-                                            @elseif ($congChuc->status == 2)
-                                                <p class="text-warning">Chuyển công tác</p>
-                                            @elseif ($congChuc->status == 3)
-                                                <p class="text-warning">Nghỉ hưu</p>
-                                            @else
-                                                <p class="text-warning">Lý do khác</p>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-primary" data-bs-toggle="modal"
-                                                data-bs-target="#baoCaoModal"
-                                                data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
-                                                data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}">
-                                                Báo cáo
-                                            </button>
-                                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#xoaModal"
-                                                data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
-                                                data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}">
-                                                Xóa
-                                            </button>
-                                        </td>
-                                    </tr>
+                                            <td>
+                                                <input type="checkbox" {{ $congChuc->is_nhap_hang ? 'checked' : '' }}
+                                                    disabled>
+                                            </td>
+                                            <td><input type="checkbox" {{ $congChuc->is_xuat_hang ? 'checked' : '' }}
+                                                    disabled>
+                                            </td>
+                                            <td><input type="checkbox" {{ $congChuc->is_xuat_canh ? 'checked' : '' }}
+                                                    disabled>
+                                            </td>
+                                            <td><input type="checkbox" {{ $congChuc->is_yeu_cau ? 'checked' : '' }}
+                                                    disabled>
+                                            </td>
+                                            <td><input type="checkbox" {{ $congChuc->is_ban_giao ? 'checked' : '' }}
+                                                    disabled>
+                                            </td>
+                                            <td><input type="checkbox" {{ $congChuc->is_chi_xem ? 'checked' : '' }}
+                                                    disabled>
+                                            </td>
+                                            <td>
+                                                @if ($congChuc->status == 1)
+                                                    <p class="text-success">Đang công tác</p>
+                                                @elseif ($congChuc->status == 2)
+                                                    <p class="text-warning">Chuyển công tác</p>
+                                                @elseif ($congChuc->status == 3)
+                                                    <p class="text-warning">Nghỉ hưu</p>
+                                                @else
+                                                    <p class="text-warning">Lý do khác</p>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-primary" data-bs-toggle="modal"
+                                                    data-bs-target="#baoCaoModal"
+                                                    data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
+                                                    data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}">
+                                                    Báo cáo
+                                                </button>
+                                                <button class="btn btn-danger" data-bs-toggle="modal"
+                                                    data-bs-target="#xoaModal"
+                                                    data-ma-cong-chuc="{{ $congChuc->ma_cong_chuc }}"
+                                                    data-ten-cong-chuc="{{ $congChuc->ten_cong_chuc }}">
+                                                    Xóa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endforeach
                             </tbody>
                         </table>
@@ -211,8 +220,8 @@
                                 <label class="ms-2" for="">Đang công tác</label>
                                 <br>
 
-                                <input class="mt-2" type="radio" name="status" id="chuyen-cong-tac"
-                                    value="2" style="transform: scale(1.5);">
+                                <input class="mt-2" type="radio" name="status" id="chuyen-cong-tac" value="2"
+                                    style="transform: scale(1.5);">
                                 <label class="ms-2" for="">Chuyển công tác</label>
                                 <br>
 
@@ -413,6 +422,9 @@
                         <br>
                         <input class="mt-2" type="checkbox" name="29" id="29" value="1">
                         <label for="myCheckbox">Báo cáo hàng tiêu hủy</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="30" id="30" value="1">
+                        <label for="myCheckbox">Báo cáo đoàn tàu</label>
 
 
 
@@ -542,7 +554,7 @@
                 button.addEventListener('click', function() {
                     const maCongChucBC = this.getAttribute('data-ma-cong-chuc');
                     const tenCongChucBC = this.getAttribute('data-ten-cong-chuc');
-                    for (let i = 1; i <= 29; i++) {
+                    for (let i = 1; i <= 30; i++) {
                         $(`#${i}`).prop("checked", false);
                     }
 

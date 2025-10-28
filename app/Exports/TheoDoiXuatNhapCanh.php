@@ -35,12 +35,12 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
     }
     public function array(): array
     {
-        $query = XuatNhapCanh::join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
-            ->join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+        $query = XuatNhapCanh::leftJoin('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->leftJoin('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
             ->leftJoin('chu_hang', 'xuat_nhap_canh.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
-            ->whereRaw("STR_TO_DATE(CONCAT(ngay_them, ' ', REPLACE(thoi_gian_nhap_canh, 'H', ':')), '%Y-%m-%d %H:%i') >= ?", [$this->tu_ngay . ' 07:00'])
-            ->whereRaw("STR_TO_DATE(CONCAT(ngay_them, ' ', REPLACE(thoi_gian_nhap_canh, 'H', ':')), '%Y-%m-%d %H:%i') <= DATE_ADD(?, INTERVAL 1 DAY)", [$this->den_ngay . ' 07:00']);
-
+            // ->whereBetween('ngay_them', [$this->tu_ngay, $this->den_ngay]);
+            ->whereRaw("STR_TO_DATE(CONCAT(ngay_them, ' ', REPLACE(REPLACE(thoi_gian_nhap_canh, 'H', ':'), 'h', ':')), '%Y-%m-%d %H:%i') >= ?", [$this->tu_ngay . ' 06:00'])
+            ->whereRaw("STR_TO_DATE(CONCAT(ngay_them, ' ', REPLACE(REPLACE(thoi_gian_nhap_canh, 'H', ':'), 'h', ':')), '%Y-%m-%d %H:%i') <= DATE_ADD(?, INTERVAL 1 DAY)", [$this->den_ngay . ' 06:00']);
         // Get all data once and calculate statistics
         $data = $query->get();
 
@@ -56,10 +56,11 @@ class TheoDoiXuatNhapCanh implements FromArray, WithEvents
         $year = Carbon::createFromFormat('Y-m-d', $this->den_ngay)->format('Y');
         $startOfMonth = Carbon::create($year, $month, 1)->format('Y-m-d');
 
-        $query2 = XuatNhapCanh::join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
-            ->join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+        $query2 = XuatNhapCanh::leftJoin('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc')
+            ->leftJoin('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
             ->leftJoin('chu_hang', 'xuat_nhap_canh.ma_chu_hang', '=', 'chu_hang.ma_chu_hang')
-            ->whereBetween('ngay_them', [$startOfMonth, $this->den_ngay])
+            ->whereRaw("STR_TO_DATE(CONCAT(ngay_them, ' ', REPLACE(REPLACE(thoi_gian_nhap_canh, 'H', ':'), 'h', ':')), '%Y-%m-%d %H:%i') >= ?", [$startOfMonth . ' 06:00:00'])
+            ->whereRaw("STR_TO_DATE(CONCAT(ngay_them, ' ', REPLACE(REPLACE(thoi_gian_nhap_canh, 'H', ':'), 'h', ':')), '%Y-%m-%d %H:%i') <= DATE_ADD(?, INTERVAL 1 DAY)", [$this->den_ngay . ' 06:00'])
             ->get();
 
         $this->luyKeHangLanh = $query2->where('is_hang_lanh', 1)->count();

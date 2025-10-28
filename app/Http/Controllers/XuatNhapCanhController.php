@@ -43,11 +43,12 @@ class XuatNhapCanhController extends Controller
 
     public function themXNCSubmit(Request $request)
     {
+
         try {
             return DB::transaction(function () use ($request) {
                 $xuatNhapCanh = XuatNhapCanh::create([
                     'so_ptvt_xuat_canh' => $request->so_ptvt_xuat_canh,
-                    'ngay_them' => now(),
+                    'ngay_them' => Carbon::createFromFormat('d/m/Y', $request->ngay_them)->format('Y-m-d'),
                     'so_the' => $request->so_the,
                     'is_hang_lanh' => $request->is_hang_lanh,
                     'is_hang_nong' => $request->is_hang_nong,
@@ -83,27 +84,33 @@ class XuatNhapCanhController extends Controller
     public function huyXNC(Request $request)
     {
         $xnc = XuatNhapCanh::find($request->ma_xnc);
-        if ($xnc->trang_thai == 1) {
-            if (!Carbon::parse($xnc->ngay_them)->lt(Carbon::today()->subDays(2))) {
-                $xnc->delete();
-            } else {
-                $xnc->trang_thai = 4;
-                $xnc->save();
-            }
-        } else {
-            if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức') {
-                $xnc->trang_thai = 1;
-                $xnc->save();
-            } else {
-                $xnc->delete();
-            }
-        }
-
-        session()->flash('alert-success', 'Hủy theo dõi xuất nhập cảnh thành công!');
-        if (Auth::user()->loai_tai_khoan == 'Admin') {
-            return redirect()->route('xuat-nhap-canh.quan-ly-yeu-cau-sua-xnc');
-        } else {
+        if ($this->getCongChucHienTai()->ma_cong_chuc == "T20-HQ11-0015") {
+            $xnc->delete();
+            session()->flash('alert-success', 'Hủy theo dõi xuất nhập cảnh thành công!');
             return redirect()->route('xuat-nhap-canh.danh-sach-xnc');
+        } else {
+            if ($xnc->trang_thai == 1) {
+                if (!Carbon::parse($xnc->ngay_them)->lt(Carbon::today()->subDays(2))) {
+                    $xnc->delete();
+                } else {
+                    $xnc->trang_thai = 4;
+                    $xnc->save();
+                }
+            } else {
+                if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức') {
+                    $xnc->trang_thai = 1;
+                    $xnc->save();
+                } else {
+                    $xnc->delete();
+                }
+            }
+
+            session()->flash('alert-success', 'Hủy theo dõi xuất nhập cảnh thành công!');
+            if (Auth::user()->loai_tai_khoan == 'Admin') {
+                return redirect()->route('xuat-nhap-canh.quan-ly-yeu-cau-sua-xnc');
+            } else {
+                return redirect()->route('xuat-nhap-canh.danh-sach-xnc');
+            }
         }
     }
     public function thuHoiYeuCauHuyXNC(Request $request)
@@ -135,9 +142,10 @@ class XuatNhapCanhController extends Controller
         try {
             DB::beginTransaction();
             $xuatNhapCanh = XuatNhapCanh::find($request->ma_xnc);
-            if (!Carbon::parse($xuatNhapCanh->ngay_them)->lt(Carbon::today()->subDays(2))) {
+            if (!Carbon::parse($xuatNhapCanh->ngay_them)->lt(Carbon::today()->subDays(2)) || $this->getCongChucHienTai()->ma_cong_chuc == "T20-HQ11-0015") {
                 XuatNhapCanh::find($request->ma_xnc)->update([
                     'so_ptvt_xuat_canh' => $request->so_ptvt_xuat_canh,
+                    'ngay_them' => Carbon::createFromFormat('d/m/Y', $request->ngay_them)->format('Y-m-d'),
                     'so_the' => $request->so_the,
                     'is_hang_lanh' => $request->is_hang_lanh,
                     'is_hang_nong' => $request->is_hang_nong,
@@ -258,8 +266,8 @@ class XuatNhapCanhController extends Controller
                 'cong_chuc.ten_cong_chuc'
             )
                 ->orderBy('ma_xnc', 'desc')
-                ->join('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
-                ->join('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc');
+                ->leftJoin('ptvt_xuat_canh', 'xuat_nhap_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+                ->leftJoin('cong_chuc', 'xuat_nhap_canh.ma_cong_chuc', '=', 'cong_chuc.ma_cong_chuc');
 
             return DataTables::eloquent($query)
                 ->filter(function ($query) use ($request) {

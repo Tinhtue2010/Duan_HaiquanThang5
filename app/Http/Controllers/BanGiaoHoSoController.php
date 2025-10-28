@@ -32,18 +32,18 @@ class BanGiaoHoSoController extends Controller
     public function themBanGiaoHoSo(Request $request)
     {
         $congChuc = $this->getCongChucHienTai();
-        return view('ban-giao-ho-so.them-ban-giao-ho-so', data: compact('congChuc'));
+        $congChucs = CongChuc::all();
+        return view('ban-giao-ho-so.them-ban-giao-ho-so', data: compact('congChuc', 'congChucs'));
     }
     public function themBanGiaoHoSoSubmit(Request $request)
     {
         try {
             return DB::transaction(function () use ($request) {
-                $congChuc = $this->getCongChucHienTai();
                 $nhapHangs = $this->getNhapHangDaXuatHet($request);
                 $banGiao = BanGiaoHoSo::create([
                     'tu_ngay' => $this->formatDateToYMD($request->tu_ngay),
                     'den_ngay' => $this->formatDateToYMD($request->den_ngay),
-                    'ma_cong_chuc' => $congChuc->ma_cong_chuc,
+                    'ma_cong_chuc' => $request->ma_cong_chuc,
                     'ngay_tao' => now(),
                 ]);
                 foreach ($nhapHangs as $nhapHang) {
@@ -83,18 +83,31 @@ class BanGiaoHoSoController extends Controller
     }
     public function getNhapHangDaXuatHet(Request $request)
     {
-        $congChuc = $this->getCongChucHienTai();
         $den_ngay = $this->formatDateToYMD($request->den_ngay);
         $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
-        $nhapHangs = NhapHang::join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
-            ->join('hang_hoa', function ($join) {
-                $join->on('nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                    ->whereRaw('hang_hoa.so_luong_khai_bao = (SELECT MAX(so_luong_khai_bao) FROM hang_hoa WHERE hang_hoa.so_to_khai_nhap = nhap_hang.so_to_khai_nhap)');
-            })
-            ->whereBetween('ngay_xuat_het', [$tu_ngay, $den_ngay])
-            ->where('ma_cong_chuc_ban_giao', $congChuc->ma_cong_chuc)
-            ->whereIn('trang_thai', [4,7])
-            ->get();
+        if ($request->ma_cong_chuc == '0') {
+            $nhapHangs = NhapHang::join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('hang_hoa', function ($join) {
+                    $join->on('nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                        ->whereRaw('hang_hoa.so_luong_khai_bao = (SELECT MAX(so_luong_khai_bao) FROM hang_hoa WHERE hang_hoa.so_to_khai_nhap = nhap_hang.so_to_khai_nhap)');
+                })
+                ->whereBetween('ngay_xuat_het', [$tu_ngay, $den_ngay])
+                ->whereIn('trang_thai', [4, 7])
+                ->groupBy('nhap_hang.so_to_khai_nhap')
+                ->get();
+        } else {
+            $nhapHangs = NhapHang::join('doanh_nghiep', 'nhap_hang.ma_doanh_nghiep', '=', 'doanh_nghiep.ma_doanh_nghiep')
+                ->join('hang_hoa', function ($join) {
+                    $join->on('nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+                        ->whereRaw('hang_hoa.so_luong_khai_bao = (SELECT MAX(so_luong_khai_bao) FROM hang_hoa WHERE hang_hoa.so_to_khai_nhap = nhap_hang.so_to_khai_nhap)');
+                })
+                ->whereBetween('ngay_xuat_het', [$tu_ngay, $den_ngay])
+                ->where('ma_cong_chuc_ban_giao', $request->ma_cong_chuc)
+                ->whereIn('trang_thai', [4, 7])
+                ->groupBy('nhap_hang.so_to_khai_nhap')
+                ->get();
+        }
+
 
         return $nhapHangs;
     }

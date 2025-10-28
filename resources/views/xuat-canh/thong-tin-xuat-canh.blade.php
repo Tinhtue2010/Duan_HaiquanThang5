@@ -252,6 +252,16 @@
                             {{ $xuatCanh->congChuc->ten_cong_chuc ?? '' }}</h2>
                         <h2 class="text-success">Ngày duyệt:
                             {{ \Carbon\Carbon::parse($xuatCanh->ngay_duyet)->format('d-m-Y') }}</h2>
+                        @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_xuat_canh == 1)
+                            <center>
+                                <a href="#">
+                                    <button data-bs-toggle="modal" data-bs-target="#thayDoiCongChucModal"
+                                        class="btn btn-warning ">
+                                        <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                        Thay đổi công chức</button>
+                                </a>
+                            </center>
+                        @endif
                     @elseif(trim($xuatCanh->trang_thai) == '4')
                         <h2 class="text-warning">Doanh nghiệp yêu cầu sửa phiếu</h2>
                         <img class="status-icon mb-2" src="{{ asset('images/icons/edit.png') }}">

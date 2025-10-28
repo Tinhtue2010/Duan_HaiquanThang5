@@ -229,10 +229,9 @@
                                     <h2 class="">Tờ khai được duyệt gia hạn {{ $nhapHang->so_ngay_gia_han }} ngày
                                     </h2>
                                 @endif
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && Auth::user()->congChuc->is_nhap_hang == 1)
+                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && in_array(Auth::user()->congChuc->ma_cong_chuc, ["T20-HQ96-0039", "T20-HQ11-0015"]))
                                     <div class="row">
-
-                                        {{-- <center>
+                                        <center>
                                             <div class="col-6">
                                                 <a
                                                     href="{{ route('nhap-hang.sua-to-khai-nhap-cong-chuc', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
@@ -243,7 +242,7 @@
                                                     </button>
                                                 </a>
                                             </div>
-                                        </center> --}}
+                                        </center>
                                     </div>
                                 @endif
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&

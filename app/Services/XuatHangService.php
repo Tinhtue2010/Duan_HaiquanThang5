@@ -584,7 +584,14 @@ class XuatHangService
         $xuatHang->ma_loai_hinh = $suaXuatHang->ma_loai_hinh;
         $trang_thai = "";
 
+        $ptvts = PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)->pluck('so_ptvt_xuat_canh')->toArray();
+        $ptvts_sua = PTVTXuatCanhCuaPhieuSua::where('ma_yeu_cau', $suaXuatHang->ma_yeu_cau)->pluck('so_ptvt_xuat_canh')->toArray();
+
         if ($xuatHang->trang_thai == '4') {
+            $trang_thai = "2";
+        } elseif ($xuatHang->trang_thai == '1') {
+            $trang_thai = "1";
+        } elseif (array_diff($ptvts, $ptvts_sua) !== [] || array_diff($ptvts_sua, $ptvts) !== []) {
             $trang_thai = "2";
         } elseif ($xuatHang->trang_thai == '5') {
             $trang_thai = "11";
@@ -592,8 +599,6 @@ class XuatHangService
             $trang_thai = "12";
         } elseif ($xuatHang->trang_thai == '14' || $xuatHang->trang_thai == '3') {
             $trang_thai = "13";
-        } elseif ($xuatHang->trang_thai == '1') {
-            $trang_thai = "1";
         }
         $xuatHang->trang_thai = $trang_thai;
         $xuatHang->save();

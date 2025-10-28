@@ -42,11 +42,13 @@ use App\Models\YeuCauNiemPhongChiTiet;
 use App\Models\YeuCauTauCont;
 use App\Models\YeuCauTauContChiTiet;
 use App\Models\TienTrinh;
+use App\Models\XuatNhapCanh;
 use App\Models\YeuCauTieuHuy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Yaza\LaravelGoogleDriveStorage\Gdrive;
 
 class LoaiHinhController extends Controller
@@ -94,14 +96,15 @@ class LoaiHinhController extends Controller
     }
     public function action3(Request $request)
     {
+        // $this->checkLechTau();
+        // $yeuCau = YeuCauGoSeal::find(378);
+        // $this->themGoSeal('GLDU0889990', $yeuCau, '2025-09-29');
         $this->checkLechTau();
-        // $this->khoiPhucNhapHang();
-
     }
 
     public function action4(Request $request)
     {
-        $this->kiemTraDungXuatHet();
+        $this->normalizeContainer();
     }
 
     public function action5(Request $request)
@@ -129,6 +132,281 @@ class LoaiHinhController extends Controller
             ]);
         }
     }
+    public function action7(Request $request)
+    {
+        $this->uploadExcel($request);
+    }
+    public function uploadExcel(Request $request)
+    {
+        try {
+            $file = $request->file('excel_file');
+            $extension = $file->getClientOriginalExtension();
+            $list = [];
+            if ($extension === 'csv') {
+                $csvData = array_map('str_getcsv', file($file->getRealPath()));
+            } elseif (in_array($extension, ['xls', 'xlsx'])) {
+                $spreadsheet = IOFactory::load($file->getRealPath());
+                $worksheet = $spreadsheet->getActiveSheet();
+                $csvData = [];
+
+                foreach ($worksheet->getRowIterator() as $row) {
+                    $rowData = [];
+                    foreach ($row->getCellIterator() as $cell) {
+                        $rowData[] = $cell->getFormattedValue();
+                    }
+                    $csvData[] = $rowData;
+                }
+            } else {
+                return response("Không hỗ trợ định dạng file này, hệ thống chỉ hỗ trợ định dạng .xls, .xlsx và .csv");
+            }
+
+            // Find header row by looking for "Tên tàu" and "Ngày nhập cảnh"
+            $headerRowIndex = -1;
+
+            foreach ($csvData as $index => $row) {
+                if (empty($row) || count($row) < 2) {
+                    continue;
+                }
+
+                $normalizedRow = array_map(function ($val) {
+                    return mb_strtolower(trim($val ?? ''));
+                }, $row);
+
+                $hasTenTau = false;
+                $hasNgayNhap = false;
+
+                foreach ($normalizedRow as $col) {
+                    if (!is_string($col) || empty($col)) continue;
+
+                    // Match "tên tàu"
+                    if (str_contains($col, 'tên') && str_contains($col, 'tàu')) {
+                        $hasTenTau = true;
+                    }
+                    // Match "ngày nhập cảnh"
+                    if (str_contains($col, 'ngày') && str_contains($col, 'nhập') && str_contains($col, 'cảnh')) {
+                        $hasNgayNhap = true;
+                    }
+                }
+
+                if ($hasTenTau && $hasNgayNhap) {
+                    $headerRowIndex = $index;
+                    break;
+                }
+            }
+
+            if ($headerRowIndex === -1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy dòng tiêu đề với các cột: Tên tàu, Ngày nhập cảnh'
+                ], 400);
+            }
+
+            $header = array_map(function ($val) {
+                return mb_strtolower(trim($val ?? ''));
+            }, $csvData[$headerRowIndex]);
+
+            // Map column indices
+            $columnIndices = [
+                'ten_tau' => -1,
+                'ngay_nhap' => -1
+            ];
+
+            foreach ($header as $colIndex => $colName) {
+                // Match "tên tàu"
+                if (str_contains($colName, 'tên') && str_contains($colName, 'tàu')) {
+                    $columnIndices['ten_tau'] = $colIndex;
+                }
+                // Match "ngày nhập cảnh"
+                if (str_contains($colName, 'ngày') && str_contains($colName, 'nhập') && str_contains($colName, 'cảnh')) {
+                    $columnIndices['ngay_nhap'] = $colIndex;
+                }
+            }
+
+            if ($columnIndices['ten_tau'] === -1 || $columnIndices['ngay_nhap'] === -1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy cột "Tên tàu" hoặc "Ngày nhập cảnh"'
+                ], 400);
+            }
+
+            // Initialize counters
+            $insertedCount = 0;
+            $skippedCount = 0;
+            $errors = [];
+            $processedRows = []; // Track rows to insert
+
+            // First pass: collect all valid rows from the file
+            foreach (array_slice($csvData, $headerRowIndex + 1) as $rowIndex => $row) {
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                $tenTau = trim($row[$columnIndices['ten_tau']] ?? '');
+                $ngayNhap = trim($row[$columnIndices['ngay_nhap']] ?? '');
+
+                // Skip if both are empty
+                if (empty($tenTau) || empty($ngayNhap)) {
+                    continue;
+                }
+
+                // Parse date
+                try {
+                    if (is_numeric($ngayNhap)) {
+                        // Excel numeric date
+                        $ngayNhapObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($ngayNhap);
+                    } else {
+                        // Handle dates in format "01-05-2025" or "01/05/2025"
+                        if (strpos($ngayNhap, '-') !== false) {
+                            $ngayNhapObj = Carbon::createFromFormat('d-m-Y', $ngayNhap);
+                        } elseif (strpos($ngayNhap, '/') !== false) {
+                            $ngayNhapObj = Carbon::createFromFormat('d/m/Y', $ngayNhap);
+                        } else {
+                            $ngayNhapObj = Carbon::parse($ngayNhap);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Dòng " . ($headerRowIndex + $rowIndex + 2) . ": Định dạng ngày không hợp lệ '{$ngayNhap}'";
+                    $skippedCount++;
+                    continue;
+                }
+
+                // Find the vehicle record
+                $ptvt = PTVTXuatCanh::where('ten_phuong_tien_vt', $tenTau)->first();
+
+                if (!$ptvt) {
+                    $errors[] = "Dòng " . ($headerRowIndex + $rowIndex + 2) . ": Không tìm thấy tàu '{$tenTau}' trong cơ sở dữ liệu";
+                    $skippedCount++;
+                    continue;
+                }
+
+                // Add to processed rows
+                $processedRows[] = [
+                    'so_ptvt_xuat_canh' => $ptvt->so_ptvt_xuat_canh,
+                    'ngay_them' => $ngayNhapObj->format('Y-m-d'),
+                    'ten_tau' => $tenTau
+                ];
+            }
+
+            // Second pass: insert only rows that don't exist in database
+            foreach ($processedRows as $rowData) {
+                // Check if this exact record already exists in database
+                $exists = XuatNhapCanh::where('so_ptvt_xuat_canh', $rowData['so_ptvt_xuat_canh'])
+                    ->whereDate('ngay_them', $rowData['ngay_them'])
+                    ->exists();
+
+                if (!$exists) {
+                    XuatNhapCanh::create([
+                        'so_ptvt_xuat_canh' => $rowData['so_ptvt_xuat_canh'],
+                        'ngay_them' => $rowData['ngay_them'],
+                    ]);
+                    $list[] = $rowData;
+                    $insertedCount++;
+                } else {
+                    $skippedCount++;
+                }
+            }
+            dd($list);
+            return response()->json([
+                'success' => true,
+                'message' => "Import hoàn tất thành công",
+                'inserted' => $insertedCount,
+                'skipped' => $skippedCount,
+                'errors' => $errors
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi xử lý file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function normalizeContainer()
+    {
+        $nhapHangs = NhapHang::where('trang_thai', 2)->get();
+        $so_to_khai_nhaps = $nhapHangs->pluck('so_to_khai_nhap');
+        $hangHoas = HangHoa::whereIn('so_to_khai_nhap', $so_to_khai_nhaps)->get();
+        $hang_trong_conts = HangTrongCont::whereIn('ma_hang', $hangHoas->pluck('ma_hang'))->get();
+
+        $niem_phongs = NiemPhong::whereIn('so_container', $hang_trong_conts->pluck('so_container'))->get();
+        foreach ($niem_phongs as $niem_phong) {
+            // $normalized_container = preg_replace('/\s+/', '', $niem_phong->so_container);
+            // $normalized_phuong_tien = str_replace('-', '', $niem_phong->phuong_tien_vt_nhap);
+            $normalized_phuong_tien = preg_replace('/\s+/', '', $niem_phong->phuong_tien_vt_nhap);
+            $niem_phong->update([
+                'phuong_tien_vt_nhap' => $normalized_phuong_tien,
+            ]);
+
+            // NiemPhong::where('so_container', $normalized_container)
+            //     ->where('ma_niem_phong', '!=', $niem_phong->ma_niem_phong)
+            //     ->delete();
+        }
+
+        // $containers = Container::all();
+        // foreach ($containers as $container) {
+        //     $newSoContainer = preg_replace('/\s+/', '', $container->so_container);
+        //     if ($newSoContainer === $container->so_container) {
+        //         continue;
+        //     }
+        //     $exists = Container::where('so_container', $newSoContainer)->exists();
+        //     if ($exists) {
+        //         continue;
+        //     }
+        //     Container::where('so_container', $container->so_container)
+        //         ->update(['so_container' => $newSoContainer]);
+        // }
+
+        // $theo_doi_hang_hoas = TheoDoiHangHoa::whereIn('so_to_khai_nhap', $so_to_khai_nhaps)->get();
+        // foreach ($theo_doi_hang_hoas as $theo_doi_hang_hoa) {
+        //     $theo_doi_hang_hoa->update([
+        //         'so_container' => preg_replace('/\s+/', '', $theo_doi_hang_hoa->so_container),
+        //     ]);
+        // }
+
+        $theo_doi_tru_lui_chi_tiets = TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui.ma_theo_doi', '=', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi')
+            ->whereIn('theo_doi_tru_lui.so_to_khai_nhap', $so_to_khai_nhaps)
+            ->get();
+
+        foreach ($theo_doi_tru_lui_chi_tiets as $theo_doi_tru_lui_chi_tiet) {
+            $theo_doi_tru_lui_chi_tiet->update([
+                // 'so_container' => preg_replace('/\s+/', '', $theo_doi_tru_lui_chi_tiet->so_container),
+                // 'phuong_tien_vt_nhap' => str_replace('-', '', $theo_doi_tru_lui_chi_tiet->phuong_tien_vt_nhap),
+                'phuong_tien_vt_nhap' => preg_replace('/\s+/', '', $theo_doi_tru_lui_chi_tiet->phuong_tien_vt_nhap),
+            ]);
+        }
+
+        $xuat_hang_conts = XuatHangCont::whereIn('so_to_khai_nhap', $so_to_khai_nhaps)->get();
+        foreach ($xuat_hang_conts as $xuat_hang_cont) {
+            $xuat_hang_cont->update([
+                // 'so_container' => preg_replace('/\s+/', '', $xuat_hang_cont->so_container),
+                // 'phuong_tien_vt_nhap' => str_replace('-', '', $xuat_hang_cont->phuong_tien_vt_nhap),
+                'phuong_tien_vt_nhap' => preg_replace('/\s+/', '', $xuat_hang_cont->phuong_tien_vt_nhap),
+            ]);
+        }
+
+
+
+        foreach ($nhapHangs as $nhapHang) {
+            $nhapHang->update([
+                // 'container_ban_dau' => preg_replace('/\s+/', '', $nhapHang->container_ban_dau),
+                // 'phuong_tien_vt_nhap' => str_replace('-', '', $nhapHang->phuong_tien_vt_nhap),
+                // 'ptvt_ban_dau' => str_replace('-', '', $nhapHang->ptvt_ban_dau),
+                'phuong_tien_vt_nhap' => preg_replace('/\s+/', '', $nhapHang->phuong_tien_vt_nhap),
+                'ptvt_ban_dau' => preg_replace('/\s+/', '', $nhapHang->ptvt_ban_dau),
+            ]);
+        }
+        // foreach ($hangHoas as $hangHoa) {
+        //     $hangHoa->update([
+        //         'so_container_khai_bao' => preg_replace('/\s+/', '', $hangHoa->so_container_khai_bao),
+        //     ]);
+        // }
+        // foreach ($hang_trong_conts as $hang_trong_cont) {
+        //     $hang_trong_cont->update([
+        //         'so_container' => preg_replace('/\s+/', '', $hang_trong_cont->so_container),
+        //     ]);
+        // }
+
+    }
     public function checkLechTau()
     {
         $so_to_khai_nhaps = [];
@@ -148,14 +426,13 @@ class LoaiHinhController extends Controller
         }
         dd($so_to_khai_nhaps);
     }
-    public function fillTiepNhan(Request $request)
+    public function fillTiepNhan()
     {
-        $nhapHangs = NhapHang::join('tien_trinh', 'tien_trinh.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
-            ->where('tien_trinh.ten_cong_viec', 'like', '%đã duyệt tờ khai,%')
+        $nhapHangs = NhapHang::where('nhap_hang.ngay_tiep_nhan', null)
             ->get();
 
         foreach ($nhapHangs as $nhapHang) {
-            NhapHang::find($nhapHang->so_to_khai_nhap)->update(['ngay_tiep_nhan' => $nhapHang->ngay_thuc_hien]);
+            $nhapHang->update(['ngay_tiep_nhan' => $nhapHang->ngay_thong_quan]);
         }
     }
     public function xoaTheoDoiHang(Request $request)
@@ -387,9 +664,9 @@ class LoaiHinhController extends Controller
 
         foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
             $theoDoiTruLui = TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)->count();
-            if ($theoDoiTruLui > 1) {
-                continue;
-            }
+            // if ($theoDoiTruLui > 1) {
+            //     continue;
+            // }
             $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)

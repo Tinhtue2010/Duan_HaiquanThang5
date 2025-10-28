@@ -187,6 +187,7 @@ class YeuCauTauContController extends Controller
                 $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $row['so_container_dich'])
+                    ->where('hang_trong_cont.so_luong', '!=', 0)
                     ->whereIn('nhap_hang.trang_thai', ['2', '3'])
                     ->distinct()
                     ->pluck('nhap_hang.so_to_khai_nhap')
@@ -348,6 +349,7 @@ class YeuCauTauContController extends Controller
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                ->where('hang_trong_cont.so_luong', '!=', 0)
                 ->distinct()
                 ->pluck('nhap_hang.so_to_khai_nhap')
                 ->toArray();
@@ -949,12 +951,14 @@ class YeuCauTauContController extends Controller
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                ->where('hang_trong_cont.so_luong', '!=', 0)
                 ->sum('hang_trong_cont.so_luong');
 
             $so_to_khai_cont_moi = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                ->where('hang_trong_cont.so_luong', '!=', 0)
                 ->distinct()
                 ->pluck('nhap_hang.so_to_khai_nhap')
                 ->implode('</br>');

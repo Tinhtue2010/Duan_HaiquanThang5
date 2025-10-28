@@ -7,6 +7,7 @@ use App\Models\YeuCauSua;
 use Illuminate\Http\Request;
 use App\Models\YeuCauChuyenTauChiTiet;
 use App\Models\CongChuc;
+use App\Models\Container;
 use App\Models\DoanhNghiep;
 use App\Models\HangTrongCont;
 use App\Models\NhapHang;
@@ -34,6 +35,14 @@ class YeuCauChuyenTauController extends Controller
     {
         if (Auth::user()->loai_tai_khoan == "Doanh nghiệp") {
             $doanhNghiep = DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first();
+            $soContainers = Container::select('container.*')
+                ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
+                ->join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
+                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                ->whereNotIn('nhap_hang.trang_thai', ['6', '5', '4', '7'])
+                ->groupBy('container.so_container')
+                ->get();
             $toKhaiDangXuLys = YeuCauChuyenTauChiTiet::join('nhap_hang', 'yeu_cau_chuyen_tau_chi_tiet.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
                 ->join('yeu_cau_chuyen_tau', 'yeu_cau_chuyen_tau_chi_tiet.ma_yeu_cau', '=', 'yeu_cau_chuyen_tau.ma_yeu_cau')
                 ->where('nhap_hang.ma_doanh_nghiep', $doanhNghiep->ma_doanh_nghiep)
@@ -45,7 +54,7 @@ class YeuCauChuyenTauController extends Controller
                 ->whereNotIn('nhap_hang.so_to_khai_nhap', $toKhaiDangXuLys)
                 ->get();
 
-            return view('quan-ly-kho.yeu-cau-chuyen-tau.them-yeu-cau-chuyen-tau', data: compact('toKhaiNhaps', 'doanhNghiep'));
+            return view('quan-ly-kho.yeu-cau-chuyen-tau.them-yeu-cau-chuyen-tau', data: compact('toKhaiNhaps', 'doanhNghiep', 'soContainers'));
         }
         return redirect()->back();
     }

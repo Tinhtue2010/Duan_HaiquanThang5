@@ -38,8 +38,8 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
             ['BÁO CÁO HÀNG CHUYỂN CỬA KHẨU XUẤT (QUAY VỀ KHO)', '', '', '', '', ''],
             ["Từ $tu_ngay đến $den_ngay ", '', '', '', '', ''],
             ['', '', '', '', '', ''],
-            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', '', 'Số lượng chuyển đi', 'Hải quan cửa khẩu nơi hàng hóa chuyển đến (quay về kho)', 'Số tờ khai mới', 'Ngày đăng ký', 'Số container'],
-            ['', '', '', '', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng hóa', 'Xuất xứ', 'Loại hàng', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Ngày xuất', '', '', ''],
+            ['STT', 'Số tờ khai', 'Ngày đăng ký', 'Chi cục HQ đăng ký', 'Doanh nghiệp XK,NK', '', '', 'Hàng hóa', '', '', '', '', '', '', '', 'Số lượng chuyển đi', 'Hải quan cửa khẩu nơi hàng hóa chuyển đến (quay về kho)', 'Số tờ khai mới', 'Ngày đăng ký', 'Số container','Đại lý'],
+            ['', '', '', '', 'Tên DN', 'Mã số DN', 'Địa chỉ DN', 'Tên hàng hóa', 'Xuất xứ', 'Loại hàng', 'Số lượng', 'ĐVT', 'Trọng lượng', 'Trị giá hàng hóa (USD)', 'Ngày xuất', '', '', '', ''],
         ];
         $totalKhaiBao = 0;
         $totalSoLuong = 0;
@@ -52,7 +52,9 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                 ->leftJoin('hai_quan', 'yeu_cau_hang_ve_kho_chi_tiet.ma_hai_quan', '=', 'hai_quan.ma_hai_quan')
                 ->groupBy('so_to_khai_nhap')->get();
             foreach ($chiTiets as $chiTiet) {
-                $nhapHang = NhapHang::find($chiTiet->so_to_khai_nhap);
+                $nhapHang = NhapHang::join('chu_hang','chu_hang.ma_chu_hang', '=', 'nhap_hang.ma_chu_hang')
+                ->where('so_to_khai_nhap', $chiTiet->so_to_khai_nhap)
+                ->first();
                 $hangHoas = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_hoa.so_to_khai_nhap', $chiTiet->so_to_khai_nhap)
                     ->get();
@@ -90,7 +92,8 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                         $chiTiet->ten_hai_quan,
                         $chiTiet->so_to_khai_moi,
                         Carbon::createFromFormat('Y-m-d', $yeuCau->ngay_yeu_cau)->format('d-m-Y'),
-                        $hangHoa->so_container
+                        $hangHoa->so_container,
+                        $nhapHang->ten_chu_hang,
                     ];
                 }
             }
@@ -136,7 +139,7 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                     ->setFitToWidth(1)
                     ->setFitToHeight(0)
                     ->setHorizontalCentered(true)
-                    ->setPrintArea('A1:T' . $sheet->getHighestRow());
+                    ->setPrintArea('A1:U' . $sheet->getHighestRow());
 
                 $sheet->getPageMargins()
                     ->setTop(0.5)
@@ -170,6 +173,7 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                 $sheet->getColumnDimension('R')->setWidth(width: 15);
                 $sheet->getColumnDimension('S')->setWidth(width: 15);
                 $sheet->getColumnDimension('T')->setWidth(width: 15);
+                $sheet->getColumnDimension('U')->setWidth(width: 15);
 
                 $sheet->getStyle('B')->getNumberFormat()->setFormatCode('0'); // Apply format
                 $sheet->getStyle('F')->getNumberFormat()->setFormatCode('0'); // Apply format
@@ -183,8 +187,8 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                 // Merge cells for headers
                 $sheet->mergeCells('A1:E1'); // CỤC HẢI QUAN
                 $sheet->mergeCells('A2:E2'); // CHI CỤC
-                $sheet->mergeCells('A4:T4'); // BÁO CÁO
-                $sheet->mergeCells('A5:T5'); // Tính đến ngày
+                $sheet->mergeCells('A4:U4'); // BÁO CÁO
+                $sheet->mergeCells('A5:U5'); // Tính đến ngày
 
                 $sheet->mergeCells('A7:A8');
                 $sheet->mergeCells('B7:B8');
@@ -199,32 +203,33 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                 $sheet->mergeCells('R7:R8');
                 $sheet->mergeCells('S7:S8');
                 $sheet->mergeCells('T7:T8');
+                $sheet->mergeCells('U7:U8');
 
 
 
                 // Bold and center align for headers
-                $sheet->getStyle('A1:T6')->applyFromArray([
+                $sheet->getStyle('A1:U6')->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
-                $sheet->getStyle('A2:T6')->applyFromArray([
+                $sheet->getStyle('A2:U6')->applyFromArray([
                     'font' => ['bold' => true]
                 ]);
-                $sheet->getStyle('A9:T' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A9:U' . $lastRow)->applyFromArray([
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ]
                 ]);
                 // Italic for date row
-                $sheet->getStyle('A5:T5')->applyFromArray([
+                $sheet->getStyle('A5:U5')->applyFromArray([
                     'font' => ['italic' => true, 'bold' => false],
                 ]);
 
                 // Bold and center align for table headers
-                $sheet->getStyle('A7:T8')->applyFromArray([
+                $sheet->getStyle('A7:U8')->applyFromArray([
                     'font' => ['bold' => true],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -239,7 +244,7 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
 
                 // Add borders to the table content
                 $lastRow = $sheet->getHighestRow();
-                $sheet->getStyle('A7:T' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A7:U' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -255,7 +260,7 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                     }
                 }
 
-                $sheet->getStyle('A' . ($chuKyStart - 2) . ':T' . $lastRow)->applyFromArray([
+                $sheet->getStyle('A' . ($chuKyStart - 2) . ':U' . $lastRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_NONE,
@@ -263,10 +268,10 @@ class BaoCaoChuyenCuaKhauXuat implements FromArray, WithEvents
                     ],
                 ]);
 
-                $sheet->mergeCells('A' . $chuKyStart . ':T' . $chuKyStart);
-                $sheet->getStyle('A' . $chuKyStart . ':T' . $chuKyStart)->getFont()->setBold(true);
-                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':T' . ($chuKyStart + 4));
-                $sheet->getStyle('A' . ($chuKyStart + 4) . ':T' . ($chuKyStart + 4))->getFont()->setBold(true);
+                $sheet->mergeCells('A' . $chuKyStart . ':U' . $chuKyStart);
+                $sheet->getStyle('A' . $chuKyStart . ':U' . $chuKyStart)->getFont()->setBold(true);
+                $sheet->mergeCells('A' . ($chuKyStart + 4) . ':U' . ($chuKyStart + 4));
+                $sheet->getStyle('A' . ($chuKyStart + 4) . ':U' . ($chuKyStart + 4))->getFont()->setBold(true);
             },
         ];
     }

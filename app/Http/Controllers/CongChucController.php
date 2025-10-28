@@ -15,6 +15,7 @@ class CongChucController extends Controller
     public function danhSachCongChuc()
     {
         $data = CongChuc::leftJoin('tai_khoan', 'cong_chuc.ma_tai_khoan', '=', 'tai_khoan.ma_tai_khoan')
+            ->orderBy('cong_chuc.status')
             ->get();
 
         $taiKhoans = TaiKhoan::where('loai_tai_khoan', 'Cán bộ công chức')

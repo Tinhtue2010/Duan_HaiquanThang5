@@ -23,7 +23,7 @@
                     <div class="card px-3 pt-3 mt-4">
                         <div class="row justify-content-center">
                             <div class="row">
-                                <div class="col-3">
+                                <div class="col-4">
                                     <div class="form-group mt-3">
                                         <label for="ptvtxc" class="mb-2 fw-bold">Phương tiện vận tải</label>
                                         <select class="form-control" id="ptvt-xc-dropdown-search"
@@ -39,7 +39,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-2">
+                                <div class="col-3">
                                     <div class="form-group mt-3">
                                         <label class="label-text mb-2 fw-bold" for="so-the">Số thẻ</label>
                                         <input type="number" class="form-control" id="so-the" name="so_the"
@@ -61,34 +61,40 @@
                                             placeholder="Nhập tổng trọng tải" required>
                                     </div>
                                 </div>
-                                <div class="col-3">
-                                    <div class="form-group mt-3">
-                                        <label class="label-text mb-2 fw-bold" for="so-luong-may">Đại lý</label>
-                                        <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
-                                            <option></option>
-                                            @foreach ($chuHangs as $chuHang)
-                                                <option value="{{ $chuHang->ma_chu_hang }}">
-                                                    {{ $chuHang->ten_chu_hang }}
-                                                    ({{ $chuHang->ma_chu_hang }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
                             </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="label-text mb-2 fw-bold" for="so-luong-may">Đại lý</label>
+                                    <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
+                                        <option></option>
+                                        @foreach ($chuHangs as $chuHang)
+                                            <option value="{{ $chuHang->ma_chu_hang }}">
+                                                {{ $chuHang->ten_chu_hang }}
+                                                ({{ $chuHang->ma_chu_hang }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="label-text mb-2 fw-bold" for="so-luong-may">Ngày thêm</label>
+                                    <input type="text" id="ngay-them" class="form-control datepicker"
+                                        placeholder="dd/mm/yyyy" name="ngay_them" readonly>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col-4">
                                     <div class="radio-group">
                                         <div class="radio-title">Loại hàng</div>
-                                        <label class="radio-container">Hàng nóng
-                                            <input type="radio" checked="checked" name="radio1" value="1">
-                                            <span class="checkmark"></span>
-                                        </label>
                                         <label class="radio-container">Hàng lạnh
-                                            <input type="radio" name="radio1" value="2">
+                                            <input type="radio" checked="checked" name="radio1" value="2">
                                             <span class="checkmark"></span>
                                         </label>
+                                        <label class="radio-container">Hàng nóng
+                                            <input type="radio" name="radio1" value="1">
+                                            <span class="checkmark"></span>
+                                        </label>
+
                                     </div>
                                 </div>
                                 <div class="col-4">
@@ -108,8 +114,8 @@
                                     <label for="thoi_gian_nhap_canh" class="form-label">
                                         <strong>Ghi chú</strong>
                                     </label>
-                                    <textarea type="time" class="form-control" id="ghi-chu" rows="3" name="ghi_chu" placeholder="Nhập ghi chú"
-                                        required></textarea>
+                                    <textarea type="time" class="form-control" id="ghi-chu" rows="3" name="ghi_chu"
+                                        placeholder="Nhập ghi chú" required></textarea>
                                 </div>
 
                             </div>
@@ -146,6 +152,7 @@
                         @csrf
                         <input type="hidden" name="so_ptvt_xuat_canh" id="so_ptvt_xuat_canh_hidden">
                         <input type="hidden" name="so_the" id="so_the_hidden">
+                        <input type="hidden" name="ngay_them" id="ngay_them_hidden">
                         <input type="hidden" name="tong_trong_tai" id="tong_trong_tai_hidden">
                         <input type="hidden" name="ma_chu_hang" id="ma_chu_hang_hidden">
                         <input type="hidden" name="is_hang_lanh" id="is_hang_lanh_hidden">
@@ -174,6 +181,7 @@
             const nhapYeuCauButton = document.getElementById('xacNhanBtn');
             let ptvtXuatCanh = document.getElementById('ptvt-xc-dropdown-search');
             let soThe = document.getElementById('so-the');
+            let ngayThem = document.getElementById('ngay-them');
             let soLuongMay = document.getElementById('so-luong-may');
             let tongTrongTai = document.getElementById('tong-trong-tai');
             let maChuHang = document.getElementById('chu-hang-dropdown-search');
@@ -186,6 +194,7 @@
             nhapYeuCauButton.addEventListener('click', function() {
                 document.getElementById('so_ptvt_xuat_canh_hidden').value = ptvtXuatCanh.value.trim();
                 document.getElementById('so_the_hidden').value = soThe.value.trim();
+                document.getElementById('ngay_them_hidden').value = ngayThem.value.trim();
                 document.getElementById('so_luong_may_hidden').value = soLuongMay.value.trim();
                 document.getElementById('tong_trong_tai_hidden').value = tongTrongTai.value.trim();
                 document.getElementById('ma_chu_hang_hidden').value = maChuHang.value.trim();
@@ -233,13 +242,12 @@
                 allowClear: true,
                 width: '100%' // You can adjust this as needed
             });
-            $('.datepicker').datepicker({
-                format: 'dd/mm/yyyy',
-                autoclose: true,
-                todayHighlight: true,
+            $('#ngay-them').datepicker({
+                dateFormat: 'dd/mm/yy',
+                defaultDate: 0,
                 language: 'vi',
-                endDate: '0d'
-            });
+            }).datepicker('setDate', new Date()); // Set today's date
+
             // Re-initialize Select2 when rows become visible
             $('.container-row').on('show', function() {
                 $(this).find('.select2-dropdown').select2({

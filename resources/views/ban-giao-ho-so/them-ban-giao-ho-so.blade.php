@@ -23,19 +23,31 @@
                             <div class="row">
                                 <div class="col-4">
                                     <label class="label-text" for="ma_to_khai">Từ ngày</label>
-                                    <input type="text" id="datepicker1" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                        name="tu_ngay" readonly>
+                                    <input type="text" id="datepicker1" class="form-control datepicker"
+                                        placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
 
                                 </div>
                                 <div class="col-4">
                                     <label class="label-text" for="ma_to_khai">Đến ngày</label>
-                                    <input type="text" id="datepicker2" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                        name="den_ngay" readonly>
+                                    <input type="text" id="datepicker2" class="form-control datepicker"
+                                        placeholder="dd/mm/yyyy" name="den_ngay" readonly>
                                 </div>
                                 <div class="col-4">
                                     <label class="label-text" for="ma_to_khai">Công chức</label>
-                                    <input type="text" id="" class="form-control"
-                                        value="{{ $congChuc->ten_cong_chuc }}" readonly>
+                                    <select class="form-control" id="cong-chuc-dropdown-search" name="ma_cong_chuc">
+                                        <option></option>
+                                        @foreach ($congChucs as $cc)
+                                            @if ($congChuc->ma_cong_chuc == $cc->ma_cong_chuc)
+                                                <option value="{{ $cc->ma_cong_chuc }}" selected>
+                                                    {{ $cc->ten_cong_chuc }}
+                                                </option>
+                                            @else
+                                                <option value="{{ $cc->ma_cong_chuc }}">
+                                                    {{ $cc->ten_cong_chuc }}
+                                                </option>
+                                            @endif
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                             <center>
@@ -81,6 +93,7 @@
                         @csrf
                         <input type="hidden" name="tu_ngay" id="tu_ngay_hidden">
                         <input type="hidden" name="den_ngay" id="den_ngay_hidden">
+                        <input type="hidden" name="ma_cong_chuc" id="ma_cong_chuc_hidden">
                         <button type="submit" class="btn btn-success">Thêm yêu cầu</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </form>
@@ -101,12 +114,14 @@
             nhapYeuCauButton.addEventListener('click', function() {
                 let tuNgay = document.getElementById('datepicker1').value;
                 let denNgay = document.getElementById('datepicker2').value;
+                let maCongCHuc = document.getElementById('cong-chuc-dropdown-search').value;
                 if (!tuNgay || !denNgay) {
                     alert('Vui lòng nhập ngày');
                     return false;
                 }
                 document.getElementById('tu_ngay_hidden').value = tuNgay;
                 document.getElementById('den_ngay_hidden').value = denNgay;
+                document.getElementById('ma_cong_chuc_hidden').value = maCongCHuc;
                 $('#xacNhanModal').modal('show');
             });
         });
@@ -119,12 +134,14 @@
         $('#idNhap').on('click', function() {
             let tuNgay = document.getElementById('datepicker1').value;
             let denNgay = document.getElementById('datepicker2').value;
+            let maCongChuc = document.getElementById('cong-chuc-dropdown-search').value;
             $.ajax({
                 url: "{{ route('ban-giao.getToKhaiDaXuatHet') }}", // Adjust with your route
                 type: "GET",
                 data: {
                     tu_ngay: tuNgay,
                     den_ngay: denNgay,
+                    ma_cong_chuc: maCongChuc
                 },
                 success: function(response) {
                     let tbody = $("#displayTableYeuCau tbody");

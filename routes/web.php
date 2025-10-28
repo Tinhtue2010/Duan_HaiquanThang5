@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\NhapHangController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ChoTKTamDungController;
+use App\Http\Controllers\ChoTKQuaHanController;
 use App\Http\Controllers\BaoCaoController;
 use App\Http\Controllers\PTVanTaiController;
 use App\Http\Controllers\QuanLyKhoController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\DuyetLanHaiController;
 use App\Http\Controllers\NhapCanhController;
 use App\Http\Controllers\XuatNhapCanhController;
 use App\Http\Controllers\YeuCauGoSealController;
+use App\Http\Controllers\DoanTauController;
 use App\Http\Controllers\APIController;
 
 Route::view('/', 'home-page');
@@ -46,6 +49,7 @@ Route::post('/lien-he-submit', [TaiKhoanController::class, 'lienHeSubmit'])->nam
 Route::get('/dang-nhap', [TaiKhoanController::class, 'dangNhap'])->name('login');
 Route::post('/submit-dang-nhap', [TaiKhoanController::class, 'submitDangNhap'])->name('submit-dang-nhap');
 Route::post('/dang-xuat', [TaiKhoanController::class, 'dangXuat'])->name('dang-xuat');
+
 
 
 Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->group(function () {
@@ -81,7 +85,14 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
 
         Route::get('/getNhapHangDaDuyets', [NhapHangController::class, 'getNhapHangDaDuyets'])->name('getNhapHangDaDuyets');
     });
+    Route::name('quan-ly-khac.')->group(function () {
+        Route::get('/quan-ly-tk-tam-dung', [ChoTKTamDungController::class, 'danhSachTKTamDung'])->name('danh-sach-tk-tam-dung');
+        Route::post('/them-tk-tam-dung', [ChoTKTamDungController::class, 'themTKTamDung'])->name('them-tk-tam-dung');
+        Route::post('/xoa-tk-tam-dung', [ChoTKTamDungController::class, 'xoaTKTamDung'])->name('xoa-tk-tam-dung');
 
+        Route::get('/quan-ly-doan-tau', [DoanTauController::class, 'danhSachDoanTau'])->name('quan-ly-doan-tau');
+        Route::post('/update-doan-tau', [DoanTauController::class, 'updateDoanTau'])->name('update-doan-tau');
+    });
     Route::name('xuat-hang.')->group(function () {
         Route::get('/quan-ly-xuat-hang', [XuatHangController::class, 'danhSachToKhai'])->name('quan-ly-xuat-hang');
         Route::get('/to-khai-da-xuat-hang', [XuatHangController::class, 'listToKhaiDaXuatHang'])->name('to-khai-da-xuat-hang');
@@ -458,6 +469,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/bao-cao-tra-cuu-container', [BaoCaoController::class, 'baoCaoTraCuuContainer'])->name('bao-cao-tra-cuu-container');
         Route::get('/bao-cao-theo-doi-xnc', [BaoCaoController::class, 'baoCaoTheoDoiXNC'])->name('bao-cao-theo-doi-xnc');
         Route::get('/bao-cao-thoi-gian-to-khai', [BaoCaoController::class, 'thoiGianToKhaiLuuTaiCang'])->name('bao-cao-thoi-gian-to-khai');
+        Route::get('/bao-cao-doan-tau', [BaoCaoController::class, 'baoCaoDoanTau'])->name('bao-cao-doan-tau');
 
         //DoanhNghiep
         Route::get('/theo-doi-tru-lui-tung-lan', [BaoCaoController::class, 'theoDoiTruLuiTungLan'])->name('theo-doi-tru-lui-tung-lan');
@@ -570,6 +582,11 @@ Route::middleware([\App\Http\Middleware\CheckRoleAdmin::class])->group(function 
         Route::post('/them-loai-hinh', [LoaiHinhController::class, 'themLoaiHinh'])->name('them-loai-hinh');
         Route::post('/xoa-loai-hinh', [LoaiHinhController::class, 'xoaLoaiHinh'])->name('xoa-loai-hinh');
 
+        Route::get('/quan-ly-tk-qua-han', [ChoTKQuaHanController::class, 'danhSachTKQuaHan'])->name('danh-sach-tk-qua-han');
+        Route::post('/them-tk-qua-han', [ChoTKQuaHanController::class, 'themTKQuaHan'])->name('them-tk-qua-han');
+        Route::post('/xoa-tk-qua-han', [ChoTKQuaHanController::class, 'xoaTKQuaHan'])->name('xoa-tk-qua-han');
+
+
         Route::get('/quan-ly-ttest', [LoaiHinhController::class, 'ttest']);
         Route::post('/action-1', [LoaiHinhController::class, 'action1'])->name('action-1');
         Route::post('/action-2', [LoaiHinhController::class, 'action2'])->name('action-2');
@@ -577,6 +594,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleAdmin::class])->group(function 
         Route::post('/action-4', [LoaiHinhController::class, 'action4'])->name('action-4');
         Route::post('/action-5', [LoaiHinhController::class, 'action5'])->name('action-5');
         Route::post('/action-6', [LoaiHinhController::class, 'action6'])->name('action-6');
+        Route::post('/action-7', [LoaiHinhController::class, 'action7'])->name('action-7');
 
         Route::get('/quan-ly-doanh-nghiep-ql/{ma_doanh_nghiep}', [DoanhNghiepController::class, 'danhSachDoanhNghiepQL'])->name('danh-sach-doanh-nghiep-ql');
         Route::post('/them-doanh-nghiep-ql', [DoanhNghiepController::class, 'themDoanhNghiepQL'])->name('them-doanh-nghiep-ql');

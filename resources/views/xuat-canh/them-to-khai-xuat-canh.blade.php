@@ -29,8 +29,8 @@
                                         <option></option>
                                         @foreach ($PTVTXuatCanhs as $PTVTXuatCanh)
                                             <option value="{{ $PTVTXuatCanh->so_ptvt_xuat_canh }}">
-                                                {{ $PTVTXuatCanh->ten_phuong_tien_vt }} Số:
-                                                {{ $PTVTXuatCanh->so_ptvt_xuat_canh }}
+                                                {{ $PTVTXuatCanh->ten_phuong_tien_vt }} 
+                                                {{-- Số: {{ $PTVTXuatCanh->so_ptvt_xuat_canh }} --}}
                                             </option>
                                         @endforeach
                                     </select>

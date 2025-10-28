@@ -73,7 +73,7 @@ class BaoCaoTheoDoiTruLuiTatCaExport implements FromArray, WithEvents, WithDrawi
             [''],
             ['', '', '', '', '', '', '', 'Ngày ' . $currentDate . ' Tháng ' . $currentMonth . ' Năm ' . $currentYear],
             ['Tên Doanh Nghiệp: ' . $ten_doanh_nghiep],
-            ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Chi cục hải quan đăng ký: ' . $this->ten_hai_quan],
+            ['Số tờ khai: ' . $nhapHang->so_to_khai_nhap, '', '', 'Ngày đăng ký: Ngày ' . $date->format('d') . ' Tháng ' . $date->format('m') . ' Năm 20' . $date->format('y'), '', '', '', '', 'Hải quan đăng ký: ' . $this->ten_hai_quan],
             ['Tên hàng hóa: ' . $hangHoaLonNhat->ten_hang],
             ['Số lượng: ' . $tongSoLuongs . '; Đơn vị tính: ' . $hangHoaLonNhat->don_vi_tinh . '; Xuất xứ: ' . $hangHoaLonNhat->xuat_xu],
             [],

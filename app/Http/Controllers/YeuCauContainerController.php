@@ -118,6 +118,7 @@ class YeuCauContainerController extends Controller
                     ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                     ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                     ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                    ->where('hang_trong_cont.so_luong', '!=', 0)
                     ->distinct()
                     ->pluck('nhap_hang.so_to_khai_nhap')
                     ->implode('</br>');
@@ -293,6 +294,7 @@ class YeuCauContainerController extends Controller
                 ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
                 ->where('hang_trong_cont.so_container', $row['so_container_dich'])
                 ->whereIn('nhap_hang.trang_thai', ['2', '3'])
+                ->where('hang_trong_cont.so_luong', '!=', 0)
                 ->distinct()
                 ->pluck('nhap_hang.so_to_khai_nhap')
                 ->implode('</br>');
