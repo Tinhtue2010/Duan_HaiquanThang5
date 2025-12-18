@@ -23,7 +23,8 @@ class YeuCauHangVeKhoChiTiet extends Model
         'ten_hang',
         'ma_hang',
         'ma_yeu_cau',
-        'ten_phuong_tien_vt'
+        'ten_phuong_tien_vt',
+        'so_seal_dinh_vi',
     ];
 
     public function nhapHang()

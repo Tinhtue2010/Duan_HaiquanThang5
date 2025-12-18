@@ -15,6 +15,7 @@ class NiemPhong extends Model
         'ma_niem_phong',
         'phuong_tien_vt_nhap',
         'so_seal',
+        'ten_doan_tau',
         'ngay_niem_phong',
         'so_container',
         'ma_cong_chuc',

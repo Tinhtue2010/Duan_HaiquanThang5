@@ -150,8 +150,8 @@
                             <div class="col">
                                 <label class="label-text" for="ten_doan_tau">Đoàn tàu</label>
                                 <span class="text-danger missing-input-text"></span>
-                                <input type="text" class="form-control mt-2" id="ten_doan_tau" name="ten_doan_tau" value="{{ $nhapHang->ten_doan_tau ?? '' }}"
-                                    placeholder="Nhập đoàn tàu" required>
+                                <input type="text" class="form-control mt-2" id="ten_doan_tau" name="ten_doan_tau"
+                                    value="{{ $nhapHang->ten_doan_tau ?? '' }}" placeholder="Nhập đoàn tàu" required>
                             </div>
                         </div>
                     </div>
@@ -172,7 +172,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-4">
+                            <div class="col-6">
                                 <div class="form-group">
                                     <label class="label-text mb-2" for="loai_hang">Loại hàng</label>
                                     <span class="text-danger missing-input-text"></span>
@@ -186,17 +186,36 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-6">
                                 <label class="label-text" for="">Số container</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="so_container" maxlength="50"
                                     name="so_container" placeholder="Nhập số container" required>
                             </div>
+                        </div>
+                        <div class="row">
                             <div class="col-4">
                                 <label class="label-text" for="so_seal">Số seal</label>
                                 <span class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="so_seal" name="so_seal"
                                     placeholder="Nhập số seal" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="label-text" for="so_seal_dinh_vi">Số seal định vị</label>
+                                <span class="text-danger missing-input-text"></span>
+                                <input type="text" class="form-control mt-2" id="so_seal_dinh_vi"
+                                    name="so_seal_dinh_vi" placeholder="Nhập số seal định vị" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="label-text mb-2" for="cong_chuc_go_seal">Công chức gỡ seal</label>
+                                <select class="form-control" id="cong-chuc-dropdown-search" name="cong_chuc_go_seal">
+                                    <option></option>
+                                    @foreach ($congChucs as $congChuc)
+                                        <option value="{{ $congChuc->ma_cong_chuc }}">
+                                            {{ $congChuc->ten_cong_chuc }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -265,6 +284,9 @@
                         <th>Trị giá (USD)</th>
                         <th>Số container</th>
                         <th>Số seal</th>
+                        <th>Số seal định vị</th>
+                        <th>Công chức gỡ seal</th>
+                        <th hidden>Mã công chức gỡ seal</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -327,6 +349,26 @@
                             <label class="label-text fw-bold" for="">Số seal</label>
                             <input type="text" class="form-control mt-2 px-3" id="so-seal-2" maxlength="50"
                                 name="so_seal" placeholder="Nhập số seal" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="label-text fw-bold" for="so_seal_dinh_vi">Số seal định vị</label>
+                            <span class="text-danger missing-input-text"></span>
+                            <input type="text" class="form-control mt-2" id="so-seal-dinh-vi-2"
+                                name="so_seal_dinh_vi" placeholder="Nhập số seal định vị" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-text fw-bold mb-2" for="cong_chuc_go_seal_2">Công chức gỡ seal</label>
+                            <span class="text-danger missing-input-text"></span>
+                            <select class="form-control" id="cong-chuc-dropdown-search-2" name="cong_chuc_go_seal_2">
+                                <option></option>
+                                @foreach ($congChucs as $congChuc)
+                                    <option value="{{ $congChuc->ma_cong_chuc }}">
+                                        {{ $congChuc->ten_cong_chuc }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -423,7 +465,10 @@
                 don_gia: row.don_gia,
                 tri_gia: row.tri_gia,
                 so_container: row.so_container_khai_bao,
-                so_seal: row.so_seal
+                so_seal: row.so_seal,
+                so_seal_dinh_vi: row.so_seal_dinh_vi,
+                ten_cong_chuc_go_seal: row.ten_cong_chuc,
+                ma_cong_chuc_go_seal: row.cong_chuc_go_seal
             }));
             displayRows();
 
@@ -443,6 +488,9 @@
                             <td>${row.tri_gia}</td>
                             <td>${row.so_container}</td>
                             <td>${row.so_seal}</td>
+                            <td>${row.so_seal_dinh_vi || ''}</td>
+                            <td>${row.ten_cong_chuc_go_seal || ''}</td>
+                            <td hidden>${row.ma_cong_chuc_go_seal || ''}</td>
                             <td>
                                 <button class="btn btn-warning btn-sm editRowButton">Sửa</button>
                                 <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
@@ -463,7 +511,9 @@
                 const tri_gia = $("#tri_gia").val();
                 const so_container = $("#so_container").val();
                 const so_seal = $("#so_seal").val();
-
+                const so_seal_dinh_vi = $("#so_seal_dinh_vi").val();
+                const ma_cong_chuc_go_seal = $("#cong-chuc-dropdown-search").val();
+                const ten_cong_chuc_go_seal = $("#cong-chuc-dropdown-search option:selected").text() || '';
                 let isValid = true;
 
                 const fields = [{
@@ -521,12 +571,16 @@
                         tri_gia,
                         so_container,
                         so_seal,
+                        so_seal_dinh_vi,
+                        ten_cong_chuc_go_seal,
+                        ma_cong_chuc_go_seal
                     });
                     displayRows();
                     $(".reset-input").val('');
                     $("#ma_hang").val(0);
                     $("#don-vi-tinh-dropdown-search").val('').trigger("change");
                     $("#loai-hang-dropdown-search").val('').trigger('change');
+                    $("#cong-chuc-dropdown-search").val('').trigger('change');
                     $(".missing-input-text").hide();
                 }
             });
@@ -543,11 +597,22 @@
                 $("#tri_gia").val(rowData.tri_gia);
                 $("#so_container").val(rowData.so_container);
                 $("#so_seal").val(rowData.so_seal);
+                $("#so_seal_dinh_vi").val(rowData.so_seal_dinh_vi || '');
+                $("#ma_cong_chuc_go_seal").val(rowData.ma_cong_chuc_go_seal || '');
 
                 $("#don-vi-tinh-dropdown-search").val(rowData.don_vi_tinh).trigger("change");
                 $("#loai-hang-dropdown-search").val(rowData.loai_hang).trigger("change");
+
+                // Set cong_chuc_go_seal using ma_cong_chuc_go_seal
+                if (rowData.ma_cong_chuc_go_seal) {
+                    $("#cong-chuc-dropdown-search").val(rowData.ma_cong_chuc_go_seal).trigger("change");
+                } else {
+                    $("#cong-chuc-dropdown-search").val('').trigger("change");
+                }
+
                 rowsData.splice(rowIndex, 1);
                 displayRows();
+
             });
 
             $(document).on("click", ".deleteRowButton", function() {
@@ -613,6 +678,8 @@
                     tri_gia: row.cells[7].textContent,
                     so_container: row.cells[8].textContent,
                     so_seal: row.cells[9].textContent,
+                    so_seal_dinh_vi: row.cells[10].textContent,
+                    ma_cong_chuc_go_seal: row.cells[12].textContent,
                 }));
 
                 // Set values for hidden inputs
@@ -646,6 +713,14 @@
                 formData.append("loai_hang", loai_hang);
                 formData.append("so_container", so_container);
                 formData.append("so_seal", so_seal);
+                const so_seal_dinh_vi = $("#so-seal-dinh-vi-2").val();
+                const ma_cong_chuc_go_seal = $("#cong-chuc-dropdown-search-2").val();
+                const ten_cong_chuc_go_seal = $("#cong-chuc-dropdown-search-2 option:selected").text() ||
+                    '';
+                formData.append("so_seal_dinh_vi", so_seal_dinh_vi);
+                formData.append("ten_cong_chuc_go_seal", ten_cong_chuc_go_seal);
+                formData.append("ma_cong_chuc_go_seal", ma_cong_chuc_go_seal);
+
                 formData.append("_token", "{{ csrf_token() }}");
 
                 $.ajax({
@@ -672,6 +747,9 @@
                                         <td>${row.tri_gia}</td>
                                         <td>${row.so_container}</td>
                                         <td>${row.so_seal}</td>
+                                        <td>${row.so_seal_dinh_vi}</td>
+                                        <td>${row.ten_cong_chuc_go_seal}</td>
+                                        <td hidden>${row.ma_cong_chuc_go_seal}</td>
                                         <td>
                                             <button class="btn btn-warning btn-sm editRowButton">Sửa</button>
                                             <button class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
@@ -687,6 +765,11 @@
                                     tri_gia: row.tri_gia,
                                     so_container: row.so_container,
                                     so_seal: row.so_seal,
+                                    so_seal_dinh_vi: row.so_seal_dinh_vi,
+                                    ten_cong_chuc_go_seal: row
+                                        .ten_cong_chuc_go_seal,
+                                    ma_cong_chuc_go_seal: row
+                                        .ma_cong_chuc_go_seal,
                                 });
                             });
                             displayRows();
@@ -786,6 +869,16 @@
                 $('#loai-hang-2-dropdown-search').select2('destroy');
                 $('#loai-hang-2-dropdown-search').select2({
                     placeholder: "Chọn loại hàng",
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $('#chonFileModal .modal-body'),
+                });
+                $('#cong-chuc-dropdown-search-2').select2('destroy');
+                $('#cong-chuc-dropdown-search-2').select2({
+                    placeholder: "Chọn công chức",
                     allowClear: true,
                     language: "vi",
                     minimumInputLength: 0,

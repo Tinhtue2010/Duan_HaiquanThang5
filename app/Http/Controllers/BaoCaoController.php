@@ -20,6 +20,7 @@ use App\Exports\BaoCaoHangTonTaiCang;
 use App\Exports\BaoCaoContainerLuuTaiCang;
 use App\Exports\BaoCaoHangHoaChuaThucXuat;
 use App\Exports\BaoCaoSuDungSealChiTiet;
+use App\Exports\BaoCaoTiepNhanSeal;
 use App\Exports\BaoCaoPhieuXuatDoanhNghiep;
 use App\Exports\BaoCaoSoLuongToKhaiXuat;
 use App\Exports\BaoCaoTheoDoiHangHoa;
@@ -31,6 +32,7 @@ use App\Exports\BaoCaoTheoDoiTruLuiTheoNgayExport;
 use App\Exports\BaoCaoDangKyXuatKhauHangHoa;
 use App\Exports\BaoCaoSangContChuyenTau;
 use App\Exports\BaoCaoGiamSatXuatKhau;
+use App\Exports\BaoCaoHangTonTaiCangChiTiet;
 use App\Exports\BaoCaoSuDungSeal;
 use App\Exports\BaoCaoContainerLuuTaiCangTheoCont;
 use App\Exports\BaoCaoPhuongTienXuatCanhSuaHuy;
@@ -44,6 +46,7 @@ use App\Exports\PhanCongNhiemVuGiamSat;
 use App\Exports\TheoDoiXuatNhapCanh;
 use App\Exports\BaoCaoThoiGianToKhai;
 use App\Exports\BaoCaoDoanTau;
+use App\Exports\BaoCaoPhuongTienChuaXuatCanh;
 use App\Models\ChuHang;
 use App\Models\CongChuc;
 use App\Models\DoanhNghiep;
@@ -71,7 +74,7 @@ class BaoCaoController extends Controller
         $ptvtXuatCanhs = PTVTXuatCanh::all();
         $doanhNghieps = DoanhNghiep::with('chuHang')->get();
         $chuHangs = ChuHang::select('ma_chu_hang', 'ten_chu_hang')->get();
-        $congChucs = CongChuc::where('is_chi_xem', 0)->get();
+        $congChucs = CongChuc::where('is_chi_xem', 0)->where('ma_cong_chuc','!=','0')->get();
         $phuongTienVTNhaps = NhapHang::all()->pluck('phuong_tien_vt_nhap')->unique()->toArray();
         return view('bao-cao/bao-cao-hang-ton', compact('doanhNghieps', 'chuHangs', 'ptvtXuatCanhs', 'congChucs', 'phuongTienVTNhaps')); // Pass the data to the view
     }
@@ -165,6 +168,8 @@ class BaoCaoController extends Controller
                     $fileName = 'Tiêu hủy hàng: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
                 } elseif ($theoDoiTruLui->cong_viec == 7) {
                     $fileName = 'Kiểm tra hàng: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
+                } elseif ($theoDoiTruLui->cong_viec == 8) {
+                    $fileName = 'Kẹp chì chung container: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
                 } elseif ($theoDoiTruLui->cong_viec == 9) {
                     $fileName = 'Gỡ seal điện tử: ' . $so_to_khai . ' ngày ' . $ngay_name . ' ' . uniqid() . '.xlsx';
                 }
@@ -400,6 +405,24 @@ class BaoCaoController extends Controller
         $fileName = 'Báo cáo sử dụng seal niêm phong từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
         return Excel::download(new BaoCaoSuDungSeal($tu_ngay, $den_ngay), $fileName);
     }
+    public function tiepNhanSeal(Request $request)
+    {
+        $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
+        $den_ngay_name = $this->formatDateToDMY($request->den_ngay);
+        $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
+        $den_ngay = $this->formatDateToYMD($request->den_ngay);
+        $fileName = 'Báo cáo chi tiết gán, gỡ seal định vị điện tử từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
+        return Excel::download(new BaoCaoTiepNhanSeal($tu_ngay, $den_ngay), $fileName);
+    }
+    public function phuongTienChuaXuatCanh(Request $request)
+    {
+        $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
+        $den_ngay_name = $this->formatDateToDMY($request->den_ngay);
+        $tu_ngay = $this->formatDateToYMD($request->tu_ngay);
+        $den_ngay = $this->formatDateToYMD($request->den_ngay);
+        $fileName = 'Báo cáo phương tiện chưa xuất cảnh từ ' . $tu_ngay_name . ' đến ' . $den_ngay_name . '.xlsx';
+        return Excel::download(new BaoCaoPhuongTienChuaXuatCanh($tu_ngay, $den_ngay), $fileName);
+    }
     public function suDungSealChiTiet(Request $request)
     {
         $tu_ngay_name = $this->formatDateToDMY($request->tu_ngay);
@@ -495,6 +518,12 @@ class BaoCaoController extends Controller
         $date = $this->formatDateNow();
         $fileName = 'Báo cáo hàng tồn tại cảng ngày ' . $date . '.xlsx';
         return Excel::download(new BaoCaoHangTonTaiCang(), $fileName);
+    }
+    public function hangTonTaiCangChiTiet()
+    {
+        $date = $this->formatDateNow();
+        $fileName = 'Báo cáo hàng tồn chi tiết tại cảng ngày ' . $date . '.xlsx';
+        return Excel::download(new BaoCaoHangTonTaiCangChiTiet(), $fileName);
     }
     public function thoiGianToKhaiLuuTaiCang()
     {
@@ -701,6 +730,8 @@ class BaoCaoController extends Controller
                 $item->ten_cong_viec = "Tiêu hủy hàng";
             } elseif ($item->cong_viec == "7") {
                 $item->ten_cong_viec = "Kiểm tra hàng";
+            } elseif ($item->cong_viec == "8") {
+                $item->ten_cong_viec = "Kẹp chì chung container";
             } elseif ($item->cong_viec == "9") {
                 $item->ten_cong_viec = "Gỡ seal điện tử";
             } elseif ($item->cong_viec == "10") {
@@ -759,6 +790,8 @@ class BaoCaoController extends Controller
                 $theoDoiTruLui->cong_viec = "Tiêu hủy hàng";
             } else if ($theoDoiTruLui->cong_viec == 7) {
                 $theoDoiTruLui->cong_viec = "Kiểm tra hàng";
+            } else if ($theoDoiTruLui->cong_viec == 8) {
+                $theoDoiTruLui->cong_viec = "Kẹp chì chung container";
             } else if ($theoDoiTruLui->cong_viec == 9) {
                 $theoDoiTruLui->cong_viec = "Gỡ seal điện tử";
             }

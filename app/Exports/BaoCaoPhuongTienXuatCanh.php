@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use Carbon\Carbon;
+use DateTime;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
 class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
@@ -46,80 +47,11 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             ['', '', '', '', '', '', '', '', '', '', 'Thuốc lá', 'Rượu (kiện)', 'Đông lạnh', '', 'Hàng khác', ''],
             ['', '', '', '', '', '', '', '', '', '', '', '', 'Kiện', 'Tấn', 'Kiện', 'Tấn'],
         ];
-
-        $data = XuatCanh::leftJoin('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.ma_xuat_canh', '=', 'xuat_canh.ma_xuat_canh')
-            ->leftJoin('xuat_hang', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_canh_chi_tiet.so_to_khai_xuat')
-            ->leftJoin('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-            ->leftJoin('ptvt_xuat_canh', 'xuat_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
-            ->leftJoin('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
-            ->leftJoin('hang_hoa', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->leftJoin('cong_chuc', 'xuat_canh.ma_cong_chuc', 'cong_chuc.ma_cong_chuc')
-            ->leftJoin('nhap_canh', 'xuat_canh.so_ptvt_xuat_canh', 'nhap_canh.so_ptvt_xuat_canh')
-            ->leftJoin('doanh_nghiep', 'xuat_canh.ma_doanh_nghiep_chon', 'doanh_nghiep.ma_doanh_nghiep')
-            ->leftJoin('chu_hang', 'doanh_nghiep.ma_chu_hang', 'chu_hang.ma_chu_hang')
-            ->whereBetween('xuat_canh.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
-            ->where('xuat_canh.trang_thai', '!=', 0)
-            ->where('xuat_canh.trang_thai', '!=', 6)
-            ->where('xuat_canh.trang_thai', '!=', 5)
-            ->where(function ($query) {
-                $query->whereNull('xuat_hang.trang_thai')
-                    ->orWhere('xuat_hang.trang_thai', '!=', 0);
-            })
-            // ->where(function ($query) {
-            //     $query->whereNotNull('xuat_canh_chi_tiet.ma_xuat_canh')
-            //         ->orWhere('xuat_canh.ma_doanh_nghiep_chon', 0);
-            // })
-            ->select(
-                'xuat_canh.ma_xuat_canh',
-                'xuat_canh.ten_thuyen_truong',
-                'xuat_canh.ngay_dang_ky',
-                'cong_chuc.ten_cong_chuc',
-                'xuat_canh.ma_doanh_nghiep',
-                'doanh_nghiep.ten_doanh_nghiep',
-                'chu_hang.ten_chu_hang',
-                'hang_hoa.loai_hang',
-                'xuat_hang_cont.so_luong_xuat',
-                'xuat_hang_cont.ma_xuat_hang_cont',
-                'xuat_canh.so_ptvt_xuat_canh',
-            )
-            ->get()
-            ->groupBy('ma_xuat_canh')
-            ->map(function ($items, $ma_xuat_canh) {
-                $first = $items->first();
-
-                $uniqueItems = collect();
-                $seen = [];
-
-                foreach ($items as $item) {
-                    $key = $item->ma_xuat_hang_cont;
-
-                    if (is_null($key) || !isset($seen[$key])) {
-                        $uniqueItems->push($item);
-                        if (!is_null($key)) {
-                            $seen[$key] = true;
-                        }
-                    }
-                }
-
-                // Calculate loai_hang_sums for all items in this filtered collection
-                $loaiHangSummary = $uniqueItems->groupBy('loai_hang')->map(function ($group) {
-                    return $group->sum('so_luong_xuat');
-                });
-
-                return [
-                    'ma_xuat_canh' => $ma_xuat_canh,
-                    'ten_thuyen_truong' => $first->ten_thuyen_truong,
-                    'ngay_dang_ky' => $first->ngay_dang_ky,
-                    'ma_doanh_nghiep' => $first->ma_doanh_nghiep,
-                    'ten_cong_chuc' => $first->ten_cong_chuc,
-                    'ten_doanh_nghiep' => $first->ten_doanh_nghiep,
-                    'ten_chu_hang' => $first->ten_chu_hang,
-                    'loai_hang' => $first->loai_hang,
-                    'loai_hang_sums' => $loaiHangSummary,
-                    'so_ptvt_xuat_canh' => $first->so_ptvt_xuat_canh,
-                ];
-            })
-            ->values();
+        if (new DateTime($this->tu_ngay) < new DateTime('2025-11-14')) {
+            $data = $this->beforeDateTime();
+        } else {
+            $data = $this->afterDateTime();
+        }
 
         $sumThuocLa = 0;
         $sumRuou = 0;
@@ -173,6 +105,7 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
             $totalThuocLa = $thuocLa + $thuocLa2 + $thuocLa3;
             $totalKhac = $value['loai_hang_sums']['Khác'] ?? 0;
 
+            $tempSum = $totalThuocLa + ($value['loai_hang_sums']['Rượu'] ?? 0) + ($value['loai_hang_sums']['Đông lạnh'] ?? 0) + $totalKhac;
             $ngayDangKys = NhapCanh::where('so_ptvt_xuat_canh', $value['so_ptvt_xuat_canh'])
                 ->pluck('ngay_dang_ky')
                 ->toArray();
@@ -221,10 +154,10 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
                 ($value['loai_hang'] == 'Khác') ? $totalTrongLuong : '0',
                 $cang_den,
                 $value['ten_cong_chuc'],
-                $value['loai_hang'] ? $value['ten_doanh_nghiep'] : '',
+                $tempSum == 0 ? '' : $value['ten_doanh_nghiep'],
                 // $value['ten_doanh_nghiep'],
-                $value['loai_hang'] ? $ten_chu_hang : '',
-                // $ten_chu_hang,
+                // $value['loai_hang'] ? $ten_chu_hang : '',
+                $ten_chu_hang,
             ];
 
             $sumThuocLa += $totalThuocLa;
@@ -254,6 +187,172 @@ class BaoCaoPhuongTienXuatCanh implements FromArray, WithEvents
         ];
 
         return $result;
+    }
+
+
+
+    public function beforeDateTime()
+    {
+        $data = XuatCanh::leftJoin('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.ma_xuat_canh', '=', 'xuat_canh.ma_xuat_canh')
+            ->leftJoin('xuat_hang', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_canh_chi_tiet.so_to_khai_xuat')
+            ->leftJoin('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->leftJoin('ptvt_xuat_canh', 'xuat_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+            ->leftJoin('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
+            ->leftJoin('hang_hoa', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->leftJoin('cong_chuc', 'xuat_canh.ma_cong_chuc', 'cong_chuc.ma_cong_chuc')
+            ->leftJoin('nhap_canh', 'xuat_canh.so_ptvt_xuat_canh', 'nhap_canh.so_ptvt_xuat_canh')
+            ->leftJoin('doanh_nghiep', 'xuat_canh.ma_doanh_nghiep_chon', 'doanh_nghiep.ma_doanh_nghiep')
+            ->leftJoin('chu_hang', 'doanh_nghiep.ma_chu_hang', 'chu_hang.ma_chu_hang')
+            ->whereBetween('xuat_canh.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
+            ->where('xuat_canh.trang_thai', '!=', 0)
+            ->where('xuat_canh.trang_thai', '!=', 1)
+            ->where('xuat_canh.trang_thai', '!=', 6)
+            ->where('xuat_canh.trang_thai', '!=', 5)
+            ->where(function ($query) {
+                $query->whereNull('xuat_hang.trang_thai')
+                    ->orWhere('xuat_hang.trang_thai', '!=', 0);
+            })
+            ->select(
+                'xuat_canh.ma_xuat_canh',
+                'xuat_canh.ten_thuyen_truong',
+                'xuat_canh.ngay_dang_ky',
+                'cong_chuc.ten_cong_chuc',
+                'xuat_canh.ma_doanh_nghiep',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+                'hang_hoa.loai_hang',
+                'xuat_hang_cont.so_luong_xuat',
+                'xuat_hang_cont.ma_xuat_hang_cont',
+                'xuat_canh.so_ptvt_xuat_canh',
+            )
+            ->get()
+            ->groupBy('ma_xuat_canh')
+            ->map(function ($items, $ma_xuat_canh) {
+                $first = $items->first();
+                $uniqueItems = collect();
+                $seen = [];
+
+                // Define valid categories
+                $validCategories = ['Thuốc lá', 'THUỐC LÁ ESSE', 'Cigar', 'Rượu', 'Đông lạnh', 'Khác'];
+
+                foreach ($items as $item) {
+                    $key = $item->ma_xuat_hang_cont;
+
+                    // Normalize loai_hang - if not in valid categories, change to 'Khác'
+                    if (!in_array($item->loai_hang, $validCategories)) {
+                        $item->loai_hang = 'Khác';
+                    }
+
+                    if (is_null($key) || !isset($seen[$key])) {
+                        $uniqueItems->push($item);
+                        if (!is_null($key)) {
+                            $seen[$key] = true;
+                        }
+                    }
+                }
+
+                // Calculate loai_hang_sums for all items in this filtered collection
+                $loaiHangSummary = $uniqueItems->groupBy('loai_hang')->map(function ($group) {
+                    return $group->sum('so_luong_xuat');
+                });
+
+                return [
+                    'ma_xuat_canh' => $ma_xuat_canh,
+                    'ten_thuyen_truong' => $first->ten_thuyen_truong,
+                    'ngay_dang_ky' => $first->ngay_dang_ky,
+                    'ma_doanh_nghiep' => $first->ma_doanh_nghiep,
+                    'ten_cong_chuc' => $first->ten_cong_chuc,
+                    'ten_doanh_nghiep' => $first->ten_doanh_nghiep,
+                    'ten_chu_hang' => $first->ten_chu_hang,
+                    'loai_hang' => $first->loai_hang,
+                    'loai_hang_sums' => $loaiHangSummary,
+                    'so_ptvt_xuat_canh' => $first->so_ptvt_xuat_canh,
+                ];
+            })
+            ->values();
+        return $data;
+    }
+    public function afterDateTime()
+    {
+        $data = XuatCanh::leftJoin('xuat_canh_chi_tiet', 'xuat_canh_chi_tiet.ma_xuat_canh', '=', 'xuat_canh.ma_xuat_canh')
+            ->leftJoin('xuat_hang', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_canh_chi_tiet.so_to_khai_xuat')
+            ->leftJoin('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
+            ->leftJoin('ptvt_xuat_canh', 'xuat_canh.so_ptvt_xuat_canh', '=', 'ptvt_xuat_canh.so_ptvt_xuat_canh')
+            ->leftJoin('hang_trong_cont', 'hang_trong_cont.ma_hang_cont', '=', 'xuat_hang_cont.ma_hang_cont')
+            ->leftJoin('hang_hoa', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->leftJoin('cong_chuc', 'xuat_canh.ma_cong_chuc', 'cong_chuc.ma_cong_chuc')
+            ->leftJoin('nhap_canh', 'xuat_canh.so_ptvt_xuat_canh', 'nhap_canh.so_ptvt_xuat_canh')
+            ->leftJoin('doanh_nghiep', 'xuat_canh.ma_doanh_nghiep_chon', 'doanh_nghiep.ma_doanh_nghiep')
+            ->leftJoin('chu_hang', 'doanh_nghiep.ma_chu_hang', 'chu_hang.ma_chu_hang')
+            ->whereRaw("STR_TO_DATE(CONCAT(xuat_canh.ngay_duyet, ' ', REPLACE(REPLACE(xuat_canh.ngay_duyet, 'H', ':'), 'h', ':')), '%Y-%m-%d %H:%i') >= ?", [$this->tu_ngay . ' 10:00'])
+            ->whereRaw("STR_TO_DATE(CONCAT(xuat_canh.ngay_duyet, ' ', REPLACE(REPLACE(xuat_canh.ngay_duyet, 'H', ':'), 'h', ':')), '%Y-%m-%d %H:%i') <= DATE_ADD(?, INTERVAL 1 DAY)", [$this->den_ngay . ' 10:00'])
+            ->where('xuat_canh.trang_thai', '!=', 0)
+            ->where('xuat_canh.trang_thai', '!=', 1)
+            ->where('xuat_canh.trang_thai', '!=', 6)
+            ->where('xuat_canh.trang_thai', '!=', 5)
+            ->where(function ($query) {
+                $query->whereNull('xuat_hang.trang_thai')
+                    ->orWhere('xuat_hang.trang_thai', '!=', 0);
+            })
+            ->select(
+                'xuat_canh.ma_xuat_canh',
+                'xuat_canh.ten_thuyen_truong',
+                'xuat_canh.ngay_dang_ky',
+                'cong_chuc.ten_cong_chuc',
+                'xuat_canh.ma_doanh_nghiep',
+                'doanh_nghiep.ten_doanh_nghiep',
+                'chu_hang.ten_chu_hang',
+                'hang_hoa.loai_hang',
+                'xuat_hang_cont.so_luong_xuat',
+                'xuat_hang_cont.ma_xuat_hang_cont',
+                'xuat_canh.so_ptvt_xuat_canh',
+            )
+            ->get()
+            ->groupBy('ma_xuat_canh')
+            ->map(function ($items, $ma_xuat_canh) {
+                $first = $items->first();
+                $uniqueItems = collect();
+                $seen = [];
+
+                // Define valid categories
+                $validCategories = ['Thuốc lá', 'THUỐC LÁ ESSE', 'Cigar', 'Rượu', 'Đông lạnh', 'Khác'];
+
+                foreach ($items as $item) {
+                    $key = $item->ma_xuat_hang_cont;
+
+                    // Normalize loai_hang - if not in valid categories, change to 'Khác'
+                    if (!in_array($item->loai_hang, $validCategories)) {
+                        $item->loai_hang = 'Khác';
+                    }
+
+                    if (is_null($key) || !isset($seen[$key])) {
+                        $uniqueItems->push($item);
+                        if (!is_null($key)) {
+                            $seen[$key] = true;
+                        }
+                    }
+                }
+
+                // Calculate loai_hang_sums for all items in this filtered collection
+                $loaiHangSummary = $uniqueItems->groupBy('loai_hang')->map(function ($group) {
+                    return $group->sum('so_luong_xuat');
+                });
+
+                return [
+                    'ma_xuat_canh' => $ma_xuat_canh,
+                    'ten_thuyen_truong' => $first->ten_thuyen_truong,
+                    'ngay_dang_ky' => $first->ngay_dang_ky,
+                    'ma_doanh_nghiep' => $first->ma_doanh_nghiep,
+                    'ten_cong_chuc' => $first->ten_cong_chuc,
+                    'ten_doanh_nghiep' => $first->ten_doanh_nghiep,
+                    'ten_chu_hang' => $first->ten_chu_hang,
+                    'loai_hang' => $first->loai_hang,
+                    'loai_hang_sums' => $loaiHangSummary,
+                    'so_ptvt_xuat_canh' => $first->so_ptvt_xuat_canh,
+                ];
+            })
+            ->values();
+        return $data;
     }
     public function registerEvents(): array
     {

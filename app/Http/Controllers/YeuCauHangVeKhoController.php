@@ -150,6 +150,7 @@ class YeuCauHangVeKhoController extends Controller
                     'ten_hang' => $firstResult['hang_hoa'] ?? '',
                     'so_container' => $row['so_container'],
                     'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt'],
+                    'so_seal_dinh_vi' => $row['so_seal_dinh_vi'],
                     'ma_yeu_cau' => $yeuCau->ma_yeu_cau
                 ]);
                 $this->themTienTrinh($row['so_to_khai_nhap'], "Doanh nghiệp đã yêu cầu đưa hàng trở lại kho ban đầu số " . $yeuCau->ma_yeu_cau, '');
@@ -465,6 +466,7 @@ class YeuCauHangVeKhoController extends Controller
                 'ten_hang' => $firstResult['hang_hoa'] ?? '',
                 'so_container' => $row['so_container'],
                 'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt'],
+                'so_seal_dinh_vi' => $row['so_seal_dinh_vi'],
                 'ma_yeu_cau' => $request->ma_yeu_cau
             ]);
         }
@@ -489,16 +491,18 @@ class YeuCauHangVeKhoController extends Controller
         foreach ($rowsData as $row) {
             $nhapHang = NhapHang::find($row['so_to_khai_nhap']);
             $firstResult = $this->getThongTinTenHang($row);
+            $ten_hang = preg_replace('/(Số lượng:\s*\d+)/', '$1<br>', $row['ten_hang']);
             YeuCauHangVeKhoChiTietSua::insert([
                 'so_to_khai_nhap' => $row['so_to_khai_nhap'],
                 'so_container' => $row['so_container'],
                 'so_to_khai_moi' => $row['so_to_khai_moi'],
                 'ma_hai_quan' => $row['ma_hai_quan'],
                 'so_tau' => NiemPhong::where('so_container', $row['so_container'])->first()->phuong_tien_vt_nhap ?? "",
-                'ten_hang' => $firstResult['hang_hoa'] ?? '',
+                'ten_hang' => $ten_hang ?? '',
                 'ngay_dang_ky' => $nhapHang->ngay_dang_ky,
                 'ma_sua_yeu_cau' => $suaYeuCau->ma_sua_yeu_cau,
-                'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt']
+                'ten_phuong_tien_vt' => $row['ten_phuong_tien_vt'],
+                'so_seal_dinh_vi' => $row['so_seal_dinh_vi'],
             ]);
             $this->themTienTrinh($row['so_to_khai_nhap'], "Doanh nghiệp đã yêu cầu sửa yêu cầu đưa hàng về kho số " . $yeuCau->ma_yeu_cau, '');
         }
@@ -559,7 +563,7 @@ class YeuCauHangVeKhoController extends Controller
             return redirect()->back();
         }
     }
-    
+
     public function quayNguocYeuCau($soToKhaiCanQuayNguoc, $yeuCau)
     {
         foreach ($soToKhaiCanQuayNguoc as $soToKhai) {
@@ -568,12 +572,12 @@ class YeuCauHangVeKhoController extends Controller
                 ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
                 ->where('cong_viec', 5)
                 ->get();
-            foreach( $theoDoiHangHoas as $theoDoi) {
-                HangTrongCont::where('ma_hang',$theoDoi->ma_hang)
-                ->where('so_container',$theoDoi->so_container)
-                ->update([
-                    'so_luong' => $theoDoi->so_luong_ton,
-                ]);
+            foreach ($theoDoiHangHoas as $theoDoi) {
+                HangTrongCont::where('ma_hang', $theoDoi->ma_hang)
+                    ->where('so_container', $theoDoi->so_container)
+                    ->update([
+                        'so_luong' => $theoDoi->so_luong_ton,
+                    ]);
             }
             //Xóa TheoDoiHangHoa
             TheoDoiHangHoa::where('so_to_khai_nhap', $soToKhai)
@@ -622,7 +626,8 @@ class YeuCauHangVeKhoController extends Controller
                 'ngay_dang_ky' => $chiTietYeuCau->ngay_dang_ky,
                 'ten_hang' => $chiTietYeuCau->ten_hang,
                 'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
-                'ten_phuong_tien_vt' => $chiTietYeuCau->ten_phuong_tien_vt
+                'ten_phuong_tien_vt' => $chiTietYeuCau->ten_phuong_tien_vt,
+                'so_seal_dinh_vi' => $chiTietYeuCau->so_seal_dinh_vi
             ]);
         }
     }

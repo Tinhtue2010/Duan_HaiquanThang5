@@ -86,6 +86,7 @@
                         <th>Hải quan chuyển đến</th>
                         <th style="display: none;">Mã HQ</th>
                         <th>Số tờ khai mới</th>
+                        <th>Seal định vị</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -245,6 +246,7 @@
                             <td>${tenHaiQuan}</td>
                             <td hidden>${maHaiQuan}</td>
                             <td>${soToKhaiMoi}</td>
+                            <td><input class="form-control"/></td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                             </td>
@@ -280,7 +282,8 @@
                         so_container: row.querySelector('td:nth-child(3)').textContent.trim(),
                         ten_phuong_tien_vt: row.querySelector('td:nth-child(5)').textContent.trim(),
                         ma_hai_quan: row.querySelector('td:nth-child(7)').textContent.trim(),
-                        so_to_khai_moi: row.querySelector('td:nth-child(8)').textContent.trim()
+                        so_to_khai_moi: row.querySelector('td:nth-child(8)').textContent.trim(),
+                        so_seal_dinh_vi: row.querySelector('td:nth-child(9) input').value.trim()
                     };
                 });
                 const rowCount = $('#displayTableYeuCau tbody tr').length;

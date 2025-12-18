@@ -9,8 +9,6 @@ class XuatCanh extends Model
     protected $connection = 'mysql';
     protected $table = 'xuat_canh';
     protected $primaryKey = 'ma_xuat_canh';
-    public $timestamps = false; // Disable automatic timestamps
-
     protected $fillable = [
         'ma_doanh_nghiep',
         'ma_cong_chuc',

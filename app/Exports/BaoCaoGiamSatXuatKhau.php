@@ -69,7 +69,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 return $query->where('xuat_hang.ma_cong_chuc', $this->ma_cong_chuc);
             })
             ->where('xuat_hang.trang_thai', '!=', '0')
-            ->whereBetween('xuat_canh.ngay_duyet', [$this->tu_ngay, $this->den_ngay])
+            ->whereBetween('xuat_canh.ngay_dang_ky', [$this->tu_ngay, $this->den_ngay])
             ->select(
                 'nhap_hang.trang_thai',
                 'nhap_hang.ngay_xuat_het',
@@ -77,7 +77,7 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
                 'doanh_nghiep.ten_doanh_nghiep',
                 'chu_hang.ten_chu_hang',
                 'xuat_hang.so_to_khai_xuat',
-                'xuat_canh.ngay_duyet',
+                DB::raw('DATE(xuat_canh.ngay_duyet) as ngay_duyet'),
                 'xuat_hang.ten_phuong_tien_vt',
                 'xuat_canh.ma_xuat_canh',
                 'hang_hoa.loai_hang',
@@ -102,7 +102,9 @@ class BaoCaoGiamSatXuatKhau implements FromArray, WithEvents
         $processedCombinations = [];
 
         foreach ($nhapHangs as $nhapHang) {
-            $ngayXuatCanh = Carbon::createFromFormat('Y-m-d', $nhapHang->ngay_duyet)->format('d-m-Y');
+            $ngayXuatCanh = $nhapHang->ngay_duyet 
+                ? Carbon::createFromFormat('Y-m-d', $nhapHang->ngay_duyet)->format('d-m-Y')
+                : '';
             $combinationKey = $nhapHang->so_to_khai_nhap . '|' . $ngayXuatCanh;
 
             if (!isset($groupedData[$combinationKey])) {

@@ -115,6 +115,7 @@
                                     <option value="7">Kiểm tra hàng</option>
                                     <option value="5">Hàng về kho ban đầu</option>
                                     <option value="6">Tiêu hủy hàng</option>
+                                    <option value="8">Kẹp chì chung container</option>
                                     <option value="9">Gỡ seal điện tử</option>
                                 </select>
                                 <label class="label-text mb-2" for="ma_to_khai">Ngày</label>

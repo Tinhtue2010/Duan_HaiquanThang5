@@ -14,6 +14,7 @@ class TheoDoiTruLui extends Model
         'so_to_khai_nhap' => 'string',
     ];
     protected $fillable = [
+        'ma_theo_doi',
         'so_to_khai_nhap',
         'so_ptvt_nuoc_ngoai',
         'ngay_them', 

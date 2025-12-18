@@ -313,10 +313,9 @@
                                 });
 
                                 remainingSoLuong = Math.max(0, remainingSoLuong);
-                                if (remainingSoLuong != 0 || item.is_da_chuyen_cont ==
-                                    0) {
-                                    indexNum++;
-                                    let row = `
+                                // if (remainingSoLuong != 0 || item.is_da_chuyen_cont == 0) {
+                                indexNum++;
+                                let row = `
                                     <tr>
                                         <td>${indexNum}</td>
                                         <td hidden>${item.ma_hang_cont}</td>
@@ -334,8 +333,8 @@
                                         </td>
                                     </tr>
                                 `;
-                                    tableBody.append(row);
-                                }
+                                tableBody.append(row);
+                                // }
 
 
                             });

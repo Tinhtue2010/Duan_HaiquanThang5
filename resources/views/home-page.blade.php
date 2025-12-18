@@ -11,6 +11,9 @@
                     <img src="{{ asset('images/img/10.jpg') }}" class="d-block w-100" alt="Banner 1">
                 </div> --}}
                 <div class="carousel-item active">
+                    <img src="{{ asset('images/img20.jpg') }}" class="d-block w-100" alt="Banner 1">
+                </div>
+                <div class="carousel-item">
                     <img src="{{ asset('images/32.jpg') }}" class="d-block w-100" alt="Banner 2">
                 </div>
                 <div class="carousel-item">

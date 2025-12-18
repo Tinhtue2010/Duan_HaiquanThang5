@@ -39,6 +39,7 @@ class YeuCauNiemPhongController extends Controller
     public function themYeuCauNiemPhong()
     {
         $soContainers = Container::with(['niemPhong', 'hangTrongCont.hangHoa'])
+            ->where('so_container', 'NOT LIKE', '% %')
             ->get()
             ->map(function ($container) {
                 return [
@@ -72,7 +73,7 @@ class YeuCauNiemPhongController extends Controller
             foreach ($rowsData as $row) {
                 $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
                 YeuCauNiemPhongChiTiet::insert([
-                    'so_container' => $row['so_container'],
+                    'so_container' => preg_replace('/\s+/', '', $row['so_container']),
                     'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                     'so_seal_cu' => $niemPhong->so_seal ?? '',
                     'so_seal_moi' => '',
@@ -126,7 +127,7 @@ class YeuCauNiemPhongController extends Controller
             foreach ($rowsData as $row) {
                 $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
                 YeuCauNiemPhongChiTiet::insert([
-                    'so_container' => $row['so_container'],
+                    'so_container' => preg_replace('/\s+/', '', $row['so_container']),
                     'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                     'so_seal_cu' => $niemPhong->so_seal ?? '',
                     'so_seal_moi' => '',
@@ -197,9 +198,9 @@ class YeuCauNiemPhongController extends Controller
             if ($yeuCau->trang_thai == 1) {
                 YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->delete();
                 foreach ($rowsData as $row) {
-                    $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
+                    $niemPhong = NiemPhong::where('so_container', preg_replace('/\s+/', '', $row['so_container']))->first();
                     YeuCauNiemPhongChiTiet::insert([
-                        'so_container' => $row['so_container'],
+                        'so_container' => preg_replace('/\s+/', '', $row['so_container']),
                         'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                         'so_seal_cu' => $niemPhong->so_seal ?? '',
                         'so_seal_moi' => '',
@@ -210,9 +211,9 @@ class YeuCauNiemPhongController extends Controller
                 $yeuCau->trang_thai = '3';
                 $yeuCau->save();
                 foreach ($rowsData as $row) {
-                    $niemPhong = NiemPhong::where('so_container', $row['so_container'])->first();
+                    $niemPhong = NiemPhong::where('so_container', preg_replace('/\s+/', '', $row['so_container']))->first();
                     YeuCauNiemPhongChiTietSua::insert([
-                        'so_container' => $row['so_container'],
+                        'so_container' => preg_replace('/\s+/', '', $row['so_container']),
                         'phuong_tien_vt_nhap' => $niemPhong->phuong_tien_vt_nhap ?? '',
                         'so_seal_cu' => $niemPhong->so_seal ?? '',
                         'so_seal_moi' => '',
@@ -258,6 +259,7 @@ class YeuCauNiemPhongController extends Controller
     {
         try {
             DB::beginTransaction();
+            $this->xoaTheoDoiTruLui($request->ma_yeu_cau);
             $yeuCau = YeuCauNiemPhong::find($request->ma_yeu_cau);
             $chiTiets = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
             $chiTietSuas = YeuCauNiemPhongChiTietSua::where('ma_yeu_cau', $request->ma_yeu_cau)->get();
@@ -339,6 +341,7 @@ class YeuCauNiemPhongController extends Controller
                         $this->capNhatSealXuatHang($chiTiet->so_container, $so_seal_moi);
                         $this->capNhatSealTruLui($chiTiet->so_container, $so_seal_moi);
                         $this->capNhatSealTheoDoi($chiTiet->so_container, $so_seal_moi);
+                        $this->themTheoDoiTruLui($chiTiet->so_container, $yeuCau, $so_seal_moi);
                     } else {
                         session()->flash('alert-danger', 'Có lỗi xảy ra');
                         return redirect()->back();
@@ -470,6 +473,7 @@ class YeuCauNiemPhongController extends Controller
                         $this->capNhatSealXuatHang($chiTietYeuCau->so_container, $so_seal_moi);
                         $this->capNhatSealTruLui($chiTietYeuCau->so_container, $so_seal_moi);
                         $this->capNhatSealTheoDoi($chiTietYeuCau->so_container, $so_seal_moi);
+                        $this->themTheoDoiTruLui($chiTietYeuCau->so_container, $yeuCau, $so_seal_moi);
                     } else {
                         session()->flash('alert-danger', 'Có lỗi xảy ra');
                         return redirect()->back();
@@ -510,7 +514,85 @@ class YeuCauNiemPhongController extends Controller
     }
 
 
+    public function getToKhaiTrongCont($so_container)
+    {
+        $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
+            ->where('hang_trong_cont.so_container', $so_container)
+            ->whereIn('nhap_hang.trang_thai', ['2'])
+            ->groupBy('nhap_hang.so_to_khai_nhap')
+            ->havingRaw('SUM(hang_trong_cont.so_luong) > 0')
+            ->pluck('nhap_hang.so_to_khai_nhap');
 
+        return $nhapHangs;
+    }
+
+    public function themTheoDoiTruLui($so_container, $yeuCau, $so_seal)
+    {
+        $nhapHangs = $this->getToKhaiTrongCont($so_container);
+        foreach ($nhapHangs as $so_to_khai_nhap) {
+            $theoDoi = TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)
+                ->where('ngay_them', now()->toDateString())
+                ->get();
+            if ($theoDoi->isNotEmpty()) {
+                continue;
+            }
+            $so_luong = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
+                ->sum('hang_trong_cont.so_luong');
+            $theoDoi = TheoDoiTruLui::create([
+                'so_to_khai_nhap' => $so_to_khai_nhap,
+                'so_ptvt_nuoc_ngoai' => '',
+                'ngay_them' => now(),
+                'cong_viec' => 8,
+                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+            ]);
+            TheoDoiTruLuiChiTiet::insert(
+                [
+                    'so_luong_xuat' => 0,
+                    'so_luong_chua_xuat' => $so_luong ?? 0,
+                    'ma_theo_doi' => $theoDoi->ma_theo_doi,
+                    'so_container' => $so_container,
+                    'so_seal' => $so_seal,
+                    'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $so_container)->first()->phuong_tien_vt_nhap ?? ''
+                ]
+            );
+        }
+
+        // $ptvtChoHang = NiemPhong::where('so_container',  $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? '';
+        // TheoDoiHangHoa::insert([
+        //     'so_to_khai_nhap' => $hangHoa->so_to_khai_nhap,
+        //     'ma_hang'  => $hangHoa->ma_hang,
+        //     'thoi_gian'  => now(),
+        //     'so_luong_xuat'  => $hangHoa->so_luong,
+        //     'so_luong_ton'  => $hangHoa->so_luong,
+        //     'phuong_tien_cho_hang' => $tau_dich ?? $ptvtChoHang,
+        //     'cong_viec' => 2,
+        //     'phuong_tien_nhan_hang' => '',
+        //     'so_container' => $so_container_moi ?? $hangHoa->so_container,
+        //     'so_seal' => '',
+        //     'ma_cong_chuc' => $ma_cong_chuc,
+        //     'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
+        // ]);
+    }
+
+    public function xoaTheoDoiTruLui($yeuCau)
+    {
+        TheoDoiTruLuiChiTiet::whereIn('ma_theo_doi', function ($query) use ($yeuCau) {
+            $query->select('ma_theo_doi')
+                ->from('theo_doi_tru_lui')
+                ->where('cong_viec', 8)
+                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau);
+        })->delete();
+
+        TheoDoiTruLui::where('cong_viec', 8)
+            ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+            ->delete();
+        TheoDoiHangHoa::where('cong_viec', 8)
+            ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
+            ->delete();
+    }
 
     public function capNhatSealXuatHang($so_container, $so_seal)
     {
@@ -537,6 +619,7 @@ class YeuCauNiemPhongController extends Controller
 
         TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', 'theo_doi_tru_lui.ma_theo_doi')
             ->whereIn('theo_doi_tru_lui_chi_tiet.so_container', [$so_container_no_space, $so_container_with_space])
+            ->whereNotIn('theo_doi_tru_lui.cong_viec', [9])
             ->where(function ($query) {
                 if (now()->hour < 9) {
                     $query->whereDate('ngay_them', today())
@@ -554,6 +637,7 @@ class YeuCauNiemPhongController extends Controller
         $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
 
         TheoDoiHangHoa::whereIn('so_container', [$so_container_no_space, $so_container_with_space])
+            ->whereNotIn('cong_viec', [9])
             ->where(function ($query) {
                 if (now()->hour < 9) {
                     $query->whereDate('thoi_gian', today())
@@ -646,6 +730,7 @@ class YeuCauNiemPhongController extends Controller
         }
         $soContainers = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $request->ma_yeu_cau)->pluck('so_container');
         $this->quayNguocYeuCau($soContainers, $yeuCau);
+        $this->xoaTheoDoiTruLui($yeuCau);
 
         $yeuCau->trang_thai = '0';
         $yeuCau->ghi_chu = "Công chức duyệt đề nghị hủy: " . $request->ghi_chu;
@@ -870,7 +955,7 @@ class YeuCauNiemPhongController extends Controller
         $containersChuaHetHang = Container::join('hang_trong_cont', 'container.so_container', '=', 'hang_trong_cont.so_container')
             ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-            ->whereIn('nhap_hang.trang_thai', [2,4])
+            ->whereIn('nhap_hang.trang_thai', [2, 4])
             ->whereIn('container.so_container', $containers)
             ->where('nhap_hang.ma_doanh_nghiep', $ma_doanh_nghiep)
             ->select('container.so_container', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))

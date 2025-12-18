@@ -41,7 +41,7 @@ class BaoCaoContainerLuuTaiCang implements FromArray, WithEvents
             ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
             ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
             ->whereIn('nhap_hang.trang_thai', ['2','3'])
-            ->select('container.*', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap','doanh_nghiep.ten_doanh_nghiep','hang_hoa.loai_hang','hang_hoa.don_vi_tinh','nhap_hang.ten_doan_tau')
+            ->select('container.*', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap','doanh_nghiep.ten_doanh_nghiep','hang_hoa.loai_hang','hang_hoa.don_vi_tinh','niem_phong.ten_doan_tau')
             ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
             ->groupBy('container.so_container', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap','hang_hoa.don_vi_tinh')
             ->orderByRaw('total_so_luong DESC')

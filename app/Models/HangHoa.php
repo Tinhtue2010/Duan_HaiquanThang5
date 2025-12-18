@@ -25,10 +25,16 @@ class HangHoa extends Model
         'don_vi_tinh',
         'so_container_khai_bao',
         'so_seal',
+        'so_seal_dinh_vi',
+        'cong_chuc_go_seal',
     ];
     public function nhapHang()
     {
         return $this->belongsTo(NhapHang::class, 'so_to_khai_nhap', 'so_to_khai_nhap');
+    }
+    public function congChucGoSeal()
+    {
+        return $this->belongsTo(CongChuc::class, 'cong_chuc_go_seal', 'ma_cong_chuc');
     }
     public function hangTrongCont()
     {

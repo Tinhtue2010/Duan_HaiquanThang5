@@ -83,7 +83,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
         $date = DateTime::createFromFormat('Y-m-d', $ngay_dang_ky);
 
         $this->ten_hai_quan = $nhapHang->haiQuan->ten_hai_quan;
-            
+
         $this->theoDoiTruLuis = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
             ->when(request('cong_viec') == 1, function ($query) {
                 return $query->join('xuat_hang', 'xuat_hang.ma_xuat_hang', '=', 'theo_doi_tru_lui.ma_yeu_cau')
@@ -164,6 +164,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
 
         $theoDois = TheoDoiTruLui::where('so_to_khai_nhap', $this->so_to_khai_nhap)
             ->groupBy('ma_yeu_cau', 'cong_viec')
+            ->orderBy('ma_theo_doi', 'asc')
             ->get();
 
         foreach ($theoDois as $theoDoi) {
@@ -267,7 +268,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
 
                             }
                         }
-                    } else {
+                    } elseif ($truLui->cong_viec != 8) {
                         $shouldIncrement = true;
                     }
 
@@ -365,6 +366,8 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             $tenCongViec = "Tiêu hủy hàng";
         } else if ($cong_viec == 7) {
             $tenCongViec = "Kiểm tra hàng";
+        } else if ($cong_viec == 8) {
+            $tenCongViec = "Kẹp chì chung container";
         } else if ($cong_viec == 9) {
             $tenCongViec = "Gỡ seal điện tử";
         }
@@ -397,6 +400,12 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
             }
         }
 
+        // if ($this->nhapHang->trang_thai == 4 || $this->nhapHang->trang_thai == 7) {
+        //     if (\Carbon\Carbon::parse($this->nhapHang->ngay_xuat_het)->isSameDay($this->tu_ngay)) {
+        //         $is_xuat_het = true;
+        //     }
+        // }
+
         // Process lan_phieu counting ONCE before the detail loop
         foreach ($this->theoDoiTruLuis as $truLui) {
             if (in_array($truLui->ma_theo_doi, $this->seenMaTheoDois)) {
@@ -418,7 +427,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         }
                     }
                 }
-            } else {
+            } elseif ($truLui->cong_viec != 8) {
                 $shouldIncrement = true;
                 // Check if this work is in today's report
                 foreach ($congViecTrongPhieus as $congViec) {
@@ -447,7 +456,7 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 $start = $this->stt + 12;
             }
 
-            if ($item->so_luong_chua_xuat != 0) {
+            if ($item->so_luong_chua_xuat != 0 || $item->cong_viec == 8) {
                 if ($is_xuat_het == true) {
                     $this->result[] = [
                         $this->stt++,
@@ -474,7 +483,8 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                         '',
                         $item->so_luong_xuat,
                         $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
-                        $item->so_seal ? $sealCuoiCung : '',
+                        // $item->so_seal ? $sealCuoiCung : '',
+                        $item->so_seal ?? '',
                         $item->phuong_tien_vt_nhap == $this->nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
                         $item->so_container == $this->nhapHang->container_ban_dau ? '' : $item->so_container,
                         '',
@@ -539,8 +549,8 @@ class BaoCaoTheoDoiTruLuiCuoiNgayExport implements FromArray, WithEvents, WithDr
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
                 $sheet->getColumnDimension('E')->setWidth(width: 15);
                 $sheet->getColumnDimension('F')->setWidth(width: 5);
-                $sheet->getColumnDimension('G')->setWidth(width: 10);
-                $sheet->getColumnDimension('H')->setWidth(width: 10);
+                $sheet->getColumnDimension('G')->setWidth(width: 15);
+                $sheet->getColumnDimension('H')->setWidth(width: 15);
                 $sheet->getColumnDimension('I')->setWidth(width: 13);
                 $sheet->getColumnDimension('J')->setWidth(width: 10);
                 $sheet->getColumnDimension('K')->setWidth(width: 15);

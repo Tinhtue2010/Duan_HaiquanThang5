@@ -60,7 +60,8 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                 'hai_quan.ten_hai_quan',
                 DB::raw('ROW_NUMBER() OVER (PARTITION BY nhap_hang.so_to_khai_nhap ORDER BY hang_hoa.ma_hang) as rn'),
                 DB::raw("SUM(hang_hoa.so_luong_khai_bao) OVER (PARTITION BY nhap_hang.so_to_khai_nhap) AS total_so_luong_khai_bao"),
-                DB::raw("SUM(hang_trong_cont.so_luong) OVER (PARTITION BY nhap_hang.so_to_khai_nhap) AS total_so_luong")
+                DB::raw("SUM(hang_trong_cont.so_luong) OVER (PARTITION BY nhap_hang.so_to_khai_nhap) AS total_so_luong"),
+                DB::raw("SUM(hang_hoa.tri_gia) OVER (PARTITION BY nhap_hang.so_to_khai_nhap) AS total_tri_gia")
             )
             ->get()
             ->where('rn', 1)
@@ -88,7 +89,7 @@ class BaoCaoHangTonTaiCang implements FromArray, WithEvents
                     $item->total_so_luong_khai_bao,
                     $item->don_vi_tinh,
                     $item->trong_luong,
-                    $item->don_gia * $item->total_so_luong,
+                    $item->total_tri_gia,
                     $item->total_so_luong,
                     $item->phuong_tien_vt_nhap,
                     $item->so_container,

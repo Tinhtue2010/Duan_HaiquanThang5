@@ -252,7 +252,7 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
 
                                 }
                             }
-                        } else {
+                        } elseif($truLui->cong_viec != 8) {
                             $shouldIncrement = true;
                         }
 
@@ -368,8 +368,8 @@ class BaoCaoTheoDoiTruLuiTheoNgayExport implements FromArray, WithEvents, WithDr
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
                 $sheet->getColumnDimension('E')->setWidth(width: 15);
                 $sheet->getColumnDimension('F')->setWidth(width: 5);
-                $sheet->getColumnDimension('G')->setWidth(width: 10);
-                $sheet->getColumnDimension('H')->setWidth(width: 10);
+                $sheet->getColumnDimension('G')->setWidth(width: 13);
+                $sheet->getColumnDimension('H')->setWidth(width: 13);
                 $sheet->getColumnDimension('I')->setWidth(width: 13);
                 $sheet->getColumnDimension('J')->setWidth(width: 10);
                 $sheet->getColumnDimension('K')->setWidth(width: 15);

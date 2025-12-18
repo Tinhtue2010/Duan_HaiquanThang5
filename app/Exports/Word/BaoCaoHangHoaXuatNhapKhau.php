@@ -484,49 +484,33 @@ class BaoCaoHangHoaXuatNhapKhau
     }
     public function getDataNhap($loaiHang, $tu_ngay, $den_ngay)
     {
-        $subQuery = HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
+        return HangHoa::where('loai_hang', $loaiHang->ten_loai_hang)
             ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
             ->whereBetween('nhap_hang.created_at', [
                 Carbon::parse($tu_ngay)->startOfDay(),
                 Carbon::parse($den_ngay)->endOfDay()
             ])
-            ->groupBy('nhap_hang.so_to_khai_nhap')
-            ->select(
-                DB::raw('SUM(hang_hoa.tri_gia) as total_tri_gia'),
-                DB::raw('SUM(hang_hoa.so_luong_khai_bao) as total_so_luong'),
-                DB::raw('COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container')
-            );
-
-        return DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
-            ->mergeBindings($subQuery->getQuery())
-            ->select(
-                DB::raw('SUM(total_tri_gia) as total_tri_gia'),
-                DB::raw('SUM(total_so_luong) as total_so_luong'),
-                DB::raw('SUM(total_so_container) as total_so_container')
-            )
+            ->selectRaw('
+            SUM(hang_hoa.tri_gia) as total_tri_gia,
+            SUM(hang_hoa.so_luong_khai_bao) as total_so_luong,
+            COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container
+        ')
             ->first();
     }
 
     public function getTongContainerNhap($tu_ngay, $den_ngay)
     {
-        $subQuery = HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+        $result = HangHoa::join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
             ->whereBetween('nhap_hang.created_at', [
                 Carbon::parse($tu_ngay)->startOfDay(),
                 Carbon::parse($den_ngay)->endOfDay()
             ])
-            ->groupBy('nhap_hang.so_to_khai_nhap')
-            ->select(
-                DB::raw('COUNT(DISTINCT hang_hoa.so_container_khai_bao) as total_so_container')
-            );
-
-        $result = DB::table(DB::raw("({$subQuery->toSql()}) as grouped_data"))
-            ->mergeBindings($subQuery->getQuery())
-            ->select(
-                DB::raw('SUM(total_so_container) as total_so_container')
-            )
-            ->first();
-
-        return $result ? $result->total_so_container : 0;
+            ->where('nhap_hang.trang_thai', '2')
+            ->where('hang_trong_cont.so_luong', '>', 0)
+            ->distinct()
+            ->count('hang_trong_cont.so_container');
+        return $result;
     }
 
     public function getDataHienTai($loaiHang, $tu_ngay, $den_ngay)

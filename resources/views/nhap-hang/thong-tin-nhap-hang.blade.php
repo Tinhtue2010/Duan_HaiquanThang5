@@ -100,9 +100,11 @@
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
                                 <th>Số container ban đầu</th>
-                                @if ($nhapHang->trang_thai == '1')
-                                    <th>Số seal</th>
-                                @endif
+                                {{-- @if ($nhapHang->trang_thai == '1') --}}
+                                <th>Số seal</th>
+                                <th>Số seal định vị</th>
+                                <th>Công chức gỡ seal</th>
+                                {{-- @endif --}}
                                 @if (trim($nhapHang->trang_thai) != '1' && trim($nhapHang->trang_thai) != '0')
                                     <th>Thao tác</th>
                                 @endif
@@ -120,9 +122,11 @@
                                     <td>{{ number_format($hangHoa->don_gia, 2) }}</td>
                                     <td>{{ number_format($hangHoa->tri_gia, 2) }}</td>
                                     <td>{{ $hangHoa->so_container_khai_bao }}</td>
-                                    @if ($nhapHang->trang_thai == '1')
-                                        <td>{{ $hangHoa->so_seal }}</td>
-                                    @endif
+                                    {{-- @if ($nhapHang->trang_thai == '1') --}}
+                                    <td>{{ $hangHoa->so_seal }}</td>
+                                    <td>{{ $hangHoa->so_seal_dinh_vi }}</td>
+                                    <td>{{ $hangHoa->congChucGoSeal->ten_cong_chuc ?? '' }}</td>
+                                    {{-- @endif --}}
                                     @if (trim($nhapHang->trang_thai) != '1' && trim($nhapHang->trang_thai) != '0')
                                         <td>
                                             <form action="{{ route('export.theo-doi-hang-hoa') }}" method="GET">
@@ -229,7 +233,8 @@
                                     <h2 class="">Tờ khai được duyệt gia hạn {{ $nhapHang->so_ngay_gia_han }} ngày
                                     </h2>
                                 @endif
-                                @if (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' && in_array(Auth::user()->congChuc->ma_cong_chuc, ["T20-HQ96-0039", "T20-HQ11-0015"]))
+                                @if (Auth::user()->loai_tai_khoan == 'Admin' || (Auth::user()->loai_tai_khoan == 'Cán bộ công chức' &&
+                                        in_array(Auth::user()->congChuc->ma_cong_chuc, ['T20-HQ96-0039', 'T20-HQ11-0015','CC008'])))
                                     <div class="row">
                                         <center>
                                             <div class="col-6">
@@ -242,18 +247,35 @@
                                                     </button>
                                                 </a>
                                             </div>
+                                            <div class="col-6">
+                                                <a href="#">
+                                                    <button data-bs-toggle="modal" data-bs-target="#suaSealDienTuModal"
+                                                        class="btn btn-warning my-2">
+                                                        <img class="side-bar-icon"
+                                                            src="{{ asset('images/icons/edit.png') }}">
+                                                        Sửa seal</button>
+                                                </a>
+                                            </div>
                                         </center>
                                     </div>
                                 @endif
+
                                 @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp' &&
                                         DoanhNghiep::where('ma_tai_khoan', Auth::user()->ma_tai_khoan)->first()->ma_doanh_nghiep ==
                                             $nhapHang->ma_doanh_nghiep)
+                                    <a href="#">
+                                        <button data-bs-toggle="modal" data-bs-target="#suaSealDienTuModal"
+                                            class="btn btn-info my-2">
+                                            <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                            Sửa seal</button>
+                                    </a>
                                     <div class="row">
                                         <div class="col-6">
                                             <a
                                                 href="{{ route('nhap-hang.sua-to-khai-nhap', ['so_to_khai_nhap' => $nhapHang->so_to_khai_nhap]) }}">
                                                 <button class="btn btn-warning px-4">
-                                                    <img class="side-bar-icon" src="{{ asset('images/icons/edit.png') }}">
+                                                    <img class="side-bar-icon"
+                                                        src="{{ asset('images/icons/edit.png') }}">
                                                     Sửa nhập đơn
                                                 </button>
                                             </a>
@@ -485,7 +507,69 @@
                 </div>
             </div>
         </div>
-        {{-- Duyệt Hủy --}}
+        {{-- Sửa seal điện tử --}}
+        <div class="modal fade" id="suaSealDienTuModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-primary" id="exampleModalLabel">Sửa thông tin seal điện tử</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('nhap-hang.sua-seal-dien-tu-to-khai') }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <label class="fw-bold mb-2">Chọn container cần sửa thông tin</label>
+                            <div class="row">
+                                <input hidden value={{ $nhapHang->so_to_khai_nhap }} name="so_to_khai_nhap">
+                                <div class="col-6">
+                                    <label for="so_seal" class="fw-bold">Số container</label>
+                                    <select class="form-control" id="container-dropdown-search"
+                                        name="so_container_khai_bao">
+                                        <option></option>
+                                        @foreach ($containers as $container)
+                                            <option value="{{ $container->so_container_khai_bao }}"
+                                                data-so-seal="{{ $container->so_seal ?? '' }}"
+                                                data-so-seal-dinh-vi="{{ $container->so_seal_dinh_vi ?? '' }}"
+                                                data-cong-chuc="{{ $container->cong_chuc_go_seal ?? '' }}">
+                                                {{ $container->so_container_khai_bao }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="so_seal" class="fw-bold">Số seal</label>
+                                    <input type="text" class="form-control" name="so_seal"
+                                        placeholder="Nhập số seal">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="so_seal_dinh_vi" class="fw-bold">Số seal định vị</label>
+                                    <input type="text" class="form-control" name="so_seal_dinh_vi"
+                                        placeholder="Nhập số seal định vị">
+                                </div>
+                                <div class="col-6">
+                                    <label for="cong_chuc_go_seal" class="fw-bold">Công chức gỡ seal</label>
+                                    <select class="form-control" id="cong-chuc-dropdown-search" name="cong_chuc_go_seal">
+                                        <option></option>
+                                        @foreach ($congChucs as $congChuc)
+                                            <option value="{{ $congChuc->ma_cong_chuc }}">
+                                                {{ $congChuc->ten_cong_chuc }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Xác nhận</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
         <div class="modal fade" id="duyetHuyModal" tabindex="-1" aria-labelledby="exampleModalLabel"
             aria-hidden="true">
             <div class="modal-dialog">
@@ -532,4 +616,71 @@
             </div>
         </div>
     @endif
+    <script>
+        $(document).ready(function() {
+            var $modal = $('#suaSealDienTuModal');
+            var $containerSelect = $('#container-dropdown-search');
+            var $congChucSelect = $('#cong-chuc-dropdown-search');
+            var $soSealInput = $('input[name="so_seal"]');
+            var $soSealDinhViInput = $('input[name="so_seal_dinh_vi"]');
+
+            function initSelect2($element, placeholderText) {
+                if ($element.hasClass('select2-hidden-accessible')) {
+                    $element.select2('destroy');
+                }
+
+                $element.select2({
+                    tags: true,
+                    placeholder: placeholderText,
+                    allowClear: true,
+                    language: "vi",
+                    minimumInputLength: 0,
+                    dropdownAutoWidth: true,
+                    width: '100%',
+                    dropdownParent: $modal.find('.modal-body')
+                });
+            }
+
+            function resetFields() {
+                $soSealInput.val('');
+                $soSealDinhViInput.val('');
+                $congChucSelect.val(null).trigger('change');
+            }
+
+            function populateFieldsFromSelection() {
+                var $selectedOption = $containerSelect.find('option:selected');
+
+                if (!$selectedOption.length || !$selectedOption.val()) {
+                    resetFields();
+                    return;
+                }
+
+                var soSeal = $selectedOption.data('so-seal') || '';
+                var soSealDinhVi = $selectedOption.data('so-seal-dinh-vi') || '';
+                var congChuc = $selectedOption.data('cong-chuc') || '';
+
+                $soSealInput.val(soSeal);
+                $soSealDinhViInput.val(soSealDinhVi);
+
+                if (congChuc) {
+                    $congChucSelect.val(congChuc).trigger('change');
+                } else {
+                    $congChucSelect.val(null).trigger('change');
+                }
+            }
+
+            $modal.on('shown.bs.modal', function() {
+                initSelect2($containerSelect, "Chọn container");
+                initSelect2($congChucSelect, "Chọn công chức");
+                populateFieldsFromSelection();
+            });
+
+            $modal.on('hidden.bs.modal', function() {
+                resetFields();
+                $containerSelect.val(null).trigger('change');
+            });
+
+            $containerSelect.on('change', populateFieldsFromSelection);
+        });
+    </script>
 @stop

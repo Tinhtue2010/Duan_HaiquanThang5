@@ -56,6 +56,7 @@
                                 <th>Phương tiện vận tải</th>
                                 <th>Hải quan cửa khẩu nơi hàng hóa chuyển đến (quay về kho)</th>
                                 <th>Số tờ khai mới</th>
+                                <th>Seal định vị</th>
                                 @if ($yeuCau->trang_thai == '2')
                                     <th>Thao tác</th>
                                 @endif
@@ -74,6 +75,7 @@
                                     <td>{{ $chiTiet->ten_phuong_tien_vt }}</td>
                                     <td>{{ $chiTiet->ten_hai_quan }}</td>
                                     <td>{{ $chiTiet->so_to_khai_moi }}</td>
+                                    <td>{{ $chiTiet->so_seal_dinh_vi }}</td>
                                     @if ($yeuCau->trang_thai == '2')
                                         <td>
                                             <a

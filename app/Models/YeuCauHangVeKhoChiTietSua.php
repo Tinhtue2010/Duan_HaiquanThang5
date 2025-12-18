@@ -22,6 +22,7 @@ class YeuCauHangVeKhoChiTietSua extends Model
         'ngay_dang_ky',
         'ten_hang',
         'ma_sua_yeu_cau',
-        'ten_phuong_tien_vt'
+        'ten_phuong_tien_vt',
+        'so_seal_dinh_vi'
     ];
 }

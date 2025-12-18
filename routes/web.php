@@ -67,6 +67,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::post('/duyet-to-khai-nhap', [NhapHangController::class, 'duyetToKhaiNhap'])->name('duyet-to-khai-nhap');
 
         Route::get('/sua-to-khai-nhap-da-duyet/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhapCongChuc'])->name('sua-to-khai-nhap-cong-chuc');
+        Route::get('/sua-to-khai-nhap-chi-tiet/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhapChiTiet'])->name('sua-to-khai-nhap-chi-tiet');
         Route::get('/sua-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'suaToKhaiNhap'])->name('sua-to-khai-nhap');
         Route::post('/submit-sua-to-khai-nhap', [NhapHangController::class, 'suaToKhaiNhapSubmit'])->name('submit-sua-to-khai-nhap');
         Route::post('/yc-huy-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'yeuCauHuyToKhai'])->name('yc-huy-to-khai-nhap');
@@ -81,6 +82,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/xem-sua-to-khai-nhap/{so_to_khai_nhap}', [NhapHangController::class, 'xemSuaToKhai'])->name('xem-sua-to-khai-nhap');
         Route::post('/duyet-sua-to-khai-nhap', [NhapHangController::class, 'duyetSuaYeuCau'])->name('duyet-sua-to-khai-nhap');
         Route::post('/huy-sua-to-khai-nhap', [NhapHangController::class, 'huySuaYeuCau'])->name('huy-sua-to-khai-nhap');
+        Route::post('/sua-seal-dien-tu-to-khai', [NhapHangController::class, 'suaSealDienTuToKhai'])->name('sua-seal-dien-tu-to-khai');
 
 
         Route::get('/getNhapHangDaDuyets', [NhapHangController::class, 'getNhapHangDaDuyets'])->name('getNhapHangDaDuyets');
@@ -446,6 +448,7 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/chuyen-cua-khau-xuat', [BaoCaoController::class, 'chuyenCuaKhauXuat'])->name('chuyen-cua-khau-xuat');
         Route::get('/bao-cao-tieu-huy', [BaoCaoController::class, 'baoCaoTieuHuy'])->name('bao-cao-tieu-huy');
         Route::get('/hang-ton-tai-cang', [BaoCaoController::class, 'hangTonTaiCang'])->name('hang-ton-tai-cang');
+        Route::get('/hang-ton-tai-cang-chi-tiet', [BaoCaoController::class, 'hangTonTaiCangChiTiet'])->name('hang-ton-tai-cang-chi-tiet');
         Route::get('/so-luong-container-tai-cang', [BaoCaoController::class, 'containerLuuTaiCang'])->name('so-luong-container-tai-cang');
         Route::get('/so-luong-tau-tai-cang', [BaoCaoController::class, 'tauLuuTaiCang'])->name('so-luong-tau-tai-cang');
         Route::get('/so-luong-container-theo-cont', [BaoCaoController::class, 'containerLuuTaiCangTheoCont'])->name('so-luong-container-theo-cont');
@@ -470,6 +473,8 @@ Route::middleware([\App\Http\Middleware\CheckRoleCongChucDoanhNghiep::class])->g
         Route::get('/bao-cao-theo-doi-xnc', [BaoCaoController::class, 'baoCaoTheoDoiXNC'])->name('bao-cao-theo-doi-xnc');
         Route::get('/bao-cao-thoi-gian-to-khai', [BaoCaoController::class, 'thoiGianToKhaiLuuTaiCang'])->name('bao-cao-thoi-gian-to-khai');
         Route::get('/bao-cao-doan-tau', [BaoCaoController::class, 'baoCaoDoanTau'])->name('bao-cao-doan-tau');
+        Route::get('/bao-cao-tiep-nhan-seal', [BaoCaoController::class, 'tiepNhanSeal'])->name('bao-cao-tiep-nhan-seal');
+        Route::get('/bao-cao-phuong-tien-chua-xuat-canh', [BaoCaoController::class, 'phuongTienChuaXuatCanh'])->name('bao-cao-phuong-tien-chua-xuat-canh');
 
         //DoanhNghiep
         Route::get('/theo-doi-tru-lui-tung-lan', [BaoCaoController::class, 'theoDoiTruLuiTungLan'])->name('theo-doi-tru-lui-tung-lan');
@@ -595,6 +600,10 @@ Route::middleware([\App\Http\Middleware\CheckRoleAdmin::class])->group(function 
         Route::post('/action-5', [LoaiHinhController::class, 'action5'])->name('action-5');
         Route::post('/action-6', [LoaiHinhController::class, 'action6'])->name('action-6');
         Route::post('/action-7', [LoaiHinhController::class, 'action7'])->name('action-7');
+
+        Route::post('/action-10', [LoaiHinhController::class, 'action10'])->name('action-10');
+        Route::post('/action-11', [LoaiHinhController::class, 'action11'])->name('action-11');
+        Route::post('/action-12', [LoaiHinhController::class, 'action12'])->name('action-12');
 
         Route::get('/quan-ly-doanh-nghiep-ql/{ma_doanh_nghiep}', [DoanhNghiepController::class, 'danhSachDoanhNghiepQL'])->name('danh-sach-doanh-nghiep-ql');
         Route::post('/them-doanh-nghiep-ql', [DoanhNghiepController::class, 'themDoanhNghiepQL'])->name('them-doanh-nghiep-ql');

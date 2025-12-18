@@ -7,6 +7,7 @@ use App\Models\XuatHangChiTietSua;
 use App\Models\XuatHangChiTietTruocSua;
 use App\Models\PTVTXuatCanhCuaPhieu;
 use App\Models\CongChuc;
+use App\Models\Container;
 use App\Models\DoanhNghiep;
 use App\Models\HangTrongCont;
 use App\Models\NhapHang;
@@ -615,24 +616,6 @@ class XuatHangService
 
         $congChuc = $this->getCongChucHienTai();
 
-        $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
-            ->select('so_to_khai_nhap')
-            ->distinct()
-            ->get();
-        foreach ($xuatHangConts as $xuatHangCont) {
-            $so_to_khai_nhap = $xuatHangCont->so_to_khai_nhap;
-            $allZero = !HangTrongCont::whereHas('hangHoa', function ($query) use ($so_to_khai_nhap) {
-                $query->where('so_to_khai_nhap', $so_to_khai_nhap);
-            })->where('so_luong', '!=', 0)->exists();
-
-            if (!$allZero) {
-                NhapHang::find($so_to_khai_nhap)
-                    ->update([
-                        'trang_thai' => '2',
-                    ]);
-            }
-            // $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt yêu cầu sửa phiếu xuất số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
-        }
         $suaXuatHang->update([
             'trang_thai' => "2",
             'trang_thai_phieu_xuat' =>  $trang_thai
@@ -863,17 +846,47 @@ class XuatHangService
 
             $congChuc = $this->getCongChucHienTai();
             $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
-                ->select('so_to_khai_nhap')
                 ->distinct()
                 ->get();
             foreach ($xuatHangConts as $xuatHangCont) {
                 $this->themTienTrinh($xuatHangCont->so_to_khai_nhap, "Cán bộ công chức đã duyệt phiếu xuất hàng số " . $xuatHang->so_to_khai_xuat, $congChuc->ma_cong_chuc);
                 $this->kiemTraXuatHetHang($xuatHangCont->so_to_khai_nhap, $maCongChuc);
+                $this->xuLyTauContainer(
+                    $xuatHangCont->so_container,
+                    $xuatHangCont->phuong_tien_vt_nhap,
+                    $xuatHang->ten_doan_tau
+                );
             }
         }
         session()->flash('alert-success', 'Trạng thái đã được cập nhật thành công!');
 
         return $xuatHang;
+    }
+    private function xuLyTauContainer($so_container, $ptvt, $ten_doan_tau)
+    {
+        if (!Container::find($so_container)) {
+            Container::insert([
+                'so_container' => $so_container,
+            ]);
+        }
+
+        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
+        $so_container_with_space = substr( $so_container_no_space, 0,  4) . ' ' . substr($so_container_no_space, 4);
+
+        $record = NiemPhong::where('so_container',  $so_container)->first();
+        if (!$record) {
+            NiemPhong::insert([
+                'so_container' => $so_container,
+                'ngay_niem_phong' => now(),
+                'phuong_tien_vt_nhap' => $ptvt,
+                'ten_doan_tau' => $ten_doan_tau
+            ]);
+        } else {
+            NiemPhong::whereIn('so_container',  [$so_container_no_space, $so_container_with_space])->update([
+                'phuong_tien_vt_nhap' => $ptvt,
+                'ten_doan_tau' => $ten_doan_tau
+            ]);
+        }
     }
     public function kiemTraXuatHetHang($so_to_khai_nhap, $maCongChuc)
     {

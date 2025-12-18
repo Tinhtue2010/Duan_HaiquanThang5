@@ -28,17 +28,25 @@ class BaoCaoDoanTau implements FromArray, WithEvents
             ['STT', 'Tên đoàn', 'Tên tàu'],
         ];
 
-        $nhapHangs = NhapHang::where('trang_thai', 2)
-            ->where('ten_doan_tau', '!=', null)
-            ->where('ten_doan_tau', '!=', '')
-            ->orderBy('ten_doan_tau', 'asc')
+        $containers = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
+            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
+            ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
+            ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
+            ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
+            ->where('niem_phong.ten_doan_tau', '!=', null)
+            // ->where('niem_phong.ten_doan_tau', '!=', '')
+            ->select('niem_phong.ten_doan_tau', 'niem_phong.phuong_tien_vt_nhap')
             ->groupBy('phuong_tien_vt_nhap')
+            ->havingRaw('SUM(hang_trong_cont.so_luong) > 0')
+            ->orderBy('niem_phong.ten_doan_tau', 'asc')
             ->get();
-        foreach ($nhapHangs as $index => $nhapHang) {
+
+
+        foreach ($containers as $index => $container) {
             $result[] = [
                 $index + 1,
-                $nhapHang->ten_doan_tau,
-                $nhapHang->phuong_tien_vt_nhap,
+                $container->ten_doan_tau,
+                $container->phuong_tien_vt_nhap,
             ];
         }
 

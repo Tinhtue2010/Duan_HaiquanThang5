@@ -65,6 +65,9 @@
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
                                 <th>Số container</th>
+                                <th>Số seal</th>
+                                <th>Số seal định vị</th>
+                                <th>Công chức gỡ seal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -109,6 +112,18 @@
                                     <td
                                         class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_container_khai_bao != $modifiedRow->so_container_khai_bao ? 'text-warning fw-bold' : '' }}">
                                         {{ $hangHoa->so_container_khai_bao }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_seal !== $modifiedRow->so_seal ? 'text-warning fw-bold' : '' }}">
+                                        {{ $hangHoa->so_seal ?? '' }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->so_seal_dinh_vi !== $modifiedRow->so_seal_dinh_vi ? 'text-warning fw-bold' : '' }}">
+                                        {{ $hangHoa->so_seal_dinh_vi ?? '' }}
+                                    </td>
+                                    <td
+                                        class="{{ $rowClass }} {{ $modifiedRow && $hangHoa->cong_chuc_go_seal != $modifiedRow->cong_chuc_go_seal ? 'text-warning fw-bold' : '' }}">
+                                        {{ $hangHoa->ten_cong_chuc ?? '' }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -166,6 +181,9 @@
                                 <th>Đơn giá (USD)</th>
                                 <th>Trị giá (USD)</th>
                                 <th>Số container</th>
+                                <th>Số seal</th>
+                                <th>Số seal định vị</th>
+                                <th>Công chức gỡ seal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -208,6 +226,18 @@
                                     <td
                                         class="{{ $originalRow && $hangHoa->so_container_khai_bao != $originalRow->so_container_khai_bao ? 'text-warning fw-bold' : $rowClass }}">
                                         {{ $hangHoa->so_container_khai_bao }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->so_seal !== $originalRow->so_seal ? 'text-warning fw-bold' : $rowClass }}">
+                                        {{ $hangHoa->so_seal ?? '' }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->so_seal_dinh_vi !== $originalRow->so_seal_dinh_vi ? 'text-warning fw-bold' : $rowClass }}">
+                                        {{ $hangHoa->so_seal_dinh_vi ?? '' }}
+                                    </td>
+                                    <td
+                                        class="{{ $originalRow && $hangHoa->cong_chuc_go_seal != $originalRow->cong_chuc_go_seal ? 'text-warning fw-bold' : $rowClass }}">
+                                        {{ $hangHoa->ten_cong_chuc ?? '' }}
                                     </td>
                                 </tr>
                             @endforeach

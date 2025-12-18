@@ -67,6 +67,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
             $this->tenCongViec = "Tiêu hủy hàng";
         } else if ($cong_viec == 7) {
             $this->tenCongViec = "Kiểm tra hàng";
+        } else if ($cong_viec == 8) {
+            $this->tenCongViec = "Kẹp chì chung container";
         } else if ($cong_viec == 9) {
             $this->tenCongViec = "Gỡ seal điện tử";
         }
@@ -96,7 +98,9 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
             ->first();
         $ngayCuoiCung = $theoDoiCuoiCung->ngay_them ?? '2000-01-01';
 
-        $theoDoiChiTiet = TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoi->ma_theo_doi)->get();
+        $theoDoiChiTiet = TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui.ma_theo_doi', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi')
+            ->where('theo_doi_tru_lui.ma_theo_doi', $theoDoi->ma_theo_doi)
+            ->get();
 
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $theoDoi->ngay_them);
         $day = $tu_ngay->format('d');  // Day of the month
@@ -202,12 +206,15 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
 
         foreach ($theoDoiTruLuis as $truLui) {
             if ($truLui->cong_viec == 1 && XuatHang::find($truLui->ma_yeu_cau)->trang_thai != 0) {
-                $this->lan_phieu++;
-                // if (Carbon::parse($truLui->ngay_them)->toDateString() == Carbon::parse($tu_ngay)->toDateString()) {
+                if ($truLui->cong_viec != 8) {
+                    $this->lan_phieu++;
+                }                // if (Carbon::parse($truLui->ngay_them)->toDateString() == Carbon::parse($tu_ngay)->toDateString()) {
                 //     $this->lanArray[] = $this->lan_phieu;
                 // }
             } elseif ($truLui->cong_viec != 1) {
-                $this->lan_phieu++;
+                if ($truLui->cong_viec != 8) {
+                    $this->lan_phieu++;
+                }
                 if ($truLui->ma_theo_doi == $theoDoi->ma_theo_doi) {
                     $this->lanArray[] = $this->lan_phieu;
                     $ma_cong_chuc = TheoDoiHangHoa::where('so_to_khai_nhap', $this->so_to_khai_nhap)
@@ -222,9 +229,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
         }
 
         foreach ($theoDoiChiTiet as $item) {
-            if ($item->so_luong_chua_xuat != 0) {
-
-
+            if ($item->so_luong_chua_xuat != 0 || $item->cong_viec == 8) {
                 $soTaus[] = $item->phuong_tien_vt_nhap;
                 if ($is_xuat_het == true) {
                     if ($item->cong_viec != 1) {
@@ -236,7 +241,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                             '',
                             '',
                             $item->so_luong_xuat,
-                            $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                            $item->cong_viec == 8 ? '' : ($item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat),
                             $item->so_seal ?? '',
                             $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
                             $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
@@ -268,7 +273,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                         '',
                         '',
                         $item->so_luong_xuat,
-                        $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                        $item->cong_viec == 8 ? '' : ($item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat),
                         $item->so_seal ?? $sealCuoiCung,
                         $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
                         $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
@@ -283,7 +288,7 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                         '',
                         '',
                         $item->so_luong_xuat,
-                        $item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat,
+                        $item->cong_viec == 8 ? '' : ($item->so_luong_chua_xuat == 0 ? '0' : $item->so_luong_chua_xuat),
                         $item->so_seal ?? '',
                         $item->phuong_tien_vt_nhap == $nhapHang->ptvt_ban_dau ? '' : $item->phuong_tien_vt_nhap,
                         $item->so_container == $nhapHang->container_ban_dau ? '' : $item->so_container,
@@ -349,8 +354,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->getColumnDimension('D')->setWidth(width: 15);
                 $sheet->getColumnDimension('E')->setWidth(width: 15);
                 $sheet->getColumnDimension('F')->setWidth(width: 5);
-                $sheet->getColumnDimension('G')->setWidth(width: 10);
-                $sheet->getColumnDimension('H')->setWidth(width: 10);
+                $sheet->getColumnDimension('G')->setWidth(width: 13);
+                $sheet->getColumnDimension('H')->setWidth(width: 13);
                 $sheet->getColumnDimension('I')->setWidth(width: 13);
                 $sheet->getColumnDimension('J')->setWidth(width: 10);
                 $sheet->getColumnDimension('K')->setWidth(width: 15);
@@ -466,8 +471,10 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->setCellValue('C' . $secondTableStart + 2, $this->theoDoi->so_ptvt_nuoc_ngoai);
 
                 if ($this->is_nhieu_tau == false) {
-                    $tau = $this->theoDoi->theoDoiChiTiet->where('so_luong_chua_xuat', '!=', 0)->first()?->phuong_tien_vt_nhap;
-
+                    $tau = $this->theoDoi
+                        ->theoDoiChiTiet
+                        ->firstWhere('so_luong_chua_xuat', '!=', 0)
+                        ?->phuong_tien_vt_nhap;
                     $sheet->mergeCells('J' . $secondTableStart + 2 . ':J' . $lastStart - 5);
                     $sheet->setCellValue('J' . $secondTableStart + 2, $tau == $this->nhapHang->ptvt_ban_dau ? '' : $tau);
                 }
@@ -497,7 +504,10 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
                 $sheet->getStyle('A' . ($lastStart - 3) . ':L' . ($lastStart - 3))->getFont()->setBold(true);
 
                 $sheet->mergeCells('G' . $lastStart . ':H' . ($lastStart));
-                $sheet->setCellValue('G' . $lastStart, "LẦN " . implode(',',  $this->lanArray));
+                if ($this->theoDoi->cong_viec == 8) {
+                } else {
+                    $sheet->setCellValue('G' . $lastStart, "LẦN " . implode(',',  $this->lanArray));
+                }
                 $sheet->getStyle('G' . $lastStart)->getFont()->setSize(22); // Increased font size
 
                 // $sheet->mergeCells('B' . ($lastStart + 8) . ':C' . ($lastStart + 8));

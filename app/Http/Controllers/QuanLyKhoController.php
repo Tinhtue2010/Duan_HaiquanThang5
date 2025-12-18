@@ -26,15 +26,20 @@ class QuanLyKhoController extends Controller
 {
     public function traCuuContainerIndex()
     {
-        $containers = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', 'nhap_hang.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', 'hang_hoa.ma_hang')
-            ->leftJoin('container', 'container.so_container', 'hang_trong_cont.so_container')
-            ->leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
-            ->whereIn('nhap_hang.trang_thai', ['2', '4', '7'])
-            ->select('container.*', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap')
-            ->selectRaw('COALESCE(SUM(hang_trong_cont.so_luong), 0) as total_so_luong')
-            ->groupBy('container.so_container', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap')
-            ->orderByRaw('total_so_luong DESC')
+        $containers = Container::leftJoin('niem_phong', 'container.so_container', '=', 'niem_phong.so_container')
+            ->joinSub(
+                NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
+                    ->join('hang_trong_cont', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
+                    ->whereIn('nhap_hang.trang_thai', [2, 4, 7])
+                    ->select('hang_trong_cont.so_container', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
+                    ->groupBy('hang_trong_cont.so_container'),
+                'summed',
+                'container.so_container',
+                '=',
+                'summed.so_container'
+            )
+            ->select('container.*', 'niem_phong.so_seal', 'niem_phong.phuong_tien_vt_nhap', 'summed.total_so_luong')
+            ->orderBy('summed.total_so_luong', 'DESC')
             ->get();
 
         return view('quan-ly-kho.tra-cuu-container', compact('containers'));

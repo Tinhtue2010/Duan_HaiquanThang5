@@ -8,7 +8,7 @@ class HangHoaSua extends Model
 {
     protected $connection = 'mysql';
     protected $table = 'hang_hoa_sua';
-    protected $primaryKey = 'ma_hang_sua'; 
+    protected $primaryKey = 'ma_hang_sua';
     protected $casts = [
         'so_to_khai_nhap' => 'string',
     ];
@@ -27,10 +27,16 @@ class HangHoaSua extends Model
         'don_vi_tinh',
         'so_container_khai_bao',
         'so_seal',
-        'ma_nhap_sua'   
+        'so_seal_dinh_vi',
+        'cong_chuc_go_seal',
+        'ma_nhap_sua'
     ];
     public function nhapHang()
     {
         return $this->belongsTo(NhapHang::class, 'so_to_khai_nhap', 'so_to_khai_nhap');
+    }
+    public function congChucGoSeal()
+    {
+        return $this->belongsTo(CongChuc::class, 'cong_chuc_go_seal', 'ma_cong_chuc');
     }
 }

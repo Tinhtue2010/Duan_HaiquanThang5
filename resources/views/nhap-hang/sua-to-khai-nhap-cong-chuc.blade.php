@@ -18,7 +18,11 @@
                 <p>
                     < Quay lại quản lý nhập hàng</p>
             </a>
-            <center><h3>Giao diện này chỉ có thể sửa: Trọng lượng, trị giá, đơn giá</h3></center>
+            @if (Auth::user()->loai_tai_khoan == 'Doanh nghiệp')
+                <center>
+                    <h3>Giao diện này chỉ có thể sửa: Trọng lượng, trị giá, đơn giá</h3>
+                </center>
+            @endif
             <h2 class="text-center text-dark">{{ $nhapHang->doanhNghiep->ten_doanh_nghiep }}</h2>
             <h2 class="text-center text-dark">TỜ KHAI NHẬP KHẨU HÀNG HÓA</h2>
             <!-- Input fields for each column -->
@@ -87,7 +91,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-4">
+                            <div class="col">
                                 <label class="label-text" for="">Đại lý</label> <span
                                     class="text-danger missing-input-text"></span>
                                 <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang">
@@ -107,19 +111,44 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-4">
+                            <div class="col">
                                 <label class="label-text" for="phuong_tien_vt_nhap">Phương tiện vận
                                     tải</label> <span class="text-danger missing-input-text"></span>
                                 <input type="text" class="form-control mt-2" id="phuong_tien_vt_nhap"
                                     name="phuong_tien_vt_nhap" placeholder="Nhập phương tiện vận tải" maxlength="50"
                                     required value={{ $nhapHang->phuong_tien_vt_nhap }}>
                             </div>
-                            <div class="col-4">
+                            <div class="col">
                                 <label class="label-text" for="trong_luong">Trọng lượng
                                     (Tấn)</label> <span class="text-danger missing-input-text"></span>
                                 <input type="number" class="form-control mt-2" id="trong_luong" name="trong_luong"
                                     placeholder="Nhập tổng trọng lượng (Tấn)" value={{ $nhapHang->trong_luong }} required>
                             </div>
+                            <div class="col">
+                                <label class="label-text mb-2" for="xuat_xu">Xuất xứ</label> <span
+                                    class="text-danger missing-input-text"></span>
+                                <select class="form-control" id="xuat-xu-dropdown-search" name="xuat_xu">
+                                    <option value="">Nhập xuất xứ của sản phẩm</option>
+                                    @foreach ($xuatXus as $xuatXu)
+                                        @if ($xuatXu == $hangHoaRows->first()->xuat_xu)
+                                            <option value="{{ $xuatXu }}" selected>
+                                                {{ $xuatXu }}
+                                            </option>
+                                        @else
+                                            <option value="{{ $xuatXu }}">
+                                                {{ $xuatXu }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label class="label-text" for="ten_doan_tau">Đoàn tàu</label>
+                                <span class="text-danger missing-input-text"></span>
+                                <input type="text" class="form-control mt-2" id="ten_doan_tau" name="ten_doan_tau"
+                                    value="{{ $nhapHang->ten_doan_tau ?? '' }}" placeholder="Nhập đoàn tàu" required>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -133,7 +162,7 @@
                         <th hidden>Mã hàng</th>
                         <th>Tên hàng</th>
                         <th>Loại hàng</th>
-                        <th hidden>Xuất xứ</th>
+                        <th>Xuất xứ</th>
                         <th>Số lượng</th>
                         <th>Đơn vị tính</th>
                         <th>Đơn giá (USD)</th>
@@ -165,7 +194,7 @@
                                     @endforeach
                                 </select>
                             </td>
-                            {{-- <td>
+                            <td>
                                 <select class="form-control select2-dropdown" name="xuat_xu">
                                     <option></option>
                                     @foreach ($xuatXus as $xuatXu)
@@ -175,7 +204,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </td> --}}
+                            </td>
                             <td>
                                 <center>
                                     <input type="text" class="form-control number" name="so_luong_khai_bao"
@@ -244,6 +273,8 @@
                         <input type="hidden" name="phuong_tien_vt_nhap" id="phuong_tien_vt_nhap_hidden">
                         <input type="hidden" name="trong_luong" id="trong_luong_hidden">
                         <input type="hidden" name="so_to_khai_nhap" id="so_to_khai_nhap_hidden">
+                        <input type="hidden" name="ten_doan_tau" id="ten_doan_tau_hidden">
+                        <input type="hidden" name="xuat_xu" id="xuat_xu_hidden">
                         <input type="hidden" name="so_to_khai_nhap_goc" value="{{ $nhapHang->so_to_khai_nhap }}">
                         <input type="hidden" name="ngay_thong_quan" id="ngay_thong_quan_hidden">
                         <button type="submit" class="btn btn-success">Sửa tờ khai</button>
@@ -275,10 +306,12 @@
                 const maHaiQuan = document.getElementById('hai-quan-dropdown-search').value;
                 const maLoaiHinh = document.getElementById('loai-hinh-dropdown-search').value;
                 const maChuHang = document.getElementById('chu-hang-dropdown-search').value;
+                const xuatXu = document.getElementById('xuat-xu-dropdown-search').value;
                 const ngayThongQuan = $('#datepicker').val();
                 const soToKhaiNhap = $("#so_to_khai_nhap").val();
                 const phuongTienVanTaiNhap = $("#phuong_tien_vt_nhap").val();
                 const trongLuong = $("#trong_luong").val();
+                const tenDoanTau = $("#ten_doan_tau").val();
 
                 if (!maHaiQuan) {
                     alert('Vui lòng chọn hải quan');
@@ -336,6 +369,8 @@
                 document.getElementById('so_to_khai_nhap_hidden').value = soToKhaiNhap;
                 document.getElementById('ngay_thong_quan_hidden').value = ngayThongQuan;
                 document.getElementById('ma_chu_hang_hidden').value = maChuHang;
+                document.getElementById('ten_doan_tau_hidden').value = tenDoanTau;
+                document.getElementById('xuat_xu_hidden').value = xuatXu;
 
                 // Submit the form
                 $('#xacNhanModal').modal('show');

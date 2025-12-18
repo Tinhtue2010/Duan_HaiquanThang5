@@ -878,6 +878,7 @@ class YeuCauGoSealController extends Controller
                 ->make(true);
         }
     }
+    
     public function themTheoDoiTruLui($so_container, $yeuCau, $ma_cong_chuc, $so_seal_moi)
     {
         $so_container_no_space = str_replace(' ', '', $so_container);

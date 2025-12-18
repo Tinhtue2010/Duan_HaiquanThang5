@@ -425,6 +425,12 @@
                         <br>
                         <input class="mt-2" type="checkbox" name="30" id="30" value="1">
                         <label for="myCheckbox">Báo cáo đoàn tàu</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="31" id="31" value="1">
+                        <label for="myCheckbox">Báo cáo chi tiết gán, gỡ seal định vị điện tử</label>
+                        <br>
+                        <input class="mt-2" type="checkbox" name="32" id="32" value="1">
+                        <label for="myCheckbox">Báo cáo phương tiện chưa xuất cảnh</label>
 
 
 

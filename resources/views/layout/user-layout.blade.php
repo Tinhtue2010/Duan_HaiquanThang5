@@ -315,11 +315,7 @@
                             </a>
                             @if (Auth::user()->loai_tai_khoan === 'Cán bộ công chức' && Auth::user()->congChuc->is_ban_giao === 1)
                                 <div class="sb-sidenav-menu-heading">Quản lý khác</div>
-                                <a class="nav-link" href="/quan-ly-doan-tau">
-                                    <div class="sb-nav-link-icon"><img class="side-bar-icon"
-                                            src="{{ asset('images/icons/product-type.png') }}"></div>
-                                    Danh sách đoàn tàu
-                                </a>
+
                                 <a class="nav-link" href="/quan-ly-ban-giao-ho-so">
                                     <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                             src="{{ asset('images/icons/report.png') }}"></div>
@@ -352,6 +348,11 @@
                             </a>
                         @elseif (Auth::user()->loai_tai_khoan === 'Admin')
                             <div class="sb-sidenav-menu-heading">Quản lý thông tin</div>
+                            <a class="nav-link" href="/to-khai-da-nhap-hang">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/import-goods-done.png') }}"></div>
+                                Tờ khai đã nhập hàng
+                            </a>
                             <a class="nav-link" href="/quan-ly-tai-khoan">
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/account.png') }}"></div>
@@ -412,6 +413,11 @@
                                 <div class="sb-nav-link-icon"><img class="side-bar-icon"
                                         src="{{ asset('images/icons/export-import.png') }}"></div>
                                 Yêu cầu sửa xuất nhập cảnh
+                            </a>
+                            <a class="nav-link" href="/quan-ly-doan-tau">
+                                <div class="sb-nav-link-icon"><img class="side-bar-icon"
+                                        src="{{ asset('images/icons/product-type.png') }}"></div>
+                                Danh sách đoàn tàu
                             </a>
                         @elseif (Auth::user()->loai_tai_khoan === 'Lãnh đạo')
                             <div class="sb-sidenav-menu-heading">Quản lý thông tin</div>

@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\CongChuc;
 use App\Models\Seal;
+use App\Models\YeuCauGoSealChiTiet;
 use App\Models\YeuCauNiemPhongChiTiet;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -43,7 +44,7 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
                 return $query->where('seal.ma_cong_chuc', $this->ma_cong_chuc);
             })
             ->groupBy('seal.so_seal')
-            ->select('seal.so_seal', 'seal.loai_seal', 'seal.ngay_cap', 'seal.ngay_su_dung', 'seal.so_container', 'yeu_cau_niem_phong_chi_tiet.phuong_tien_vt_nhap', 'yeu_cau_go_seal_chi_tiet.phuong_tien_vt_nhap as ptvt_go_seal', 'cong_chuc.ten_cong_chuc')
+            ->select('seal.so_seal', 'seal.loai_seal', 'seal.ngay_cap', 'seal.ngay_su_dung', 'yeu_cau_niem_phong_chi_tiet.so_container', 'yeu_cau_niem_phong_chi_tiet.phuong_tien_vt_nhap', 'yeu_cau_go_seal_chi_tiet.phuong_tien_vt_nhap as ptvt_go_seal', 'cong_chuc.ten_cong_chuc')
             ->get();
 
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $this->tu_ngay)->format('d-m-Y');
@@ -75,11 +76,14 @@ class BaoCaoSuDungSealChiTiet implements FromArray, WithEvents
             } elseif ($item->loai_seal == 5) {
                 $loaiSeal = "Seal định vị điện tử";
             }
+            if($item->so_container == null){
+                $so_container = YeuCauGoSealChiTiet::where('so_seal_moi', $item->so_seal)->first()->so_container ?? "";
+            }
             $result[] = [
                 $stt++,
                 $loaiSeal,
                 $item->so_seal,
-                $item->so_container,
+                $item->so_container ?? $so_container,
                 $item->phuong_tien_vt_nhap ?? $item->ptvt_go_seal,
                 Carbon::parse($item->ngay_cap)->format('d-m-Y'),
                 Carbon::parse($item->ngay_su_dung)->format('d-m-Y'),

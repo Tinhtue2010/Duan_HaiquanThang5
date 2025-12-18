@@ -83,6 +83,7 @@
                         <th>Hải quan chuyển đến</th>
                         <th style="display: none;">Mã HQ</th>
                         <th>Số tờ khai mới</th>
+                        <th>Seal định vị</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -165,6 +166,7 @@
                         <td class="text-center">${chiTiet.ten_hai_quan}</td>
                         <td class="text-center" hidden>${chiTiet.ma_hai_quan}</td>
                         <td class="text-center">${chiTiet.so_to_khai_moi}</td>
+                        <td><input class="form-control" value="${chiTiet.so_seal_dinh_vi || ''}"/></td>
                         <td class="text-center">
                             <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                         </td>
@@ -248,6 +250,7 @@
                             <td>${tenHaiQuan}</td>
                             <td hidden>${maHaiQuan}</td>
                             <td>${soToKhaiMoi}</td>
+                            <td><input class="form-control" value="${item.so_seal_dinh_vi || ''}"/></td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-danger btn-sm deleteRowButton">Xóa</button>
                             </td>
@@ -265,9 +268,11 @@
                     stt: row.querySelector('td:nth-child(1)').textContent.trim(),
                     so_to_khai_nhap: row.querySelector('td:nth-child(2)').textContent.trim(),
                     so_container: row.querySelector('td:nth-child(3)').textContent.trim(),
+                    ten_hang: row.querySelector('td:nth-child(4)').textContent.trim(),
                     ten_phuong_tien_vt: row.querySelector('td:nth-child(5)').textContent.trim(),
                     ma_hai_quan: row.querySelector('td:nth-child(7)').textContent.trim(),
-                    so_to_khai_moi: row.querySelector('td:nth-child(8)').textContent.trim()
+                    so_to_khai_moi: row.querySelector('td:nth-child(8)').textContent.trim(),
+                    so_seal_dinh_vi: row.querySelector('td:nth-child(9) input').value.trim()
 
                 };
             });
