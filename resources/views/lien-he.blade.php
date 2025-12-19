@@ -42,7 +42,7 @@
                                 <textarea class="form-control" name="loi_nhan" rows="5" maxlength="2000" required></textarea>
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-primary center">Gửi thông tin</button>
+                                <button type="submit" class="btn btn-primary center" disabled>Gửi thông tin</button>
                             </div>
                         </form>
                     </div>

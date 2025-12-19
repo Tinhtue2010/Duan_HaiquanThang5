@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CongChuc;
 use Illuminate\Http\Request;
-use App\Models\NhomNiemPhong;
 use App\Models\Seal;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

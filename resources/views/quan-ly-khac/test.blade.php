@@ -48,7 +48,6 @@
                                 <option value="11">Đã chọn phương tiện xuất cảnh</option>
                                 <option value="12">Đã duyệt xuất hàng</option>
                                 <option value="13">Đã thực xuất hàng</option>
-                                <option value="0">Đã hủy</option>
                             </select>
                         </div>
                     </div>

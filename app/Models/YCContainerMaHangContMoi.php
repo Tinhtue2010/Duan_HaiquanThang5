@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+//Hỗ trợ cho hủy/sửa yêu cầu chuyển container
 class YCContainerMaHangContMoi extends Model
 {
     protected $connection = 'mysql';

@@ -97,9 +97,6 @@ class LoaiHinhController extends Controller
     public function action3(Request $request)
     {
         $this->checkLechTau();
-        // $yeuCau = YeuCauGoSeal::find(378);
-        // $this->themGoSeal('GLDU0889990', $yeuCau, '2025-09-29');
-        // $this->hangVeKhoChiTiet();
     }
 
     public function action4(Request $request)
@@ -199,38 +196,7 @@ class LoaiHinhController extends Controller
             return false;
         }
     }
-    public function hangVeKhoChiTiet()
-    {
-        try {
-            return DB::transaction(function () {
-                $ma_yeu_cau = 566;
-                $chiTiets = YeuCauHangVeKhoChiTiet::where('ma_yeu_cau', $ma_yeu_cau)
-                    ->get();
 
-                foreach ($chiTiets as $chiTiet) {
-                    $data = TheoDoiHangHoa::where('theo_doi_hang_hoa.so_to_khai_nhap', $chiTiet->so_to_khai_nhap)
-                        ->join('hang_hoa', 'theo_doi_hang_hoa.ma_hang', '=', 'hang_hoa.ma_hang')
-                        ->where('theo_doi_hang_hoa.so_luong_ton', '>', 0)
-                        ->where('theo_doi_hang_hoa.cong_viec', 5)
-                        ->get();
-
-                    $hang_hoa_info = $data->map(function ($item) {
-                        return "{$item->ten_hang} - Số lượng: {$item->so_luong_ton}";
-                    })->implode('<br>');
-
-                    $chiTiet->update([
-                        'ten_hang' => $hang_hoa_info,
-                    ]);
-                }
-
-                DB::commit();
-                return true;
-            });
-        } catch (\Exception $e) {
-            Log::error('Error in niemPhongLai: ' . $e->getMessage());
-            return false;
-        }
-    }
     public function niemPhongLai2()
     {
         try {
@@ -321,8 +287,6 @@ class LoaiHinhController extends Controller
                         'phuong_tien_vt_nhap' => $so_tau_moi,
                     ]);
 
-
-
                 DB::commit();
                 return true;
             });
@@ -335,6 +299,9 @@ class LoaiHinhController extends Controller
     {
         return Carbon::createFromFormat('d/m/Y', $dateString)->format('Y-m-d');
     }
+
+
+    //Đổi chỗ 2 phiếu trừ lùi
     public function switchTruLui()
     {
         $ma_theo_doi_1 = 199907;
@@ -370,28 +337,9 @@ class LoaiHinhController extends Controller
             }
         });
     }
-    public function fillNiemPhongTruLui()
-    {
-        $yeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau', 'yeu_cau_niem_phong.ma_yeu_cau')
-            ->where('yeu_cau_niem_phong.ma_yeu_cau', '>=', 8114)
-            ->get();
-        foreach ($yeuCaus as $yeuCau) {
-            $this->themTheoDoiTruLuiNiemPhong($yeuCau->so_container, $yeuCau, $yeuCau->so_seal_moi);
-        }
-    }
-    public function getToKhaiTrongCont($so_container)
-    {
-        $nhapHangs = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('hang_trong_cont.so_container', $so_container)
-            ->whereIn('nhap_hang.trang_thai', ['2'])
-            ->groupBy('nhap_hang.so_to_khai_nhap')
-            ->havingRaw('SUM(hang_trong_cont.so_luong) > 0')
-            ->pluck('nhap_hang.so_to_khai_nhap');
 
-        return $nhapHangs;
-    }
 
+    //Nếu YC gỡ seal lỗi không tạo phiếu trừ lùi
     public function themTheoDoiTruLuiGoSeal()
     {
         $ma_yeu_cau = 479;
@@ -444,29 +392,8 @@ class LoaiHinhController extends Controller
             ]);
         }
     }
-    public function themTheoDoiTruLuiNiemPhong($so_container, $yeuCau, $so_seal)
-    {
-        $nhapHangs = $this->getToKhaiTrongCont($so_container);
-        foreach ($nhapHangs as $so_to_khai_nhap) {
-            $theoDoi = TheoDoiTruLui::create([
-                'so_to_khai_nhap' => $so_to_khai_nhap,
-                'so_ptvt_nuoc_ngoai' => '',
-                'ngay_them' => now(),
-                'cong_viec' => 8,
-                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
-            ]);
-            TheoDoiTruLuiChiTiet::insert(
-                [
-                    'so_luong_xuat' => 0,
-                    'so_luong_chua_xuat' => 0,
-                    'ma_theo_doi' => $theoDoi->ma_theo_doi,
-                    'so_container' => $so_container,
-                    'so_seal' => $so_seal,
-                    'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $so_container)->first()->phuong_tien_vt_nhap ?? ''
-                ]
-            );
-        }
-    }
+
+    //Cho tên container về dạng tên chuẩn
     public function normalizeContainer()
     {
         $nhapHangs = NhapHang::where('trang_thai', 2)->get();
@@ -545,116 +472,8 @@ class LoaiHinhController extends Controller
             ]);
         }
     }
-    public function fixDoanTau()
-    {
-        $nhapHangs = NhapHang::where('trang_thai', 2)
-            ->groupBy('phuong_tien_vt_nhap')
-            ->get();
-        foreach ($nhapHangs as $nhapHang) {
-            NiemPhong::where('phuong_tien_vt_nhap', $nhapHang->phuong_tien_vt_nhap)
-                ->update(['ten_doan_tau' => $nhapHang->ten_doan_tau]);
-        }
-    }
-    public function fixNiemPhongTruLuiLap()
-    {
-        $yeuCaus = YeuCauNiemPhong::where('ngay_yeu_cau', '=', now()->toDateString())->get();
-        foreach ($yeuCaus as $yeuCau) {
-            $truLuiNiemPhongs = TheoDoiTruLui::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-                ->where('cong_viec', 8)
-                ->get();
-            foreach ($truLuiNiemPhongs as $truLuiNiemPhong) {
-                $count = TheoDoiTruLui::where('so_to_khai_nhap', $truLuiNiemPhong->so_to_khai_nhap)
-                    ->where('ngay_them', now()->toDateString())
-                    ->count();
-                if ($count > 1) {
-                    $truLuiNiemPhong->delete();
-                }
-            }
-        }
-    }
-    public function fix()
-    {
-        $so_to_khai_nhap = '500576660000';
-        $theoDoiHangHoas = TheoDoiHangHoa::where('so_to_khai_nhap', $so_to_khai_nhap)
-            ->where('cong_viec', 2)
-            ->where('ma_yeu_cau', 3167)
-            ->get();
-        foreach ($theoDoiHangHoas as $theoDoiHangHoa) {
 
-            $xuatHangCont = XuatHangCont::join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
-                ->select('xuat_hang_cont.*', 'hang_trong_cont.ma_hang')
-                ->where('xuat_hang_cont.so_to_khai_xuat', 44285)
-                ->where('hang_trong_cont.ma_hang', $theoDoiHangHoa->ma_hang)
-                ->where('xuat_hang_cont.so_to_khai_nhap', $so_to_khai_nhap)
-                ->first();
-            if (!$xuatHangCont) {
-                continue;
-            }
-            $theoDoiHangHoa->update([
-                'so_luong_xuat' => $theoDoiHangHoa->so_luong_xuat + $xuatHangCont->so_luong_xuat,
-                'so_luong_ton' => $theoDoiHangHoa->so_luong_ton + $xuatHangCont->so_luong_xuat,
-            ]);
-        }
-    }
-    public function fix2()
-    {
-        $so_to_khai_xuat = 44458;
-        $xuatHangConts = XuatHangCont::where('so_to_khai_xuat', $so_to_khai_xuat)->get();
-        foreach ($xuatHangConts as $xuatHangCont) {
-            $hangHoaXuat = XuatHangCont::where('ma_xuat_hang_cont', $xuatHangCont->ma_xuat_hang_cont)
-                ->join('hang_trong_cont', 'xuat_hang_cont.ma_hang_cont', '=', 'hang_trong_cont.ma_hang_cont')
-                ->join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-                ->leftJoin('niem_phong', 'hang_trong_cont.so_container', '=', 'niem_phong.so_container')
-                ->select(
-                    'niem_phong.so_seal',
-                    'xuat_hang_cont.so_luong_xuat',
-                    'xuat_hang_cont.so_container',
-                    'hang_trong_cont.so_luong',
-                    'hang_trong_cont.ma_hang_cont',
-                    'hang_hoa.ten_hang',
-                    'hang_hoa.ma_hang'
-                )
-                ->first();
-            $xuatHang = XuatHang::find($so_to_khai_xuat);
-            $ptvtXuatCanh = $this->getPTVTXuatCanhCuaPhieu($xuatHang->so_to_khai_xuat);
-            $ngayDangKy = Carbon::parse($xuatHang->ngay_dang_ky);
-            $thoiGian = $ngayDangKy->setTime(now()->hour, now()->minute);
-            TheoDoiHangHoa::insert(
-                [
-                    'so_to_khai_nhap' => $xuatHangCont->so_to_khai_nhap,
-                    'ma_hang' => $hangHoaXuat->ma_hang,
-                    'thoi_gian' => $thoiGian,
-                    'so_luong_xuat' => $hangHoaXuat->so_luong_xuat,
-                    'so_luong_ton' => $hangHoaXuat->so_luong - $hangHoaXuat->so_luong_xuat,
-                    'phuong_tien_cho_hang' => '',
-                    'cong_viec' => 1,
-                    'phuong_tien_nhan_hang' => $ptvtXuatCanh,
-                    'so_container' => $hangHoaXuat->so_container,
-                    'so_seal' => $hangHoaXuat->so_seal ?? '',
-                    'ma_cong_chuc' => $xuatHang->ma_cong_chuc ?? '',
-                    'ma_yeu_cau' => $xuatHang->so_to_khai_xuat,
-
-                ]
-            );
-            TheoDoiTruLui::insert([
-                'so_to_khai_nhap' => $xuatHangCont->so_to_khai_nhap,
-                'so_ptvt_nuoc_ngoai' => $ptvtXuatCanh,
-                'phuong_tien_vt_nhap' => '',
-                'ngay_them' => $xuatHang->ngay_dang_ky,
-                'cong_viec' => 1,
-                'ma_yeu_cau' => $xuatHang->so_to_khai_xuat,
-            ]);
-        }
-    }
-    public function getPTVTXuatCanhCuaPhieu($so_to_khai_xuat)
-    {
-        return PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $so_to_khai_xuat)
-            ->with('PTVTXuatCanh')
-            ->get()
-            ->pluck('PTVTXuatCanh.ten_phuong_tien_vt')
-            ->filter()
-            ->implode('; ');
-    }
+    //Kiểm tra xem số tàu của container có khác số tàu của tờ khai nhập không
     public function checkLechTau()
     {
         $so_to_khai_nhaps = [];
@@ -673,6 +492,7 @@ class LoaiHinhController extends Controller
             }
         }
         dd($so_to_khai_nhaps);
+        //Nếu muốn tự động sửa thì chạy đoạn dưới
         foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
             $nhapHang = NhapHang::find($so_to_khai_nhap);
             $container = NhapHang::join('hang_hoa', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
@@ -707,187 +527,8 @@ class LoaiHinhController extends Controller
             }
         }
     }
-    public function fillTiepNhan()
-    {
-        $nhapHangs = NhapHang::where('nhap_hang.ngay_tiep_nhan', null)
-            ->get();
 
-        foreach ($nhapHangs as $nhapHang) {
-            $nhapHang->update(['ngay_tiep_nhan' => $nhapHang->ngay_thong_quan]);
-        }
-    }
-    public function xoaTheoDoiHang(Request $request)
-    {
-        // $this->fixPhanQuyenBaoCao();
-        // $this->kiemTraDungXuatHet();
-        // $this->fixKiemTra();
-        // $this->fixSoContKhaiBao();
-        // $this->sealXuyenNgay();
-
-
-        // $nhapHangs = NhapHang::where('ngay_xuat_het', '>', '2025-07-01')->get();
-        // foreach ($nhapHangs as $nhapHang) {
-        //     $so_to_khai_nhap = $nhapHang->so_to_khai_nhap;
-        //     $xuatHang = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
-        //         ->where('xuat_hang_cont.so_to_khai_nhap', $so_to_khai_nhap)
-        //         ->whereIn('xuat_hang.trang_thai', [2, 12, 13])
-        //         ->orderBy('xuat_hang.updated_at', 'desc')
-        //         ->first();
-
-        //     NhapHang::find($so_to_khai_nhap)
-        //         ->update([
-        //             'ma_cong_chuc_ban_giao' => $xuatHang->ma_cong_chuc ?? '',
-        //         ]);
-        // }
-
-
-        // $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-        //     ->where('ngay_yeu_cau', today())
-        //     ->get();
-
-        // foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-        //     $so_container_no_space = str_replace(' ', '', $chiTietYeuCau->so_container); // Remove spaces
-        //     $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        //     XuatHang::where(function ($query) {
-        //         if (now()->hour < 9) {
-        //             $query->whereDate('ngay_dang_ky', today())
-        //                 ->orWhereDate('ngay_dang_ky', today()->subDay());
-        //         } else {
-        //             $query->whereDate('ngay_dang_ky', today());
-        //         }
-        //     })
-        //         ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-        //         ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
-        //         ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $chiTietYeuCau->so_seal_moi]);
-        // }
-
-        // $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-        //     ->where('yeu_cau_niem_phong.ma_yeu_cau', 4117)
-        //     ->get();
-
-        // foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-        //     $so_container_no_space = str_replace(' ', '', $chiTietYeuCau->so_container); // Remove spaces
-        //     $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        //     XuatHang::where(function ($query) {
-        //         $query->whereDate('ngay_dang_ky', today())
-        //             ->orWhereDate('ngay_dang_ky', today()->subDay());
-        //     })
-        //         ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-        //         ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
-        //         ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $chiTietYeuCau->so_seal_moi]);
-        // }
-
-
-
-
-        // $yeuCaus = YeuCauGoSeal::join('yeu_cau_go_seal_chi_tiet', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
-        //     ->where('yeu_cau_go_seal.is_niem_phong', 1)
-        //     ->where('yeu_cau_go_seal.trang_thai', 2)
-        //     ->where('yeu_cau_go_seal.ma_yeu_cau', '>', 3)
-        //     ->where('yeu_cau_go_seal.ma_yeu_cau', '<', 29)
-        //     ->get();
-
-        // foreach ($yeuCaus as $yeuCau) {
-        //     TheoDoiHangHoa::where('so_container', $yeuCau->so_container)
-        //         ->where('cong_viec', 9)
-        //         ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-        //         ->update([
-        //             'so_seal' => $yeuCau->so_seal_moi,
-        //         ]);
-        //     TheodoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
-        //         ->where('theo_doi_tru_lui_chi_tiet.so_container', $yeuCau->so_container)
-        //         ->where('theo_doi_tru_lui.cong_viec', 9)
-        //         ->where('theo_doi_tru_lui.ma_yeu_cau', $yeuCau->ma_yeu_cau)
-        //         ->update([
-        //             'so_seal' => $yeuCau->so_seal_moi,
-        //         ]);
-        // }
-
-        // $chiTietYeuCaus = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-        //     ->whereDate('ngay_yeu_cau', today()->subDay())
-        //     ->get();
-
-        // foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-        //     $so_container_no_space = str_replace(' ', '', $chiTietYeuCau->so_container); // Remove spaces
-        //     $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        //     TheoDoiHangHoa::whereIn('so_container', [$so_container_no_space, $so_container_with_space])
-        //         ->where('cong_viec', 9)
-        //         ->update([
-        //             'so_seal' => $chiTietYeuCau->so_seal_moi,
-        //         ]);
-        //     TheodoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
-        //         ->whereIn('so_container', [$so_container_no_space, $so_container_with_space])
-        //         ->where('theo_doi_tru_lui.cong_viec', 9)
-        //         ->update([
-        //             'so_seal' => $chiTietYeuCau->so_seal_moi,
-        //         ]);
-        // }
-
-        // $yeuCaus = YeuCauGoSeal::join('yeu_cau_go_seal_chi_tiet', 'yeu_cau_go_seal.ma_yeu_cau', '=', 'yeu_cau_go_seal_chi_tiet.ma_yeu_cau')
-        //     ->where('yeu_cau_go_seal.trang_thai', 2)
-        //     ->where('yeu_cau_go_seal.ma_yeu_cau', '>', 3)
-        //     ->where('yeu_cau_go_seal.ma_yeu_cau', '<', 28)
-        //     ->get();
-
-        // foreach ($yeuCaus as $yeuCau) {
-        //     $this->themGoSeal($yeuCau->so_container, $yeuCau,$yeuCau->ngay_yeu_cau);
-        // }
-
-        // $yeuCau = YeuCauGoSeal::find(161);
-        // $thoi_gian = Carbon::parse($yeuCau->ngay_yeu_cau);
-        // $now = Carbon::now();
-        // $thoi_gian->setTime($now->hour, $now->minute, $now->second);
-        // $this->themGoSeal('WHLU5667358', $yeuCau, $thoi_gian);
-
-
-        // $this->fixYeuCauTau();
-        // $this->capNhatSealTruLui();
-
-
-        // $nps = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-        //     ->where('yeu_cau_niem_phong.ma_yeu_cau', 547)
-        //     ->get();
-        // foreach($nps as $np){
-        //     $this->capNhatSealXuatHang($np->so_container, $np->so_seal_moi);
-        // }
-
-
-        // $this->fixTauTrenCont();
-        // $this->fixNiemPhong();
-
-        // $this->khoiPhucNhapHang();
-
-        // $this->fixContainer();
-        // $this->checkDupsNiemPhong();
-        // $this->fixTauTheoDoiTruLui();
-        // $this->fixTheoDoi();
-        return redirect()->back();
-    }
-    public function kiemTraDungXuatHet()
-    {
-        $list = [];
-        $nhapHangs = NhapHang::where('trang_thai', 4)->where('ngay_xuat_het', '>', '2025-07-01')->get();
-        foreach ($nhapHangs as $nhapHang) {
-            $xuatHang = XuatHang::join('xuat_hang_cont', 'xuat_hang.so_to_khai_xuat', '=', 'xuat_hang_cont.so_to_khai_xuat')
-                ->where('xuat_hang_cont.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-                ->whereNotIn('xuat_hang.trang_thai', [0, 1, 7, 8, 9, 10])
-                ->orderBy('xuat_hang.created_at', 'desc')
-                ->first();
-            if ($xuatHang && $xuatHang->ma_cong_chuc != null) {
-                if ($xuatHang->ma_cong_chuc != $nhapHang->ma_cong_chuc_ban_giao) {
-                    $list[] = $nhapHang->so_to_khai_nhap;
-                    // $nhapHang->update([
-                    //     'ma_cong_chuc_ban_giao' => $xuatHang->ma_cong_chuc,
-                    //     'ngay_xuat_het' => $xuatHang->ngay_dang_ky,
-                    // ]);
-                }
-            }
-        }
-        dd($list);
-    }
+    //Fix xem tờ khai nào đã hết hàng nhưng chưa chuyển thành xuất hết (Thường lẫn với xuất hàng chờ duyệt)
     public function kiemTraDungXuatHet2()
     {
         $list = [];
@@ -911,307 +552,8 @@ class LoaiHinhController extends Controller
         dd($list);
     }
 
-    public function sealXuyenNgay()
-    {
-        $so_to_khai_nhaps = [];
-        foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
-            $so_seal = XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-                ->where('xuat_hang_cont.so_to_khai_nhap', $so_to_khai_nhap)
-                ->where('xuat_hang.ngay_dang_ky', '2025-07-16')
-                ->where('xuat_hang_cont.so_seal_cuoi_ngay', '!=', '')
-                ->select('xuat_hang_cont.so_seal_cuoi_ngay')
-                ->first()
-                ?->so_seal_cuoi_ngay ?? '';
-            XuatHangCont::join('xuat_hang', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-                ->where('xuat_hang_cont.so_to_khai_nhap', $so_to_khai_nhap)
-                ->where('xuat_hang.ngay_dang_ky', '2025-07-17')
-                ->where('xuat_hang_cont.so_seal_cuoi_ngay', '')
-                ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $so_seal]);
-        }
-    }
 
-    public function themGoSeal($so_container, $yeuCau, $ngay_yeu_cau)
-    {
-        $so_container_no_space = str_replace(' ', '', $so_container);
-        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        $so_to_khai_nhaps = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.trang_thai', '2')
-            ->whereIn('hang_trong_cont.so_container', [$so_container_no_space, $so_container_with_space])
-            ->select('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap', DB::raw('SUM(hang_trong_cont.so_luong) as total_so_luong'))
-            ->groupBy('nhap_hang.ma_doanh_nghiep', 'nhap_hang.so_to_khai_nhap')
-            ->get()->pluck('so_to_khai_nhap')->toArray();
-
-        foreach ($so_to_khai_nhaps as $so_to_khai_nhap) {
-            $theoDoiTruLui = TheoDoiTruLui::where('so_to_khai_nhap', $so_to_khai_nhap)->count();
-            // if ($theoDoiTruLui > 1) {
-            //     continue;
-            // }
-            $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
-                ->get();
-
-            $theoDoi = TheoDoiTruLui::create([
-                'so_to_khai_nhap' => $so_to_khai_nhap,
-                'so_ptvt_nuoc_ngoai' => '',
-                'ngay_them' => $ngay_yeu_cau,
-                'cong_viec' => 9,
-                'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
-            ]);
-            foreach ($hangHoas as $hangHoa) {
-                TheoDoiTruLuiChiTiet::insert(
-                    [
-                        'ten_hang' => $hangHoa->ten_hang,
-                        'so_luong_xuat' => 0,
-                        'so_luong_chua_xuat' => $hangHoa->so_luong,
-                        'ma_theo_doi' => $theoDoi->ma_theo_doi,
-                        'so_container' => $hangHoa->so_container,
-                        'so_seal' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->so_seal ?? '',
-                        'phuong_tien_vt_nhap' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? ''
-                    ]
-                );
-                $ptvtChoHang = NiemPhong::where('so_container',  $hangHoa->so_container)->first()->phuong_tien_vt_nhap ?? '';
-                TheoDoiHangHoa::insert([
-                    'so_to_khai_nhap' => $hangHoa->so_to_khai_nhap,
-                    'ma_hang'  => $hangHoa->ma_hang,
-                    'thoi_gian'  => $ngay_yeu_cau,
-                    'so_luong_xuat'  => $hangHoa->so_luong,
-                    'so_luong_ton'  => $hangHoa->so_luong,
-                    'phuong_tien_cho_hang' => $ptvtChoHang,
-                    'cong_viec' => 9,
-                    'phuong_tien_nhan_hang' => '',
-                    'so_container' => $hangHoa->so_container,
-                    'so_seal' => NiemPhong::where('so_container', $hangHoa->so_container)->first()->so_seal ?? '',
-                    'ma_cong_chuc' => $yeuCau->ma_cong_chuc,
-                    'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
-                ]);
-            }
-        }
-    }
-
-
-    public function fixKiemTra()
-    {
-        $ma_yeu_cau = 511;
-        $so_container = "CCLU 6643705";
-        $so_tau = "ND 2338";
-        YeuCauKiemTraChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->update([
-            'so_container' => $so_container,
-            'so_tau' => $so_tau,
-        ]);
-        TheoDoiHangHoa::where('ma_yeu_cau', $ma_yeu_cau)
-            ->where('cong_viec', 7)
-            ->update([
-                'so_container' => $so_container,
-                'phuong_tien_cho_hang' => $so_tau,
-            ]);
-        TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
-            ->where('theo_doi_tru_lui.ma_yeu_cau', $ma_yeu_cau)
-            ->where('theo_doi_tru_lui.cong_viec', 7)
-            ->update([
-                'theo_doi_tru_lui_chi_tiet.so_container' => $so_container,
-                'theo_doi_tru_lui_chi_tiet.phuong_tien_vt_nhap' => $so_tau,
-            ]);
-    }
-    public function fixYeuCauTau()
-    {
-        $ma_yeu_cau = 1664;
-        $so_container = "PRGU 9509577";
-        $so_tau = "ND 3076";
-        YeuCauTauContChiTiet::where('ma_yeu_cau', $ma_yeu_cau)->update([
-            'so_container_dich' => $so_container,
-            'tau_dich' => $so_tau,
-        ]);
-        TheoDoiHangHoa::where('ma_yeu_cau', $ma_yeu_cau)
-            ->where('cong_viec', 4)
-            ->update([
-                'so_container' => $so_container,
-                'phuong_tien_cho_hang' => $so_tau,
-            ]);
-        TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', '=', 'theo_doi_tru_lui.ma_theo_doi')
-            ->where('theo_doi_tru_lui.ma_yeu_cau', $ma_yeu_cau)
-            ->where('theo_doi_tru_lui.cong_viec', 2)
-            ->update([
-                'theo_doi_tru_lui_chi_tiet.so_container' => $so_container,
-                'theo_doi_tru_lui_chi_tiet.phuong_tien_vt_nhap' => $so_tau,
-            ]);
-    }
-    public function fixTruLuiDaHuy()
-    {
-        $ycs = YeuCauTauCont::where('trang_thai', 0)
-            ->get();
-        foreach ($ycs as $yc) {
-            TheoDoiTruLui::where('ma_yeu_cau', $yc->ma_yeu_cau)
-                ->where('cong_viec', 2)
-                ->delete();
-        }
-    }
-    public function checkDupsNiemPhong()
-    {
-        $allNiemPhong = NiemPhong::all();
-        $grouped = $allNiemPhong->groupBy('so_container');
-
-        foreach ($grouped as $items) {
-            // Keep the first, delete the rest
-            $items->skip(1)->each(function ($item) {
-                $item->delete();
-            });
-        }
-    }
-    public function kiemTraSealDung()
-    {
-        $ycs = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-            ->where('yeu_cau_niem_phong.ma_yeu_cau', '>=', 2400)
-            ->where('yeu_cau_niem_phong.trang_thai', operator: '2')
-            ->orderBy('yeu_cau_niem_phong.ma_yeu_cau', 'desc')
-            ->get();
-        $containerDaCheck = [];
-        $container = [];
-        foreach ($ycs as $yc) {
-            if (in_array($yc->so_container, $containerDaCheck)) {
-                continue;
-            }
-            $seal = NiemPhong::where('so_container', $yc->so_container)->first()->so_seal ?? '';
-            if ($yc->so_seal_moi != $seal && Seal::find($seal)) {
-                $container[] = $yc->so_container;
-            }
-            $containerDaCheck[] = $yc->so_container;
-        }
-        dd($container);
-    }
-
-    public function fixNiemPhong()
-    {
-        $ycs = YeuCauNiemPhong::join('yeu_cau_niem_phong_chi_tiet', 'yeu_cau_niem_phong.ma_yeu_cau', '=', 'yeu_cau_niem_phong_chi_tiet.ma_yeu_cau')
-            ->where('ngay_yeu_cau', today())
-            ->get();
-        $arr = [];
-        foreach ($ycs as $yc) {
-            if ($yc->phuong_tien_vt_nhap == '') {
-                $arr[] = $yc->ma_yeu_cau;
-            }
-        }
-        $arr = array_unique($arr);
-        foreach ($arr as $ar) {
-            $ycs = YeuCauNiemPhongChiTiet::where('ma_yeu_cau', $ar)->get();
-            foreach ($ycs as $yc) {
-                $ptvt = NiemPhong::where('so_container', $yc->so_container)->first()->phuong_tien_vt_nhap;
-                $yc->phuong_tien_vt_nhap = $ptvt;
-                $yc->save();
-            }
-        }
-    }
-    public function fixContainer()
-    {
-        $niemPhongs = NiemPhong::all();
-
-        foreach ($niemPhongs as $niemPhong) {
-            $so_container_no_space = str_replace(' ', '', $niemPhong->so_container);
-            $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-            if (!Container::whereIn('so_container', [$so_container_no_space, $so_container_with_space])->exists()) {
-                Container::insert([
-                    'so_container' => $so_container_with_space,
-                ]);
-            }
-        }
-    }
-
-
-    public function fixTheoDoi()
-    {
-        $theoDoi = TheoDoiTruLui::where('cong_viec', 2)
-            ->where('ma_theo_doi', '>', 49000)
-            ->get();
-        foreach ($theoDoi as $td) {
-            $chiTiets = YeuCauTauContChiTiet::where('ma_yeu_cau', $td->ma_yeu_cau)
-                ->groupBy('so_to_khai_nhap')
-                ->get();
-            foreach ($chiTiets as $chiTiet) {
-                if ($chiTiet->so_to_khai_nhap == $td->so_to_khai_nhap) {
-                    TheoDoiTruLuiChiTiet::where('ma_theo_doi', $td->ma_theo_doi)
-                        ->update(['phuong_tien_vt_nhap' => $chiTiet->tau_dich]);
-                }
-            }
-        }
-    }
-
-    public function fixPTVTXC()
-    {
-        PTVTXuatCanh::all()->each(function ($ptvt) {
-            $ptvt->update([
-                'draft_den' => $ptvt->draft_roi,
-                'dwt_den' => $ptvt->dwt_roi,
-                'loa_den' => $ptvt->loa_roi,
-                'breadth_den' => $ptvt->breadth_roi,
-                'trang_thai' => 2,
-            ]);
-        });
-    }
-
-    public function fixTauTrenCont()
-    {
-        $nhapHangs = NhapHang::where('trang_thai', 2)->get();
-        foreach ($nhapHangs as $nhapHang) {
-            $soContainers = HangHoa::join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->where('hang_hoa.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-                ->pluck('so_container')
-                ->unique();
-            foreach ($soContainers as $soContainer) {
-                NiemPhong::where('so_container', $soContainer)
-                    ->where('phuong_tien_vt_nhap', operator: null)
-                    ->update([
-                        'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap,
-                    ]);
-            }
-        }
-    }
-    public function fixTauTheoDoiTruLui()
-    {
-        $theoDoiTruLuis = TheoDoiTruLui::where('cong_viec', '!=', 1)
-            ->get();
-        foreach ($theoDoiTruLuis as $theoDoiTruLui) {
-            TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoiTruLui->ma_theo_doi)->update([
-                'phuong_tien_vt_nhap' => $theoDoiTruLui->phuong_tien_vt_nhap,
-            ]);
-        }
-    }
-    public function fixSuaXuatHang()
-    {
-        $count = 0;
-        $xuatHangs = XuatHang::whereNot('trang_thai', 0)->get();
-        foreach ($xuatHangs as $xuatHang) {
-            $ngay_them = TheoDoiTruLui::where('cong_viec', 1)->where('ma_yeu_cau', $xuatHang->so_to_khai_xuat)->first()->ngay_them ?? 0;
-            if ($ngay_them != $xuatHang->ngay_dang_ky) {
-                $count++;
-            }
-        }
-        dd($count);
-    }
-
-    public function suaSoContainer()
-    {
-        $so_to_khai_nhap = '500489964960';
-        $so_container = 'TCLU 9408800';
-
-        $tau = 'ND 3721';
-        NhapHang::find($so_to_khai_nhap)->update([
-            'container_ban_dau' => $so_container,
-        ]);
-        HangHoa::where('so_to_khai_nhap', $so_to_khai_nhap)->update([
-            'so_container_khai_bao' => $so_container
-        ]);
-        HangTrongCont::join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-            ->where('hang_hoa.so_to_khai_nhap', $so_to_khai_nhap)
-            ->update([
-                'hang_trong_cont.so_container' => $so_container
-            ]);
-        XuatHangCont::where('so_to_khai_nhap', $so_to_khai_nhap)->update([
-            'so_container' => $so_container,
-        ]);
-    }
-
+    //Khôi phục tờ khai nhập hàng đã hủy (Chưa update từ lâu)
     public function khoiPhucNhapHang()
     {
         $nhapHang = NhapHangDaHuy::find(479);
@@ -1249,18 +591,6 @@ class LoaiHinhController extends Controller
         }
     }
 
-
-    public function fixSoContKhaiBao()
-    {
-        $nhapHangs = NhapHang::all();
-        foreach ($nhapHangs as $nhapHang) {
-            HangHoa::where('so_to_khai_nhap', $nhapHang->so_to_khai_nhap)->update(['so_container_khai_bao' => $nhapHang->container_ban_dau]);
-        }
-        $nhapHangsHuy = NhapHangDaHuy::where('trang_thai', '0')->get();
-        foreach ($nhapHangsHuy as $nhapHangHuy) {
-            HangHoaDaHuy::where('id_huy', $nhapHangHuy->id_huy)->update(['so_container_khai_bao' => $nhapHang->container_ban_dau]);
-        }
-    }
 
     public function khoiPhucXuatHang2($so_to_khai_xuat, $trang_thai)
     {
@@ -1313,99 +643,6 @@ class LoaiHinhController extends Controller
                 'ma_cong_chuc_ban_giao' => $maCongChuc
             ]);
     }
-    public function quayNguocYeuCau($yeuCau)
-    {
-        $chiTietYeuCaus = YeuCauContainerChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->get();
-        foreach ($chiTietYeuCaus as $chiTietYeuCau) {
-            $nhapHangs = HangTrongCont::join('hang_hoa', 'hang_trong_cont.ma_hang', '=', 'hang_hoa.ma_hang')
-                ->join('nhap_hang', 'hang_hoa.so_to_khai_nhap', '=', 'nhap_hang.so_to_khai_nhap')
-                ->where('nhap_hang.so_to_khai_nhap', $chiTietYeuCau->so_to_khai_nhap)
-                ->get();
-
-            foreach ($nhapHangs as $nhapHang) {
-                $nhapHang->so_container = $chiTietYeuCau->so_container_goc;
-                $nhapHang->save();
-            }
-        }
-    }
-
-
-    public function capNhatSealTheoDoi($so_container, $so_seal)
-    {
-        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
-        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        TheoDoiHangHoa::whereIn('so_container', [$so_container_no_space, $so_container_with_space])
-            ->whereDate('thoi_gian', today()->subDay())
-            ->update(['so_seal' => $so_seal]);
-    }
-    public function capNhatSealXuatHang($so_container, $so_seal, $ngay_dang_ky): void
-    {
-        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
-        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        XuatHang::whereDate('xuat_hang.ngay_dang_ky', $ngay_dang_ky)
-            ->join('xuat_hang_cont', 'xuat_hang_cont.so_to_khai_xuat', '=', 'xuat_hang.so_to_khai_xuat')
-            ->whereIn('xuat_hang_cont.so_container',  [$so_container_no_space, $so_container_with_space])
-            ->update(['xuat_hang_cont.so_seal_cuoi_ngay' => $so_seal]);
-    }
-    public function capNhatSealTruLui($so_container, $so_seal): void
-    {
-        $so_container_no_space = str_replace(' ', '', $so_container); // Remove spaces
-        $so_container_with_space = substr($so_container_no_space, 0, 4) . ' ' . substr($so_container_no_space, 4);
-
-        TheoDoiTruLui::join('theo_doi_tru_lui_chi_tiet', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi', 'theo_doi_tru_lui.ma_theo_doi')
-            ->whereIn('theo_doi_tru_lui_chi_tiet.so_container', [$so_container_no_space, $so_container_with_space])
-            ->whereDate('ngay_them', today()->subDay())
-            ->update(['theo_doi_tru_lui_chi_tiet.so_seal' => $so_seal]);
-    }
-
-    public function xoaTheoDoiTruLui2($yeuCau)
-    {
-        TheoDoiTruLuiChiTiet::whereIn('ma_theo_doi', function ($query) use ($yeuCau) {
-            $query->select('ma_theo_doi')
-                ->from('theo_doi_tru_lui')
-                ->where('cong_viec', 2)
-                ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau);
-        })->delete();
-
-        TheoDoiTruLui::where('cong_viec', 2)
-            ->where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-            ->delete();
-    }
-
-
-    public function themTheoDoiTruLui($so_to_khai_nhap, $yeuCau)
-    {
-        $hangHoas = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.so_to_khai_nhap', $so_to_khai_nhap)
-            ->get();
-        $nhapHang = NhapHang::find($so_to_khai_nhap);
-        $theoDoi = TheoDoiTruLui::create([
-            'so_to_khai_nhap' => $so_to_khai_nhap,
-            'so_ptvt_nuoc_ngoai' => '',
-            'phuong_tien_vt_nhap' => $nhapHang->phuong_tien_vt_nhap ?? '',
-            'ngay_them' => now(),
-            'cong_viec' => 2,
-            'ma_yeu_cau' => $yeuCau->ma_yeu_cau,
-        ]);
-        foreach ($hangHoas as $hangHoa) {
-            TheoDoiTruLuiChiTiet::insert(
-                [
-                    'ten_hang' => $hangHoa->ten_hang,
-                    'so_luong_xuat' => 0,
-                    'so_luong_chua_xuat' => $hangHoa->so_luong,
-                    'ma_theo_doi' => $theoDoi->ma_theo_doi,
-                    'so_container' => $hangHoa->so_container,
-                    'so_seal' => '',
-                ]
-            );
-        }
-    }
-
-
-
 
 
     public function fixNgayXuatHet()
@@ -1489,20 +726,6 @@ class LoaiHinhController extends Controller
         ]);
     }
 
-    public function thayPTVT(Request $request)
-    {
-        $xuatHangs = XuatHang::all();
-        foreach ($xuatHangs as $xuatHang) {
-            $ptvts = PTVTXuatCanhCuaPhieu::where('so_to_khai_xuat', $xuatHang->so_to_khai_xuat)
-                ->with('PTVTXuatCanh')
-                ->get()
-                ->pluck('PTVTXuatCanh.ten_phuong_tien_vt')
-                ->filter()
-                ->implode('; ');
-            $xuatHang->ten_phuong_tien_vt = $ptvts ?? '';
-            $xuatHang->save();
-        }
-    }
     public function xuatHet()
     {
         $allNhapHangs = NhapHang::where('trang_thai', '2')->get();
@@ -1540,43 +763,6 @@ class LoaiHinhController extends Controller
         }
     }
 
-    public function containerTauGoc()
-    {
-        $yeuCaus = YeuCauChuyenContainer::where('trang_thai', '2')->get();
-        foreach ($yeuCaus as $yeuCau) {
-            $phuong_tien_cho_hang = TheoDoiHangHoa::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-                ->where('cong_viec', 3)
-                ->first()->phuong_tien_cho_hang;
-            YeuCauContainerChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->update([
-                'tau_goc' => $phuong_tien_cho_hang
-            ]);
-        }
-    }
-    public function ycKiemTraSoLuong()
-    {
-        $yeuCaus = YeuCauKiemTra::where('trang_thai', '2')->get();
-        foreach ($yeuCaus as $yeuCau) {
-            $so_luong_ton = TheoDoiHangHoa::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-                ->where('cong_viec', 7)
-                ->sum('so_luong_ton');
-            YeuCauKiemTraChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->update([
-                'so_luong' => $so_luong_ton
-            ]);
-        }
-    }
-
-    public function ycChuyenTauSoLuong()
-    {
-        $yeuCaus = YeuCauChuyenTau::all();
-        foreach ($yeuCaus as $yeuCau) {
-            $so_luong_ton = TheoDoiHangHoa::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)
-                ->where('cong_viec', 4)
-                ->sum('so_luong_ton');
-            YeuCauChuyenTauChiTiet::where('ma_yeu_cau', $yeuCau->ma_yeu_cau)->update([
-                'so_luong' => $so_luong_ton
-            ]);
-        }
-    }
 
     public function checkLechSoLuong(Request $request)
     {
@@ -1612,46 +798,7 @@ class LoaiHinhController extends Controller
 
         dd($arr);
     }
-    public function checkLechSoLuongv2()
-    {
-        $so_to_khai_xuats = [44458, 44291, 44285, 44281];
-
-        $so_luong_hien_tai = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-            ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-            ->where('nhap_hang.so_to_khai_nhap', '500576738730')
-            ->get();
-
-        foreach ($so_to_khai_xuats as $so_to_khai_xuat) {
-            $xuat_hang_conts = XuatHangCont::where('so_to_khai_xuat', $so_to_khai_xuat)->get();
-
-            foreach ($xuat_hang_conts as $xuat_hang_cont) {
-                // Find the item in the original collection
-                $item = $so_luong_hien_tai->firstWhere('ma_hang_cont', $xuat_hang_cont->ma_hang_cont);
-
-                if ($item) {
-                    // Now this will actually modify the object in the collection
-                    $item->so_luong += $xuat_hang_cont->so_luong_xuat;
-                }
-            }
-        }
-        $sum = $so_luong_hien_tai->sum('so_luong');
-        dd($so_luong_hien_tai->select('ma_hang_cont', 'so_luong', 'ma_hang', 'ten_hang'));
-    }
-    public function checkXuatHetHang()
-    {
-        $allNhapHangs = NhapHang::where('trang_thai', '4')->get();
-        $arr = [];
-        foreach ($allNhapHangs as $nhapHang) {
-            $soLuongTon = NhapHang::join('hang_hoa', 'nhap_hang.so_to_khai_nhap', '=', 'hang_hoa.so_to_khai_nhap')
-                ->join('hang_trong_cont', 'hang_hoa.ma_hang', '=', 'hang_trong_cont.ma_hang')
-                ->where('nhap_hang.so_to_khai_nhap', $nhapHang->so_to_khai_nhap)
-                ->sum('hang_trong_cont.so_luong');
-            if ($soLuongTon != 0) {
-                array_push($arr, $soLuongTon, $nhapHang->so_to_khai_nhap);
-            }
-        }
-        dd($arr);
-    }
+    //Khi thêm báo cáo mới thì phân quyền nhanh ở đây 
     public function fixPhanQuyenBaoCao()
     {
         $congChucs = CongChuc::all();
