@@ -78,7 +78,7 @@
                                             name="so_to_khai_nhap" placeholder="Nhập số tờ khai" required>
                                         <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                         <input type="text" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                            name="tu_ngay" readonly>
+                                            name="tu_ngay" required readonly>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                                 cáo</button>
                                         </center>
@@ -97,12 +97,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -202,12 +202,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -229,12 +229,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -266,12 +266,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center>
@@ -296,12 +296,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -332,12 +332,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center>
@@ -359,12 +359,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -384,12 +384,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -410,12 +410,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -434,16 +434,16 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                             <label class="label-text mb-1 mt-2" for="">Cán bộ công chức</label>
                                             <select class="form-control" id="cong-chuc-dropdown-search"
-                                                name="ma_cong_chuc">
+                                                name="ma_cong_chuc" required>
                                                 <option></option>
                                                 <option value="Tất cả">
                                                     Toàn thể công chức
@@ -473,12 +473,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -498,12 +498,12 @@
                                                 <div class="col-6">
                                                     <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                     <input type="text" class="form-control datepicker"
-                                                        placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                        placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                                 </div>
                                                 <div class="col-6">
                                                     <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                     <input type="text" class="form-control datepicker"
-                                                        placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                        placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                                 </div>
                                             </div>
                                             <div class="mx-1">
@@ -546,12 +546,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center>
@@ -570,7 +570,7 @@
                                 <div class="form-group">
                                     <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET">
                                         <label class="label-text mb-1 mt-2" for="">Tên tàu</label>
-                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap">
+                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap" required>
                                             <option></option>
                                             @foreach ($phuongTienVTNhaps as $phuongTienVTNhap)
                                                 <option value="{{ $phuongTienVTNhap }}">
@@ -597,12 +597,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center>
@@ -624,12 +624,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center>
@@ -654,12 +654,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center>
@@ -726,12 +726,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -752,12 +752,12 @@
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -831,7 +831,7 @@
                                         <div class="row mx-1">
                                             <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                             <input type="text" class="form-control datepicker"
-                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                         </div>
                                         <center>
                                             <button type="submit" class="btn btn-primary mt-2">
@@ -863,7 +863,7 @@
                                         </select>
                                         <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                         <input type="text" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                            name="tu_ngay" readonly>
+                                            name="tu_ngay" required readonly>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                                 cáo</button></center>
                                     </form>

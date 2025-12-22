@@ -31,7 +31,7 @@
                             <div class="form-group">
                                 <form action="{{ route('export.so-luong-container-theo-cont') }}" method="GET">
                                     <label class="label-text mb-2" for="ma_to_khai">Số container</label>
-                                    <select class="form-control" id="container-dropdown-search" name="so_container">
+                                    <select class="form-control" id="container-dropdown-search" name="so_container" required>
                                         <option></option>
                                         @foreach ($containers as $container)
                                             <option value="{{ $container->so_container }}">
@@ -64,12 +64,12 @@
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                             <input type="text" id="datepicker8" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                         </div>
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                             <input type="text" id="datepicker9" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                         </div>
                                     </div>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -120,7 +120,7 @@
                                 </select>
                                 <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                 <input type="text" id="ngay-tru-lui" class="form-control" placeholder="dd/mm/yyyy"
-                                    name="tu_ngay" readonly>
+                                    name="tu_ngay" required readonly>
                                 <center>
                                     <a href="#">
                                         <button class="btn btn-success mt-2" id="btnInTruLui">
@@ -154,7 +154,7 @@
                                         name="so_to_khai_nhap" placeholder="Nhập số tờ khai" required>
                                     <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                     <input type="text" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                        name="tu_ngay" readonly>
+                                        name="tu_ngay" required readonly>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo cáo</button>
                                     </center>
                                 </form>
@@ -181,7 +181,7 @@
                                     </select>
                                     <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                     <input type="text" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                        name="tu_ngay" readonly>
+                                        name="tu_ngay" required readonly>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                             cáo</button></center>
                                 </form>
@@ -205,7 +205,7 @@
                                     </select>
                                     <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                     <input type="text" class="form-control datepicker" placeholder="dd/mm/yyyy"
-                                        name="tu_ngay" readonly>
+                                        name="tu_ngay" required readonly>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
                                             cáo</button></center>
                                 </form>
@@ -219,7 +219,7 @@
                                 <div class="form-group">
                                     <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET">
                                         <label class="label-text mb-1 mt-2" for="">Tên tàu</label>
-                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap">
+                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap" required>
                                             <option></option>
                                             @foreach ($phuongTienVTNhaps as $phuongTienVTNhap)
                                                 <option value="{{ $phuongTienVTNhap }}">
@@ -263,7 +263,7 @@
                             <h4>Báo cáo chi tiết hàng hóa xuất nhập khẩu</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                <form action="{{ route('export.chi-tiet-xnk-theo-dn') }}" method="GET">
+                                <form action="{{ route('export.chi-tiet-xnk-theo-dn') }}" method="GET" >
                                     <select class="form-control" id="doanh-nghiep-dropdown-search-3"
                                         name="ma_doanh_nghiep" required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -278,12 +278,12 @@
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                             <input type="text" id="datepicker3" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                         </div>
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                             <input type="text" id="datepicker4" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                         </div>
                                     </div>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -310,12 +310,12 @@
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                             <input type="text" class="form-control datepicker"
-                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                         </div>
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                             <input type="text" class="form-control datepicker"
-                                                placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
                                         </div>
                                     </div>
                                     <center>
@@ -346,12 +346,12 @@
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                             <input type="text" id="datepicker5" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="tu_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
                                         </div>
                                         <div class="col-6">
                                             <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                             <input type="text" id="datepicker6" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="den_ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="den_ngay" requiredreadonly>
                                         </div>
                                     </div>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -378,7 +378,7 @@
                                         <div class="col-12">
                                             <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                             <input type="text" id="datepicker7" class="form-control"
-                                                placeholder="dd/mm/yyyy" name="ngay" readonly>
+                                                placeholder="dd/mm/yyyy" name="ngay" required readonly>
                                         </div>
                                     </div>
                                     <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo

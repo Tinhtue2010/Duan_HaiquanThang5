@@ -98,10 +98,8 @@ class BaoCaoTheoDoiTruLuiExport implements FromArray, WithEvents, WithDrawings, 
             ->first();
         $ngayCuoiCung = $theoDoiCuoiCung->ngay_them ?? '2000-01-01';
 
-        $theoDoiChiTiet = TheoDoiTruLuiChiTiet::join('theo_doi_tru_lui', 'theo_doi_tru_lui.ma_theo_doi', 'theo_doi_tru_lui_chi_tiet.ma_theo_doi')
-            ->where('theo_doi_tru_lui.ma_theo_doi', $theoDoi->ma_theo_doi)
+        $theoDoiChiTiet = TheoDoiTruLuiChiTiet::where('ma_theo_doi', $theoDoi->ma_theo_doi)
             ->get();
-
         $tu_ngay = Carbon::createFromFormat('Y-m-d', $theoDoi->ngay_them);
         $day = $tu_ngay->format('d');  // Day of the month
         $month = $tu_ngay->format('m'); // Month number

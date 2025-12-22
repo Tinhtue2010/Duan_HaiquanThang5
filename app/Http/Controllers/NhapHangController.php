@@ -720,7 +720,7 @@ class NhapHangController extends Controller
     }
     public function toKhaiDaQua14Ngay()
     {
-        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức") {
+        if (Auth::user()->loai_tai_khoan == "Cán bộ công chức" || Auth::user()->loai_tai_khoan == "Admin") {
             $nhapHangs = NhapHang::where('ngay_tiep_nhan', '<=', now()->subDays(14))
                 ->where('ngay_tiep_nhan', '>=', Carbon::create(2025, 8, 15))
                 ->orderBy('ngay_tiep_nhan', 'asc')
