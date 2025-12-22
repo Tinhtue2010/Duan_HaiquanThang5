@@ -31,11 +31,13 @@
                             <div class="form-group">
                                 <form action="{{ route('export.so-luong-container-theo-cont') }}" method="GET">
                                     <label class="label-text mb-2" for="ma_to_khai">Số container</label>
-                                    <select class="form-control" id="container-dropdown-search" name="so_container" required>
+                                    <select class="form-control" id="container-dropdown-search" name="so_container"
+                                        required>
                                         <option></option>
                                         @foreach ($containers as $container)
                                             <option value="{{ $container->so_container }}">
-                                                {{ $container->so_container }} ({{ $container->phuong_tien_vt_nhap }} - {{ $container->so_seal }})
+                                                {{ $container->so_container }} ({{ $container->phuong_tien_vt_nhap }} -
+                                                {{ $container->so_seal }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -48,7 +50,7 @@
                         <div class="card p-3 me-3 col-5">
                             <h4>Báo cáo số lượng tờ khai xuất hết</h4>
                             <div class="form-group">
-                                <form action="{{ route('export.to-khai-xuat-het-doanh-nghiep') }}" method="GET">
+                                <form action="{{ route('export.to-khai-xuat-het-doanh-nghiep') }}" method="GET"  class="report-form">
                                     <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
                                     <select class="form-control" id="doanh-nghiep-dropdown-search" name="ma_doanh_nghiep"
                                         required>
@@ -149,7 +151,7 @@
                             <h4>Báo cáo theo dõi trừ lùi cuối ngày</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_to_khai">Số tờ khai nhập</label>
-                                <form action="{{ route('export.theo-doi-tru-lui-cuoi-ngay') }}" method="GET">
+                                <form action="{{ route('export.theo-doi-tru-lui-cuoi-ngay') }}" method="GET" class="report-form">
                                     <input type="text" class="form-control" id="so_to_khai_nhap"
                                         name="so_to_khai_nhap" placeholder="Nhập số tờ khai" required>
                                     <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
@@ -166,7 +168,7 @@
                         <div class="card p-3 me-3 col-5">
                             <h4>Báo cáo đăng ký thủ tục xuất khẩu hàng hóa</h4>
                             <div class="form-group">
-                                <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa') }}" method="GET">
+                                <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa') }}" method="GET" class="report-form">
                                     <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công
                                         ty</label>
                                     <select class="form-control" id="doanh-nghiep-dropdown-search" name="ma_doanh_nghiep"
@@ -190,7 +192,7 @@
                         <div class="card p-3 me-3 col-5">
                             <h4>Báo cáo đăng ký thủ tục xuất khẩu hàng hóa (Sang cont + Cẩu Cont + Kiểm tra hàng)</h4>
                             <div class="form-group">
-                                <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa-2') }}" method="GET">
+                                <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa-2') }}" method="GET" class="report-form">
                                     <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công
                                         ty</label>
                                     <select class="form-control" id="doanh-nghiep-dropdown-search" name="ma_doanh_nghiep"
@@ -219,7 +221,8 @@
                                 <div class="form-group">
                                     <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET">
                                         <label class="label-text mb-1 mt-2" for="">Tên tàu</label>
-                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap" required>
+                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap"
+                                            required>
                                             <option></option>
                                             @foreach ($phuongTienVTNhaps as $phuongTienVTNhap)
                                                 <option value="{{ $phuongTienVTNhap }}">
@@ -238,7 +241,7 @@
                             <h4>Báo cáo hàng tồn theo Doanh nghiệp</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                <form action="{{ route('export.hang-ton-doanh-nghiep') }}" method="GET">
+                                <form action="{{ route('export.hang-ton-doanh-nghiep') }}" method="GET" >
                                     <select class="form-control" id="doanh-nghiep-dropdown-search" name="ma_doanh_nghiep"
                                         required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -263,7 +266,7 @@
                             <h4>Báo cáo chi tiết hàng hóa xuất nhập khẩu</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                <form action="{{ route('export.chi-tiet-xnk-theo-dn') }}" method="GET" >
+                                <form action="{{ route('export.chi-tiet-xnk-theo-dn') }}" method="GET" class="report-form">
                                     <select class="form-control" id="doanh-nghiep-dropdown-search-3"
                                         name="ma_doanh_nghiep" required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -295,7 +298,7 @@
                             <h4>Báo cáo doanh nghiệp xuất nhập khẩu hàng hóa</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                <form action="{{ route('export.doanh-nghiep-xnk-theo-dn') }}" method="GET">
+                                <form action="{{ route('export.doanh-nghiep-xnk-theo-dn') }}" method="GET" class="report-form">
                                     <select class="form-control" id="doanh-nghiep-dropdown-search-2"
                                         name="ma_doanh_nghiep" required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -331,7 +334,7 @@
                             <h4>Báo cáo phiếu xuất của doanh nghiệp</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                <form action="{{ route('export.phieu-xuat-theo-doanh-nghiep') }}" method="GET">
+                                <form action="{{ route('export.phieu-xuat-theo-doanh-nghiep') }}" method="GET" class="report-form">
                                     <select class="form-control" id="doanh-nghiep-dropdown-search-4"
                                         name="ma_doanh_nghiep" required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -363,7 +366,7 @@
                             <h4>Báo cáo cấp 2</h4>
                             <div class="form-group">
                                 <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                <form action="{{ route('export.bao-cao-cap-hai') }}" method="GET">
+                                <form action="{{ route('export.bao-cao-cap-hai') }}" method="GET" class="report-form">
                                     <select class="form-control" id="doanh-nghiep-dropdown-search-5"
                                         name="ma_doanh_nghiep" required>
                                         <option value="">Chọn doanh nghiệp</option>
@@ -672,6 +675,68 @@
         // Listen for input changes and copy value to second form
         document.getElementById('idNhap').addEventListener('input', function() {
             document.getElementById('idNhapCopy').value = this.value;
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('submit', function(e) {
+                if (!e.target.classList.contains('report-form')) return;
+
+                const form = e.target;
+                let isValid = true;
+
+                // Clear all previous errors
+                form.querySelectorAll('.invalid-feedback').forEach(el => {
+                    el.textContent = '';
+                    el.style.display = 'none';
+                });
+                form.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+
+                // Validate tu_ngay
+                const tuNgay = form.querySelector('input[name="tu_ngay"]');
+                if (tuNgay && (!tuNgay.value || tuNgay.value.trim() === '')) {
+                    showError(tuNgay, 'Vui lòng chọn ngày');
+                    isValid = false;
+                }
+
+                // Validate den_ngay if exists
+                const denNgay = form.querySelector('input[name="den_ngay"]');
+                if (denNgay) {
+                    if (!denNgay.value || denNgay.value.trim() === '') {
+                        showError(denNgay, 'Vui lòng chọn đến ngày');
+                        isValid = false;
+                    } else if (tuNgay && tuNgay.value && denNgay.value) {
+                        // Validate date range
+                        const fromDate = parseDate(tuNgay.value);
+                        const toDate = parseDate(denNgay.value);
+
+                        if (fromDate > toDate) {
+                            showError(denNgay, 'Đến ngày phải lớn hơn hoặc bằng từ ngày');
+                            isValid = false;
+                        }
+                    }
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+
+            function showError(input, message) {
+                input.classList.add('is-invalid');
+                const errorDiv = input.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv.textContent = message;
+                    errorDiv.style.display = 'block';
+                }
+            }
+
+            function parseDate(dateString) {
+                const parts = dateString.split('/');
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
         });
     </script>
 @stop

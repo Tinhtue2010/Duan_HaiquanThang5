@@ -73,7 +73,7 @@
                                 <h4>Báo cáo theo dõi trừ lùi cuối ngày</h4>
                                 <div class="form-group">
                                     <label class="label-text mb-2" for="ma_to_khai">Số tờ khai nhập</label>
-                                    <form action="{{ route('export.theo-doi-tru-lui-cuoi-ngay') }}" method="GET">
+                                    <form action="{{ route('export.theo-doi-tru-lui-cuoi-ngay') }}" method="GET" class="report-form">
                                         <input type="text" class="form-control" id="so_to_khai_nhap"
                                             name="so_to_khai_nhap" placeholder="Nhập số tờ khai" required>
                                         <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
@@ -92,7 +92,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 4)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo tiếp nhận hằng ngày</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.tiep-nhan-hang-ngay') }}" method="GET">
+                                    <form action="{{ route('export.tiep-nhan-hang-ngay') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -119,7 +119,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 5)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo theo dõi trừ lùi theo ngày</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.theo-doi-tru-lui-theo-ngay') }}" method="GET">
+                                    <form action="{{ route('export.theo-doi-tru-lui-theo-ngay') }}" method="GET" class="report-form">
                                         <label class="label-text mb-2" for="ma_to_khai">Số tờ khai nhập</label>
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="idNhap" name="so_to_khai_nhap"
@@ -143,7 +143,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 24)->first()?->phan_quyen == 1)
                                 <h4>Bảng kê công việc</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bang-ke-cong-viec') }}" method="GET">
+                                    <form action="{{ route('export.bang-ke-cong-viec') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="mx-1">
                                                 <label class="label-text mb-2" for="ma_to_khai">Tháng</label>
@@ -197,17 +197,17 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 8)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo hàng hóa xuất nhập khẩu</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-hang-hoa-xuat-nhap-khau') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-hang-hoa-xuat-nhap-khau') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="tu_ngay" required readonly>
+                                                    placeholder="dd/mm/yyyy" name="tu_ngay" readonly required>
                                             </div>
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Đến ngày</label>
                                                 <input type="text" class="form-control datepicker"
-                                                    placeholder="dd/mm/yyyy" name="den_ngay" required readonly>
+                                                    placeholder="dd/mm/yyyy" name="den_ngay" readonly required>
                                             </div>
                                         </div>
                                         <center><button type="submit" class="btn btn-primary mt-2">Tải xuống báo
@@ -224,7 +224,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 11)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo chi tiết hàng hóa xuất nhập khẩu</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.chi-tiet-xnk-trong-ngay') }}" method="GET">
+                                    <form action="{{ route('export.chi-tiet-xnk-trong-ngay') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -248,7 +248,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 12)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo thống kê hàng hóa sang cont, chuyển tàu, kiểm tra hàng</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-sang-cont-chuyen-tau') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-sang-cont-chuyen-tau') }}" method="GET" class="report-form">
                                         <label class="label-text mb-1 mt-2" for="">Cán bộ công chức</label>
                                         <select class="form-control" id="cong-chuc-dropdown-search-2"
                                             name="ma_cong_chuc">
@@ -291,7 +291,7 @@
                                 <br>
                                 <br>
                                 <div class="form-group">
-                                    <form action="{{ route('export.doanh-nghiep-xnk') }}" method="GET">
+                                    <form action="{{ route('export.doanh-nghiep-xnk') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -317,7 +317,7 @@
                                 <h4>Báo cáo doanh nghiệp xuất nhập khẩu hàng hóa</h4>
                                 <div class="form-group">
                                     <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                    <form action="{{ route('export.doanh-nghiep-xnk-theo-dn') }}" method="GET">
+                                    <form action="{{ route('export.doanh-nghiep-xnk-theo-dn') }}" method="GET" class="report-form">
                                         <select class="form-control" id="doanh-nghiep-dropdown-search-5"
                                             name="ma_doanh_nghiep" required>
                                             <option value="">Chọn doanh nghiệp</option>
@@ -354,7 +354,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 15)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo hàng chuyển cửa khẩu xuất (Quay về kho)</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.chuyen-cua-khau-xuat') }}" method="GET">
+                                    <form action="{{ route('export.chuyen-cua-khau-xuat') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -379,7 +379,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 29)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo hàng tiêu hủy</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-tieu-huy') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-tieu-huy') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -405,7 +405,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 17)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo số lượng tờ khai xuất hết</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.so-luong-to-khai-xuat-het') }}" method="GET">
+                                    <form action="{{ route('export.so-luong-to-khai-xuat-het') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -429,7 +429,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 18)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo giám sát hàng hóa xuất khẩu</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-giam-sat-xuat-khau') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-giam-sat-xuat-khau') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -468,7 +468,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 19)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo sử dụng seal niêm phong</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-su-dung-seal') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-su-dung-seal') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -492,7 +492,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 25)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo sử dụng seal niêm phong chi tiết</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-su-dung-seal-chi-tiet') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-su-dung-seal-chi-tiet') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="row">
                                                 <div class="col-6">
@@ -541,7 +541,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 26)->first()?->phan_quyen == 1)
                                 <h4>Theo dõi phương tiện xuất nhập cảnh tại khu vực đầu tán</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-theo-doi-xnc') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-theo-doi-xnc') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -568,9 +568,10 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 20)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo số lượng container lưu trên tàu</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET">
+                                    <form action="{{ route('export.so-luong-tau-tai-cang') }}" method="GET" class="report-form">
                                         <label class="label-text mb-1 mt-2" for="">Tên tàu</label>
-                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap" required>
+                                        <select class="form-control" id="tau-dropdown-search" name="phuong_tien_vt_nhap"
+                                            required>
                                             <option></option>
                                             @foreach ($phuongTienVTNhaps as $phuongTienVTNhap)
                                                 <option value="{{ $phuongTienVTNhap }}">
@@ -592,7 +593,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 21)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo phương tiện nhập cảnh</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-phuong-tien-nhap-canh') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-phuong-tien-nhap-canh') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -619,7 +620,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 22)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo phương tiện xuất cảnh</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-phuong-tien-xuat-canh') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-phuong-tien-xuat-canh') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -649,7 +650,7 @@
                                 <h4>Báo cáo phương tiện xuất cảnh sửa, hủy</h4>
                                 <div class="form-group">
                                     <form action="{{ route('export.bao-cao-phuong-tien-xuat-canh-sua-huy') }}"
-                                        method="GET">
+                                        method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -676,7 +677,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 28)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo thời gian tờ khai lưu tại cảng</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-thoi-gian-to-khai') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-thoi-gian-to-khai') }}" method="GET" class="report-form">
                                         <center>
                                             <button type="submit" class="btn btn-primary mt-2">
                                                 Tải xuống báo cáo
@@ -721,7 +722,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 31)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo chi tiết gán, gỡ seal định vị điện tử</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.bao-cao-tiep-nhan-seal') }}" method="GET">
+                                    <form action="{{ route('export.bao-cao-tiep-nhan-seal') }}" method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -747,7 +748,7 @@
                                 <h4>Báo cáo phương tiện chưa xuất cảnh</h4>
                                 <div class="form-group">
                                     <form action="{{ route('export.bao-cao-phuong-tien-chua-xuat-canh') }}"
-                                        method="GET">
+                                        method="GET" class="report-form">
                                         <div class="row">
                                             <div class="col-6">
                                                 <label class="label-text mb-2" for="ma_to_khai">Từ ngày</label>
@@ -775,7 +776,7 @@
                                 <h4>Báo cáo hàng tồn theo Doanh nghiệp</h4>
                                 <div class="form-group">
                                     <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công ty</label>
-                                    <form action="{{ route('export.hang-ton-doanh-nghiep') }}" method="GET">
+                                    <form action="{{ route('export.hang-ton-doanh-nghiep') }}" method="GET" class="report-form">
                                         <select class="form-control" id="doanh-nghiep-dropdown-search-3"
                                             name="ma_doanh_nghiep" required>
                                             <option value="" data-ten-doanh-nghiep="">Chọn doanh nghiệp</option>
@@ -801,7 +802,7 @@
                                 <div class="form-group">
                                     <h4>Báo cáo hàng tồn theo đại lý</h4>
                                     <label class="label-text mb-2" for="chu_hang">Tên đại lý</label>
-                                    <form action="{{ route('export.hang-ton-chu-hang') }}" method="GET">
+                                    <form action="{{ route('export.hang-ton-chu-hang') }}" method="GET" class="report-form">
                                         <select class="form-control" id="chu-hang-dropdown-search" name="ma_chu_hang"
                                             onchange="updateTenChuHang()" required>
                                             <option value="" data-ten-chu-hang="">Chọn đại lý</option>
@@ -827,7 +828,7 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 23)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo phân công nhiệm vụ</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.phan-cong-nhiem-vu-giam-sat') }}" method="GET">
+                                    <form action="{{ route('export.phan-cong-nhiem-vu-giam-sat') }}" method="GET" class="report-form">
                                         <div class="row mx-1">
                                             <label class="label-text mb-2" for="ma_to_khai">Ngày</label>
                                             <input type="text" class="form-control datepicker"
@@ -847,11 +848,11 @@
                                     Auth::user()->congChuc->phanQuyenBaoCao->where('ma_bao_cao', 6)->first()?->phan_quyen == 1)
                                 <h4>Báo cáo đăng ký xuất khẩu hàng hóa</h4>
                                 <div class="form-group">
-                                    <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa') }}" method="GET">
+                                    <form action="{{ route('export.dang-ky-xuat-khau-hang-hoa') }}" method="GET" class="report-form">
                                         <label class="label-text mb-2" for="ma_doanh_nghiep">Tên Doanh nghiệp/Công
                                             ty</label>
                                         <select class="form-control" id="doanh-nghiep-dropdown-search-2"
-                                            name="ma_doanh_nghiep" required>
+                                            name="ma_doanh_nghiep" class="report-form"required>
                                             <option value="" data-ten-doanh-nghiep="">Chọn doanh nghiệp</option>
                                             @foreach ($doanhNghieps as $doanhNghiep)
                                                 <option value="{{ $doanhNghiep->ma_doanh_nghiep }}"
@@ -1060,5 +1061,67 @@
     <!-- Plugin chọn tháng -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('submit', function(e) {
+                if (!e.target.classList.contains('report-form')) return;
 
+                const form = e.target;
+                let isValid = true;
+
+                // Clear all previous errors
+                form.querySelectorAll('.invalid-feedback').forEach(el => {
+                    el.textContent = '';
+                    el.style.display = 'none';
+                });
+                form.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+
+                // Validate tu_ngay
+                const tuNgay = form.querySelector('input[name="tu_ngay"]');
+                if (tuNgay && (!tuNgay.value || tuNgay.value.trim() === '')) {
+                    showError(tuNgay, 'Vui lòng chọn ngày');
+                    isValid = false;
+                }
+
+                // Validate den_ngay if exists
+                const denNgay = form.querySelector('input[name="den_ngay"]');
+                if (denNgay) {
+                    if (!denNgay.value || denNgay.value.trim() === '') {
+                        showError(denNgay, 'Vui lòng chọn đến ngày');
+                        isValid = false;
+                    } else if (tuNgay && tuNgay.value && denNgay.value) {
+                        // Validate date range
+                        const fromDate = parseDate(tuNgay.value);
+                        const toDate = parseDate(denNgay.value);
+
+                        if (fromDate > toDate) {
+                            showError(denNgay, 'Đến ngày phải lớn hơn hoặc bằng từ ngày');
+                            isValid = false;
+                        }
+                    }
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+
+            function showError(input, message) {
+                input.classList.add('is-invalid');
+                const errorDiv = input.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv.textContent = message;
+                    errorDiv.style.display = 'block';
+                }
+            }
+
+            function parseDate(dateString) {
+                const parts = dateString.split('/');
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+        });
+    </script>
 @stop
