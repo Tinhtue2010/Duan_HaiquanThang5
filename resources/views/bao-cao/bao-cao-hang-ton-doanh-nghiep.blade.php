@@ -615,7 +615,10 @@
             const congViec = document.getElementById('list-cong-viec').value.trim();
             const ngayTruLui = document.getElementById('ngay-tru-lui').value;
             $('#ngay_tru_lui_hidden').val(ngayTruLui);
-
+            if (!ngayTruLui) {
+                alert('Vui lòng chọn ngày');
+                return;
+            }
             $.ajax({
                 url: `/get-so-to-khai-tru-lui`,
                 data: {
